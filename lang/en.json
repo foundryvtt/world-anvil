@@ -1,0 +1,9 @@
+{
+  "WA.ConfigureMenu": "World Anvil Integration",
+  "WA.ConfigureLabel": "World Anvil Integration",
+  "WA.ConfigureHint": "Configure your World Anvil integration.",
+  "WA.UserToken": "User Authentication Token",
+  "WA.UserTokenHint": "Enter a World Anvil user authentication token for your World Anvil account on the Account Management page of your World Anvil user profile.",
+  "WA.WorldId": "Select World",
+  "WA.WorldIdHint": "Choose World from World Anvil that should be mapped to this World in Foundry Virtual Tabletop."
+}

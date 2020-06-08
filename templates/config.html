@@ -1,0 +1,22 @@
+<form>
+    <div class="form-group">
+        <label>{{localize "WA.UserToken"}}</label>
+        <input type="text" name="authToken" value="{{authToken}}" required/>
+        <p class="notes">{{localize "WA.UserTokenHint"}}</p>
+    </div>
+
+    <div class="form-group">
+        <label>{{localize "WA.WorldId"}}</label>
+        <select name="worldId">
+            {{#select worldId}}
+            <option value=""></option>
+            {{#each worlds}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
+            {{/select}}
+        </select>
+        <p class="notes">{{localize "WA.WorldIdHint"}}</p>
+    </div>
+
+    <button type="submit">{{localize "Save Changes"}}</button>
+</form>
