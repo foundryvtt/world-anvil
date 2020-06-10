@@ -3,6 +3,7 @@
  */
 export default class WorldAnvil {
   constructor() {
+    const config = game.settings.get("world-anvil", "configuration");
 
     /**
      * The Foundry VTT Application API key
@@ -14,7 +15,7 @@ export default class WorldAnvil {
      * The World Anvil user token
      * @type {string|null}
      */
-    this.authToken = game.settings.get("world-anvil", "authToken");
+    this.authToken = config.authToken;
 
     /**
      * An array of World IDs which belong to the World Anvil user
@@ -26,7 +27,7 @@ export default class WorldAnvil {
      * The currently associated World ID
      * @type {string|null}
      */
-    this.worldId = game.settings.get("world-anvil", "worldId");
+    this.worldId = config.worldId;
 
     /**
      * The currently associated World Anvil User
@@ -87,7 +88,8 @@ export default class WorldAnvil {
    * @param {string} [authToken]
    */
   async connect(authToken) {
-    if ( authToken ) this.authToken = authToken;
+    if ( authToken !== undefined ) this.authToken = authToken;
+    if ( !this.authToken ) return;
     this.user = await this.getUser();
     console.log(`World Anvil | Connected to World Anvil API as User ${this.user.username}`);
   }
@@ -107,13 +109,26 @@ export default class WorldAnvil {
 
   /**
    * Fetch all articles from within a World, optionally filtering with a specific search query
-   * @param {string} worldId        The World ID
-   * @param {object} [params]       An optional search string
+   * @param {object} [params]       An optional query parameters
    * @return {Promise<object[]>}    An array of Article objects
    */
-  async getArticles(worldId, params={}) {
-    worldId = worldId || this.worldId;
-    return this._fetch(`world/${worldId}/articles`, params);
+  async getArticles(params={}) {
+    params.limit = parseInt(params.limit) || 50;
+    params.offset = parseInt(params.offset) || 0;
+
+    // Query paged articles until we have retrieved them all
+    let hasMore = true;
+    let result = null;
+    while ( hasMore ) {
+      let batch = await this._fetch(`world/${this.worldId}/articles`, params);
+      hasMore = batch.articles.length === params.limit;  // There may be more
+      params.offset += batch.articles.length; // Increment the pagination
+      if ( !result ) result = batch;  // Store the 1st result
+      else result.articles = result.articles.concat(batch.articles); // Append additional results
+    }
+
+    // Return the complete result
+    return result;
   }
 
 	/* -------------------------------------------- */
@@ -147,9 +162,9 @@ export default class WorldAnvil {
    * @return {Promise<object>}    An array of Article objects
    */
   async getWorld(worldId) {
-    worldId = worldId || this.worldId;
-    if ( !worldId ) throw new Error("You must first identify a World Id to integrate with");
-    const world = await this._fetch(`world/${worldId}`);
+    if ( worldId !== undefined ) this.worldId = worldId;
+    const world = await this._fetch(`world/${this.worldId}`);
+    this.worldId = worldId;
     return this.world = world;
   }
 }

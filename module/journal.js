@@ -3,7 +3,7 @@ import {importArticle} from "./framework.js";
 /**
  * A World Anvil Directory that allows you to see and manage your World Anvil content in Foundry VTT
  */
-export default class WorldAnvilJournal extends Application {
+export default class WorldAnvilBrowser extends Application {
 
   /** @override */
   static get defaultOptions() {
@@ -35,7 +35,7 @@ export default class WorldAnvilJournal extends Application {
 
   /** @override */
   async getData() {
-    const world = this.anvil.world || await this.anvil.getWorld();
+    const world = this.anvil.world || await this.anvil.getWorld(this.anvil.worldId);
     const categories = await this.getArticleCategories();
     return {
       world: world,
@@ -125,13 +125,13 @@ export default class WorldAnvilJournal extends Application {
           "flags.world-anvil.categoryId": category.id
         });
         for ( let a of category.articles ) {
-          await importArticle(a.id);
+          await importArticle(a.id, {renderSheet: false});
         }
         break;
       case "browse-folder":
         break;
       case "link-entry":
-        return await importArticle(button.dataset.articleId);
+        return await importArticle(button.dataset.articleId, {renderSheet: true});
       case "browse-entry":
         const entry = game.journal.get(button.dataset.entryId);
         entry.sheet.render(true);

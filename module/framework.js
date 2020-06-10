@@ -4,7 +4,7 @@
  * @param {JournalEntry|null} entry     An existing Journal Entry to sync
  * @return {Promise<JournalEntry>}
  */
-export async function importArticle(articleId, entry=null) {
+export async function importArticle(articleId, {entry=null, renderSheet=false}={}) {
   const anvil = game.modules.get("world-anvil").anvil;
   const article = await anvil.getArticle(articleId);
   const folder = game.folders.find(f => f.getFlag("world-anvil", "categoryId") === article.category.id);
@@ -12,11 +12,13 @@ export async function importArticle(articleId, entry=null) {
 
   // Update an existing Journal Entry
   if ( entry ) {
-    return entry.update({
+    await entry.update({
       name: article.title,
       content: content.html,
       img: content.img
     });
+    ui.notifications.info(`Refreshed World Anvil article ${article.title}`);
+    return entry;
   }
 
   // Create a new Journal Entry
@@ -26,7 +28,7 @@ export async function importArticle(articleId, entry=null) {
     img: content.img,
     folder: folder ? folder.id : null,
     "flags.world-anvil.articleId": article.id
-  });
+  }, {renderSheet});
   ui.notifications.info(`Imported World Anvil article ${article.title}`);
   return entry;
 }
@@ -42,12 +44,11 @@ export async function importArticle(articleId, entry=null) {
  * @private
  */
 function _getArticleContent(article) {
-  let content = `<h1>${article.title}</h1>\n<p>${article.content_parsed}</p><hr/>`;
+  let content = `<h1>${article.title}</h1>\n<p><a href="${article.url}" title="${article.title} on World Anvil" target="_blank">${article.url}</a></p>\n<p>${article.content_parsed}</p><hr/>`;
   if ( article.sections ) {
-    for ( let [s, c] of Object.entries(article.sections) ) {
-      if ( s.endsWith("_parsed") ) {
-        content += `<h2>${s.replace("_parsed", "").titleCase()}</h2>\n<p>${c}</p><hr/>`;
-      }
+    for ( let [id, section] of Object.entries(article.sections) ) {
+      let title = section.title || id.titleCase();
+      content += `<h2>${title}</h2>\n<p>${section.content_parsed}</p><hr/>`;
     }
   }
 
@@ -68,6 +69,11 @@ function _getArticleContent(article) {
     img.title = i.title;
     i.parentElement.replaceChild(img, i);
     image = image || img;
+  });
+
+  // World Anvil Content Links
+  div.querySelectorAll('span[data-article-id]').forEach(s => {
+    s.classList.add("entity-link", "wa-link");
   });
 
   // Regex formatting

@@ -10,7 +10,8 @@ export default class WorldAnvilConfig extends FormApplication {
       id: "world-anvil-config",
       template: "modules/world-anvil/templates/config.html",
       width: 600,
-      height: "auto"
+      height: "auto",
+      closeOnSubmit: false
     });
   }
 
@@ -26,8 +27,30 @@ export default class WorldAnvilConfig extends FormApplication {
   /** @override */
   async getData() {
     const anvil = game.modules.get("world-anvil").anvil;
-    if ( !anvil.worlds.length ) await anvil.getWorlds();
+
+    // Determine the configuration step
+    let stepNumber = 0;
+    let stepLabel = "WA.ConfigureStep3";
+    if ( !anvil.user ) {
+      stepLabel = "WA.ConfigureStep1";
+      stepNumber = 1;
+    }
+    else if ( !anvil.worldId ) {
+      stepLabel = "WA.ConfigureStep2";
+      stepNumber = 2;
+    }
+    else stepNumber = 3;
+
+    // If we have reached step 3, we can safely close the form when it is submitted
+    if ( stepNumber === 3 ) this.options.closeOnSubmit = true;
+
+    // Maybe retrieve a list of world options
+    if ( anvil.user && !anvil.worlds.length ) await anvil.getWorlds();
+
+    // Return the template data for rendering
     return {
+      stepLabel: stepLabel,
+      displayWorldChoices: stepNumber >= 2,
       worlds: anvil.worlds,
       worldId: anvil.worldId,
       authToken: anvil.authToken
@@ -38,9 +61,7 @@ export default class WorldAnvilConfig extends FormApplication {
 
   /** @override */
   _updateObject(event, formData) {
-    for ( let [k, v] of Object.entries(formData) ) {
-      game.settings.set("world-anvil", k, v);
-    }
+    game.settings.set("world-anvil", "configuration", formData);
   }
 
 	/* -------------------------------------------- */
@@ -61,32 +82,18 @@ export default class WorldAnvilConfig extends FormApplication {
     });
 
     // Auth User Key
-    game.settings.register("world-anvil", "authToken", {
-      name: "WA.UserToken",
-      hint: "WA.UserTokenHint",
+    game.settings.register("world-anvil", "configuration", {
       scope: "world",
       config: false,
       default: null,
-      type: String,
-      onChange: token => {
+      type: Object,
+      onChange: async c => {
         const anvil = game.modules.get("world-anvil").anvil;
-        if ( token !== anvil.authToken ) anvil.connect(token);
+        if ( c.authToken !== anvil.authToken ) await anvil.connect(c.authToken);
+        if ( c.worldId !== anvil.worldId ) await anvil.getWorld(c.worldId);
+        const app = Object.values(ui.windows).find(a => a.constructor === WorldAnvilConfig);
+        if ( app ) app.render();
       }
     });
-
-    // Associated World ID
-    game.settings.register("world-anvil", "worldId", {
-      name: "WA.WorldId",
-      hint: "WA.WorldIdHint",
-      scope: "world",
-      config: false,
-      default: null,
-      type: String,
-      onChange: worldId => {
-        const anvil = game.modules.get("world-anvil").anvil;
-        anvil.worldId = worldId;
-        anvil.getWorld(worldId);
-      }
-    })
   }
 }

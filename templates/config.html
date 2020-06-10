@@ -1,10 +1,13 @@
 <form>
+    <p class="notification info">{{localize stepLabel}}</p>
+
     <div class="form-group">
         <label>{{localize "WA.UserToken"}}</label>
         <input type="text" name="authToken" value="{{authToken}}"/>
         <p class="notes">{{localize "WA.UserTokenHint"}}</p>
     </div>
 
+    {{#if displayWorldChoices }}
     <div class="form-group">
         <label>{{localize "WA.WorldId"}}</label>
         <select name="worldId">
@@ -17,6 +20,7 @@
         </select>
         <p class="notes">{{localize "WA.WorldIdHint"}}</p>
     </div>
+    {{/if}}
 
     <button type="submit">{{localize "Save Changes"}}</button>
 </form>

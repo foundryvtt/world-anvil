@@ -3,6 +3,11 @@
   "WA.ConfigureMenu": "World Anvil Integration",
   "WA.ConfigureLabel": "World Anvil Integration",
   "WA.ConfigureHint": "Configure your World Anvil integration.",
+
+  "WA.ConfigureStep1": "Step 1: Provide a World Anvil user authorization Token from the API Keys Management section of your World Anvil User Dashboard.",
+  "WA.ConfigureStep2": "Step 2: Choose which of your available World Anvil worlds you would like to associated with this Foundry VTT World.",
+  "WA.ConfigureStep3": "Your World Anvil integration is properly configured!",
+
   "WA.UserToken": "User Authentication Token",
   "WA.UserTokenHint": "Enter a World Anvil user authentication token for your World Anvil account on the Account Management page of your World Anvil user profile.",
   "WA.WorldId": "Select World",
