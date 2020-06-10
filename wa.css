@@ -1,0 +1,67 @@
+button#world-anvil {
+    flex: 0 0 32px;
+}
+
+button#world-anvil img {
+    position: relative;
+    top: 4px;
+    border: none;
+}
+
+.world-anvil .world-description {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+
+.world-anvil header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+}
+.world-anvil header.section {
+    border-bottom: 2px solid darkred;
+    margin-bottom: 5px;
+}
+.world-anvil header h2 {
+    border-bottom: none;
+    margin: 0;
+}
+.world-anvil header h3 {
+    margin: 0;
+}
+.world-anvil header .controls {
+    flex: 1;
+    text-align: right;
+}
+
+
+.world-anvil .world-anvil-link {
+    flex: 1;
+    margin: 0;
+    padding-left: 20px;
+    background-image: url(icons/wa-icon.svg);
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    background-position: 0 50%;
+    color: #191813;
+    text-decoration: none;
+}
+
+.world-anvil a.article-link {
+    color: #191813;
+    text-decoration: none;
+}
+
+.world-anvil .world-anvil-control {
+    width: auto;
+    height: 24px;
+    margin: 0;
+    padding: 0 4px;
+    line-height: 24px;
+    text-align: center;
+
+}
+

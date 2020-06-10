@@ -10,8 +10,7 @@ export default class WorldAnvilConfig extends FormApplication {
       id: "world-anvil-config",
       template: "modules/world-anvil/templates/config.html",
       width: 600,
-      height: "auto",
-      closeOnSubmit: false
+      height: "auto"
     });
   }
 
@@ -25,8 +24,9 @@ export default class WorldAnvilConfig extends FormApplication {
 	/* -------------------------------------------- */
 
   /** @override */
-  getData() {
+  async getData() {
     const anvil = game.modules.get("world-anvil").anvil;
+    if ( !anvil.worlds.length ) await anvil.getWorlds();
     return {
       worlds: anvil.worlds,
       worldId: anvil.worldId,
@@ -69,7 +69,8 @@ export default class WorldAnvilConfig extends FormApplication {
       default: null,
       type: String,
       onChange: token => {
-        game.modules.get("world-anvil").anvil.connect(token)
+        const anvil = game.modules.get("world-anvil").anvil;
+        if ( token !== anvil.authToken ) anvil.connect(token);
       }
     });
 
@@ -82,7 +83,9 @@ export default class WorldAnvilConfig extends FormApplication {
       default: null,
       type: String,
       onChange: worldId => {
-        game.modules.get("world-anvil").anvil.worldId = worldId;
+        const anvil = game.modules.get("world-anvil").anvil;
+        anvil.worldId = worldId;
+        anvil.getWorld(worldId);
       }
     })
   }

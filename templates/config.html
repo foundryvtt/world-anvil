@@ -1,7 +1,7 @@
 <form>
     <div class="form-group">
         <label>{{localize "WA.UserToken"}}</label>
-        <input type="text" name="authToken" value="{{authToken}}" required/>
+        <input type="text" name="authToken" value="{{authToken}}"/>
         <p class="notes">{{localize "WA.UserTokenHint"}}</p>
     </div>
 
@@ -11,7 +11,7 @@
             {{#select worldId}}
             <option value=""></option>
             {{#each worlds}}
-            <option value="{{this}}">{{this}}</option>
+            <option value="{{this.id}}">{{this.name}}</option>
             {{/each}}
             {{/select}}
         </select>

@@ -38,6 +38,16 @@ export default class WorldAnvil {
 	/* -------------------------------------------- */
 
   /**
+   * Report whether we have connected to the World Anvil service by obtaining the User
+   * @return {boolean}
+   */
+  get connected() {
+    return !!this.user;
+  }
+
+	/* -------------------------------------------- */
+
+  /**
    * Submit an API request to a World Anvil API endpoint
    * @param {string} endpoint     The endpoint name
    * @param {object} params       Additional request parameters
@@ -57,7 +67,7 @@ export default class WorldAnvil {
     endpoint += "?"+query;
 
     // Submit the request
-    console.log(`[World Anvil] Submitting API request to ${endpoint}`);
+    console.log(`World Anvil | Submitting API request to ${endpoint}`);
     const response = await fetch(endpoint, {
       method: "GET",
       headers: {
@@ -79,7 +89,7 @@ export default class WorldAnvil {
   async connect(authToken) {
     if ( authToken ) this.authToken = authToken;
     this.user = await this.getUser();
-    console.log(`Connected to World Anvil API as User ${this.user.username}`);
+    console.log(`World Anvil | Connected to World Anvil API as User ${this.user.username}`);
   }
 
 	/* -------------------------------------------- */
@@ -98,11 +108,12 @@ export default class WorldAnvil {
   /**
    * Fetch all articles from within a World, optionally filtering with a specific search query
    * @param {string} worldId        The World ID
-   * @param {string} [search]       An optional search string
+   * @param {object} [params]       An optional search string
    * @return {Promise<object[]>}    An array of Article objects
    */
-  async getArticles(worldId, search) {
-    return this._fetch(`world/${worldId}/articles`);
+  async getArticles(worldId, params={}) {
+    worldId = worldId || this.worldId;
+    return this._fetch(`world/${worldId}/articles`, params);
   }
 
 	/* -------------------------------------------- */
@@ -118,11 +129,27 @@ export default class WorldAnvil {
 	/* -------------------------------------------- */
 
   /**
-   * Fetch the data for a World
-   * @param {string} worldId
+   * Fetch the available Worlds for the current User.
+   * Cache the list of worlds in the API object for later reference.
    * @return {Promise<object>}
    */
+  async getWorlds() {
+    if ( !this.connected ) return [];
+    const request = await this._fetch(`user/${this.user.id}/worlds`);
+    return this.worlds = request.worlds;
+  }
+
+	/* -------------------------------------------- */
+
+  /**
+   * Fetch the complete data for a specific World and cache it to the API object
+   * @param {string} worldId        The World ID
+   * @return {Promise<object>}    An array of Article objects
+   */
   async getWorld(worldId) {
-    return this._fetch(`world/${worldId}`);
+    worldId = worldId || this.worldId;
+    if ( !worldId ) throw new Error("You must first identify a World Id to integrate with");
+    const world = await this._fetch(`world/${worldId}`);
+    return this.world = world;
   }
 }
