@@ -32,7 +32,7 @@ When importing a category, it will become a Folder in your Journal sidebar and a
 
 When importing a single article, it will become a new Journal Entry in your Journal sidebar which you can move to a Folder of your choice.
 
-![World Anvil Browser]["docs/wa-browser.jpg"]
+![World Anvil Browser](https://foundryvtt.s3.us-west-2.amazonaws.com/website-media-dev/user_1/screen/world-anvil-browser-2020-06-10.jpg)
 
 -----
 
