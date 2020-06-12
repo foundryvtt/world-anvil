@@ -37,6 +37,7 @@ button#world-anvil img {
 .world-anvil .world-description {
     max-height: 200px;
     overflow-y: auto;
+    scrollbar-width: thin;
 }
 
 .world-anvil header {
@@ -87,5 +88,31 @@ button#world-anvil img {
     line-height: 24px;
     text-align: center;
 
+}
+
+
+/** --------------------------------------------
+    Journal Entries
+--------------------------------------------- */
+
+.journal-sheet.world-anvil .image-thumb-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.journal-sheet.world-anvil .image-thumb-container img {
+    max-width: 320px;
+    max-height: 480px;
+}
+
+dt {
+    font-weight: bold;
+}
+
+dd {
+    padding-left: 5px;
+    margin: 3px 0;
 }
 

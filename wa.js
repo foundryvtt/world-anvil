@@ -15,6 +15,9 @@ Hooks.once("init", () => {
   // Register the World Anvil module
   const module = game.modules.get("world-anvil");
   module.anvil = new WorldAnvil();
+
+  // Register some helper functions
+  module.importArticle = importArticle;
 });
 
 
@@ -25,12 +28,11 @@ Hooks.once("init", () => {
  * Initialization actions taken once data sources are ready
  */
 Hooks.once("ready", () => {
+  if ( !game.user.isGM ) return;
 
-  // Connect to World Anvil, if the user can create Journal content
-  if ( game.user.can("JOURNAL_CREATE") ) {
-    const anvil = game.modules.get("world-anvil").anvil;
-    anvil.connect();
-  }
+  // Connect to World Anvil
+  const anvil = game.modules.get("world-anvil").anvil;
+  anvil.connect();
 });
 
 
@@ -41,6 +43,7 @@ Hooks.once("ready", () => {
  * Add the World Anvil configuration button to the Journal Directory
  */
 Hooks.on("renderJournalDirectory", (app, html, data) => {
+  if ( !game.user.isGM ) return;
 
   // Add the World Anvil Button
   const button = $(`<button type="button" id="world-anvil">
@@ -71,27 +74,44 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
  * Augment rendered Journal sheets to add WorldAnvil content
  */
 Hooks.on("renderJournalSheet", (app, html, data) => {
+
+  // Get the rendered Journal entry
   const entry = app.object;
   const articleId = entry.getFlag("world-anvil", "articleId");
   if ( !articleId ) return;
 
-  // Add header button to re-sync
-  let title = html.find(".window-title");
-  if ( title ) {
-    const sync = $(`<a class="wa-sync"><i class="fas fa-sync"></i>WA Sync</a>`);
-    sync.on("click", event => {
-      event.preventDefault();
-      importArticle(articleId, {entry});
-    });
-    title.after(sync);
+  // Add header button to re-sync (GM Only)
+  if ( game.user.isGM ) {
+    let title = html.find(".window-title");
+    if (title) {
+      html.addClass("world-anvil");
+      const sync = $(`<a class="wa-sync"><i class="fas fa-sync"></i>${game.i18n.localize("WA.Sync")}</a>`);
+      sync.on("click", event => {
+        event.preventDefault();
+        importArticle(articleId, {entry});
+      });
+      title.after(sync);
+    }
   }
 
   // Activate cross-link listeners
   html.find(".wa-link").click(event => {
     event.preventDefault();
     const articleId = event.currentTarget.dataset.articleId;
+
+    // View an existing linked article (OBSERVER+)
     const entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
-    if ( entry ) entry.sheet.render(true);
-    else importArticle(articleId, {renderSheet: true});
+    if ( entry ) {
+      if ( !entry.hasPerm(game.user, "OBSERVER") ) {
+        return ui.notifications.warn(game.i18n.localize("WA.NoPermissionView"));
+      }
+      return entry.sheet.render(true);
+    }
+
+    // Import a new article (GM Only)
+    if ( !game.user.isGM ) {
+      return ui.notifications.warn(game.i18n.localize("WA.NoPermissionView"));
+    }
+    return importArticle(articleId, {renderSheet: true});
   });
 });

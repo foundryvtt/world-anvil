@@ -44,13 +44,39 @@ export async function importArticle(articleId, {entry=null, renderSheet=false}={
  * @private
  */
 function _getArticleContent(article) {
-  let content = `<h1>${article.title}</h1>\n<p><a href="${article.url}" title="${article.title} on World Anvil" target="_blank">${article.url}</a></p>\n<p>${article.content_parsed}</p><hr/>`;
+  let body = "";
+  let aside = "";
+
+  // Article sections
   if ( article.sections ) {
     for ( let [id, section] of Object.entries(article.sections) ) {
       let title = section.title || id.titleCase();
-      content += `<h2>${title}</h2>\n<p>${section.content_parsed}</p><hr/>`;
+      if ( title === "Sidebarcontent" ) title = "General Details";
+
+      // Determine whether the section is body vs. aside (if short)
+      if ( section.content.length > 100 ) {
+        body += `<h2>${title}</h2>\n<p>${section.content_parsed}</p><hr/>`;
+      } else {
+        aside += `<dt>${title}</dt><dd>${section.content_parsed}</dd>`
+      }
     }
   }
+
+  // Article relations
+  if ( article.relations ) {
+    for ( let [id, section] of Object.entries(article.relations) ) {
+      const title = section.title || id.titleCase();
+      const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
+      const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
+      aside += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
+    }
+  }
+
+  // Combine content sections
+  let content = `<h1>${article.title}</h1>\n`;
+  content += `<p><a href="${article.url}" title="${article.title} ${game.i18n.localize("WA.OnWA")}" target="_blank">${article.url}</a></p>\n<p>${article.content_parsed}</p><hr/>`;
+  if ( aside ) content += `<aside><dl>${aside}</dl></aside>`;
+  if ( body ) content += body;
 
   // HTML formatting
   const div = document.createElement("div");
@@ -62,13 +88,20 @@ function _getArticleContent(article) {
 
   // Images
   let image = null;
+
+  // Portrait Image
+  if ( article.portrait ) {
+    image = article.portrait.url.replace("http://", "https://");
+  }
+
+  // Image from body
   div.querySelectorAll("img").forEach(i => {
     let img = new Image();
     img.src = `https://worldanvil.com${i.getAttribute("src")}`;
     img.alt = i.alt;
     img.title = i.title;
     i.parentElement.replaceChild(img, i);
-    image = image || img;
+    image = image || img.src;
   });
 
   // World Anvil Content Links
@@ -83,6 +116,6 @@ function _getArticleContent(article) {
   // Return content and image
   return {
     html: html,
-    img: image ? image.src : null
+    img: image
   }
 }

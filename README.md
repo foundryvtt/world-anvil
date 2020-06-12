@@ -34,6 +34,12 @@ When importing a single article, it will become a new Journal Entry in your Jour
 
 ![World Anvil Browser](https://foundryvtt.s3.us-west-2.amazonaws.com/website-media-dev/user_1/screen/world-anvil-browser-2020-06-10.jpg)
 
+### Permission Controls
+
+All functionality of this module is restricted to Gamemaster users only.
+
+This module does not currently attempt to preserve permission or visibility control settings from World Anvil when importing content into Foundry VTT. Instead any imported content will be private only for the Gamemaster user who imported it.
+
 -----
 
 ## Updating/Syncing an Article

@@ -69,12 +69,7 @@ export default class WorldAnvil {
 
     // Submit the request
     console.log(`World Anvil | Submitting API request to ${endpoint}`);
-    const response = await fetch(endpoint, {
-      method: "GET",
-      headers: {
-        "User-Agent": `Foundry Virtual Tabletop, ${game.data.version}`,
-      }
-    });
+    const response = await fetch(endpoint);
     if ( response.status !== 200 ) {
       throw new Error(`World Anvil API request failed for endpoint ${endpoint}`);
     }

@@ -11,5 +11,9 @@
   "WA.UserToken": "User Authentication Token",
   "WA.UserTokenHint": "Enter a World Anvil user authentication token for your World Anvil account on the Account Management page of your World Anvil user profile.",
   "WA.WorldId": "Select World",
-  "WA.WorldIdHint": "Choose World from World Anvil that should be mapped to this World in Foundry Virtual Tabletop."
+  "WA.WorldIdHint": "Choose World from World Anvil that should be mapped to this World in Foundry Virtual Tabletop.",
+  "WA.NoPermissionView": "You do not have permission to view this linked Article.",
+
+  "WA.Sync": "WA Sync",
+  "WA.OnWA": "on World Anvil"
 }
