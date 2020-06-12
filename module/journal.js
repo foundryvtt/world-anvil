@@ -136,6 +136,13 @@ export default class WorldAnvilBrowser extends Application {
         const entry = game.journal.get(button.dataset.entryId);
         entry.sheet.render(true);
         break;
+      case "sync-folder":
+        let wa_category = this.categories.find(c => c.id === button.dataset.categoryId);
+        for ( let a of wa_category.articles ) {
+          let article = game.journal.find(e => e.getFlag("world-anvil", "articleId") === a.id);
+          await importArticle(a.id, {entry: article, renderSheet: false});
+        }
+        break;
     }
   }
 }
