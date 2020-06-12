@@ -17,7 +17,7 @@
             </h2>
             <div class="controls">
                 {{#if c.link }}
-                <button type="button" class="world-anvil-control" data-action="sync-folder" data-category-id="{{ c.id }}" data-folder-id="{{ c.link.id }}">
+                <button type="button" class="world-anvil-control" data-action="sync-folder" data-category-id="{{ c.id }}" data-folder-id="{{ c.link.id }}" title="{{ localize 'WA.SyncFolder' }}">
                     <i class="fas fa-sync"></i>
                 </button>
                 <button type="button" class="world-anvil-control" data-action="browse-folder" data-folder-id="{{ c.link.id }}">
@@ -34,7 +34,7 @@
         <article>
             <header>
                 <h3>
-                    <a class="article-link" href="{{ a.url }}" title="{{ a.title }} {{ localize 'WA.OnWA' }}" target="_blank">{{ a.title }}</a>
+                    <a class="article-link" href="{{ a.url }}" title="{{ a.title }} {{ localize 'WA.OnWA' }}" target="_blank" data-article-id="{{ a.id }}">{{ a.title }}</a>
                 </h3>
                 <div class="controls">
                     {{#if a.link }}

@@ -7,7 +7,8 @@
 export async function importArticle(articleId, {entry=null, renderSheet=false}={}) {
   const anvil = game.modules.get("world-anvil").anvil;
   const article = await anvil.getArticle(articleId);
-  const folder = game.folders.find(f => f.getFlag("world-anvil", "categoryId") === article.category.id);
+  const categoryId = article.category ? article.category.id : "0";
+  const folder = game.folders.find(f => f.getFlag("world-anvil", "categoryId") === categoryId);
   const content = _getArticleContent(article);
 
   // Update an existing Journal Entry

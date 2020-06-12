@@ -124,10 +124,9 @@ export default class WorldAnvilBrowser extends Application {
           parent: null,
           "flags.world-anvil.categoryId": category.id
         });
-        for ( let a of category.articles ) {
-          await importArticle(a.id, {renderSheet: false});
-        }
-        break;
+        return Promise.all(category.articles.map(a => {
+          return importArticle(a.id, {renderSheet: false});
+        }));
       case "browse-folder":
         break;
       case "link-entry":
@@ -138,11 +137,10 @@ export default class WorldAnvilBrowser extends Application {
         break;
       case "sync-folder":
         let wa_category = this.categories.find(c => c.id === button.dataset.categoryId);
-        for ( let a of wa_category.articles ) {
+        return Promise.all(wa_category.articles.map(a => {
           let article = game.journal.find(e => e.getFlag("world-anvil", "articleId") === a.id);
-          await importArticle(a.id, {entry: article, renderSheet: false});
-        }
-        break;
+          return importArticle(a.id, {entry: article, renderSheet: false});
+        }));
     }
   }
 }
