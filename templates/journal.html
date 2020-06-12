@@ -17,6 +17,9 @@
             </h2>
             <div class="controls">
                 {{#if c.link }}
+                <button type="button" class="world-anvil-control" data-action="sync-folder" data-category-id="{{ c.id }}" data-folder-id="{{ c.link.id }}">
+                    <i class="fas fa-sync"></i>
+                </button>
                 <button type="button" class="world-anvil-control" data-action="browse-folder" data-folder-id="{{ c.link.id }}">
                     <i class="fas fa-folder"></i> {{ c.link.name }}
                 </button>
