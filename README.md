@@ -2,6 +2,8 @@
 
 This module provides an integration with [World Anvil](https://worldanvil.com) for Foundry Virtual Tabletop, allowing you to import article content from World Anvil into the Foundry VTT journal system and easily keep that content synchronized over time as you update and create articles on the World Anvil platform.
 
+Watch the following video to learn more about this module and how to use it: https://www.youtube.com/watch?v=o9DMELe7G_o
+
 -----
 
 ## Installation
@@ -58,3 +60,9 @@ This software is licensed under the MIT License. See the LICENSE.txt file in thi
 
 If you would like to contribute to making this software better, merge requests are welcomed. In your merge request, please include a clear description of the change you are making and be prepared to engage with me for 1-2 rounds of code review.
 
+### Contributors
+
+Thanks to the following individuals for their contributions to this module.
+
+* Dimitris from World Anvil
+* Megastrukur
