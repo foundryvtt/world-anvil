@@ -90,9 +90,11 @@ function _getArticleContent(article) {
   // Images
   let image = null;
 
-  // Portrait Image
+  // Portrait Image as Featured or Cover image if no Portrait
   if ( article.portrait ) {
     image = article.portrait.url.replace("http://", "https://");
+  } else if ( article.cover ) {
+    image = article.cover.url.replace("http://", "https://");
   }
 
   // Image from body
@@ -102,7 +104,6 @@ function _getArticleContent(article) {
     img.alt = i.alt;
     img.title = i.title;
     i.parentElement.replaceChild(img, i);
-    image = image || img.src;
   });
 
   // World Anvil Content Links
