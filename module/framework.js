@@ -87,10 +87,8 @@ function _getArticleContent(article) {
   const t = document.createTextNode("%p%");
   div.querySelectorAll("span.line-spacer").forEach(s => s.parentElement.replaceChild(t.cloneNode(), s));
 
-  // Images
-  let image = null;
-
   // Portrait Image as Featured or Cover image if no Portrait
+  let image = null;
   if ( article.portrait ) {
     image = article.portrait.url.replace("http://", "https://");
   } else if ( article.cover ) {
@@ -104,6 +102,7 @@ function _getArticleContent(article) {
     img.alt = i.alt;
     img.title = i.title;
     i.parentElement.replaceChild(img, i);
+    image = image || img.src;
   });
 
   // World Anvil Content Links

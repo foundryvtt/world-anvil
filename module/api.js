@@ -116,8 +116,10 @@ export default class WorldAnvil {
     let result = null;
     while ( hasMore ) {
       let batch = await this._fetch(`world/${this.worldId}/articles`, params);
-      hasMore = batch.articles.length === params.limit;  // There may be more
-      params.offset += batch.articles.length; // Increment the pagination
+      batch.articles = batch.articles || [];
+      const nReturned = batch.articles.length;
+      hasMore = nReturned === params.limit;  // There may be more
+      params.offset += nReturned; // Increment the pagination
       if ( !result ) result = batch;  // Store the 1st result
       else result.articles = result.articles.concat(batch.articles); // Append additional results
     }
