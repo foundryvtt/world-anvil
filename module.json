@@ -2,7 +2,7 @@
   "name": "world-anvil",
   "title": "World Anvil Integration",
   "description": "<p>A module to integrate <a href=\"https://worldanvil.com\" title=\"World Anvil\" target=\"_blank\">World Anvil</a> with Foundry Virtual Tabletop.</p>",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minimumCoreVersion": "0.6.0",
   "compatibleCoreVersion": "0.7.0",
   "author": "Atropos",
@@ -18,5 +18,5 @@
   ],
   "url": "https://gitlab.com/foundrynet/world-anvil",
   "manifest": "https://gitlab.com/foundrynet/world-anvil/-/raw/master/module.json",
-  "download": "https://gitlab.com/foundrynet/world-anvil/-/archive/release-1.0.1/world-anvil-release-1.0.1.zip"
+  "download": "https://gitlab.com/foundrynet/world-anvil/-/archive/release-1.0.2/world-anvil-release-1.0.2.zip"
 }

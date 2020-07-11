@@ -63,6 +63,7 @@ button#world-anvil img {
     text-align: right;
 }
 
+/* Article Links */
 .world-anvil .world-anvil-link {
     flex: 1;
     margin: 0;
@@ -87,9 +88,24 @@ button#world-anvil img {
     padding: 0 4px;
     line-height: 24px;
     text-align: center;
-
 }
 
+/* Article Filters */
+.world-anvil .article-filters {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    justify-content: flex-end;
+    align-items: center;
+}
+.world-anvil .article-filters li {
+    flex: none;
+    margin-left: 3px
+}
+.world-anvil .article-filters button.world-anvil-control.inactive {
+    opacity: 0.65;
+}
 
 /** --------------------------------------------
     Journal Entries

@@ -1,5 +1,6 @@
 /**
  * A collection of methods for interacting with the World Anvil API
+ * https://www.worldanvil.com/api/aragorn/documentation
  */
 export default class WorldAnvil {
   constructor() {

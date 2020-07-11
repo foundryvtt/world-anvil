@@ -61,6 +61,7 @@ export default class WorldAnvilConfig extends FormApplication {
 
   /** @override */
   _updateObject(event, formData) {
+    formData.authToken = formData.authToken.trim();
     game.settings.set("world-anvil", "configuration", formData);
   }
 

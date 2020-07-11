@@ -9,6 +9,18 @@
     </section>
     <hr/>
 
+    <ul class="article-filters">
+        <li>
+            <button type="button" class="world-anvil-control {{#unless displayDraft}}inactive{{/unless}}" data-action="toggle-drafts">
+                <i class="fas fa-feather-alt"></i> Display Drafts
+            </button>
+        <li>
+            <button type="button" class="world-anvil-control {{#unless displayWIP}}inactive{{/unless}}" data-action="toggle-wip">
+                <i class="fas fa-hammer"></i> Display Work in Progress
+            </button>
+        </li>
+    </ul>
+
     {{#each categories as |c|}}
     <section class="world-articles">
         <header class="section">

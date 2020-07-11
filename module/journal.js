@@ -4,6 +4,13 @@ import {importArticle} from "./framework.js";
  * A World Anvil Directory that allows you to see and manage your World Anvil content in Foundry VTT
  */
 export default class WorldAnvilBrowser extends Application {
+  constructor(...args) {
+    super(...args);
+    this._displayDraft = true;
+    this._displayWIP = true;
+  }
+
+	/* -------------------------------------------- */
 
   /** @override */
   static get defaultOptions() {
@@ -39,7 +46,9 @@ export default class WorldAnvilBrowser extends Application {
     const categories = await this.getArticleCategories();
     return {
       world: world,
-      categories: categories
+      categories: categories,
+      displayDraft: this._displayDraft,
+      displayWIP: this._displayWIP
     }
   }
 
@@ -58,6 +67,10 @@ export default class WorldAnvilBrowser extends Application {
 
     // Organize the articles by category
     const categoryMap = articles.reduce((categories, a) => {
+
+      // Exclude drafts or WIP
+      if ( a.is_draft && !this._displayDraft ) return categories;
+      if ( a.is_wip && !this._displayWIP ) return categories;
 
       // Reference or create the category
       let c = a.category || {id: "0", title: "Uncategorized Articles"};
@@ -141,6 +154,12 @@ export default class WorldAnvilBrowser extends Application {
           let article = game.journal.find(e => e.getFlag("world-anvil", "articleId") === a.id);
           return importArticle(a.id, {entry: article, renderSheet: false});
         }));
+      case "toggle-drafts":
+        this._displayDraft = !this._displayDraft;
+        return this.render();
+      case "toggle-wip":
+        this._displayWIP = !this._displayWIP;
+        return this.render();
     }
   }
 }

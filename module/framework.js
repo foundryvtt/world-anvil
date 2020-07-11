@@ -79,6 +79,9 @@ function _getArticleContent(article) {
   if ( aside ) content += `<aside><dl>${aside}</dl></aside>`;
   if ( body ) content += body;
 
+  // Disable image source attributes so that they do not begin loading immediately
+  content = content.replace(/src=/g, "data-src=");
+
   // HTML formatting
   const div = document.createElement("div");
   div.innerHTML = content;
@@ -98,7 +101,8 @@ function _getArticleContent(article) {
   // Image from body
   div.querySelectorAll("img").forEach(i => {
     let img = new Image();
-    img.src = `https://worldanvil.com${i.getAttribute("src")}`;
+    img.src = `https://worldanvil.com${i.dataset.src}`;
+    delete i.dataset.src;
     img.alt = i.alt;
     img.title = i.title;
     i.parentElement.replaceChild(img, i);
@@ -106,8 +110,16 @@ function _getArticleContent(article) {
   });
 
   // World Anvil Content Links
-  div.querySelectorAll('span[data-article-id]').forEach(s => {
-    s.classList.add("entity-link", "wa-link");
+  div.querySelectorAll('span[data-article-id]').forEach(el => {
+    el.classList.add("entity-link", "wa-link");
+  });
+  div.querySelectorAll('a[data-article-id]').forEach(el => {
+    el.classList.add("entity-link", "wa-link");
+    const span = document.createElement("span");
+    span.classList = el.classList;
+    Object.entries(el.dataset).forEach(e => span.dataset[e[0]] = e[1]);
+    span.textContent = el.textContent;
+    el.replaceWith(span);
   });
 
   // Regex formatting
