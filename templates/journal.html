@@ -11,6 +11,13 @@
 
     <ul class="article-filters">
         <li>
+            {{#if worldCss}}
+            <button type="button" class="world-anvil-control" data-action="world-css">
+                <i class="fas fa-file-code"></i> Regenerate World CSS
+            </button>
+            {{/if}}
+        <li>
+        <li>
             <button type="button" class="world-anvil-control {{#unless displayDraft}}inactive{{/unless}}" data-action="toggle-drafts">
                 <i class="fas fa-feather-alt"></i> Display Drafts
             </button>

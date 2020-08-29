@@ -53,7 +53,9 @@ export default class WorldAnvilConfig extends FormApplication {
       displayWorldChoices: stepNumber >= 2,
       worlds: anvil.worlds,
       worldId: anvil.worldId,
-      authToken: anvil.authToken
+      authToken: anvil.authToken,
+      worldCssFlag: anvil.worldCssFlag,
+      articleCssFlag: anvil.articleCssFlag
     };
   }
 
@@ -95,6 +97,24 @@ export default class WorldAnvilConfig extends FormApplication {
         const app = Object.values(ui.windows).find(a => a.constructor === WorldAnvilConfig);
         if ( app ) app.render();
       }
+    });
+
+    game.settings.register("world-anvil", "worldCssFlag", {
+      name: "WA.UseWorldCSS",
+      hint: "WA.UseWorldCSSHint",
+      scope: "world",
+      config: true,
+      default: false,
+      type: Boolean
+    });
+
+    game.settings.register("world-anvil", "articleCssFlag", {
+      name: "WA.UseArticleCSS",
+      hint: "WA.UseArticleCSSHint",
+      scope: "world",
+      config: true,
+      default: false,
+      type: Boolean
     });
   }
 }

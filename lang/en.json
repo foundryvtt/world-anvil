@@ -14,6 +14,11 @@
   "WA.WorldIdHint": "Choose World from World Anvil that should be mapped to this World in Foundry Virtual Tabletop.",
   "WA.NoPermissionView": "You do not have permission to view this linked Article.",
 
+  "WA.UseWorldCSS": "Use World Anvil World CSS?",
+  "WA.UseWorldCSSHint": "Should imported articles use the World defined CSS",
+  "WA.UseArticleCSS": "Use World Anvil Article CSS?",
+  "WA.UseArticleCSSHint": "Should imported articles use the Article defined CSS",
+
   "WA.Sync": "WA Sync",
   "WA.SyncFolder": "Sync Category Folder",
   "WA.OnWA": "on World Anvil"

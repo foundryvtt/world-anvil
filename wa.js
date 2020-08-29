@@ -83,7 +83,7 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
   // Add header button to re-sync (GM Only)
   if ( game.user.isGM ) {
     let title = html.find(".window-title");
-    if (title) {
+    if ( title ) {
       html.addClass("world-anvil");
       const sync = $(`<a class="wa-sync"><i class="fas fa-sync"></i>${game.i18n.localize("WA.Sync")}</a>`);
       sync.on("click", event => {

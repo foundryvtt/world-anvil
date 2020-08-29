@@ -31,13 +31,25 @@ export default class WorldAnvil {
     this.worldId = config.worldId;
 
     /**
+     * The Flag to indicate the use of World level CSS
+     * @type{boolean|null}
+     */
+    this.worldCss = game.settings.get("world-anvil", "worldCssFlag");
+
+    /**
+     * The Flag to indicate the use of Article level CSS
+     * @type{boolean|null}
+     */
+    this.articleCss = game.settings.get("world-anvil", "articleCssFlag");
+
+    /**
      * The currently associated World Anvil User
      * @type {object|null}
      */
     this.user = null;
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Report whether we have connected to the World Anvil service by obtaining the User
@@ -47,7 +59,7 @@ export default class WorldAnvil {
     return !!this.user;
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Submit an API request to a World Anvil API endpoint
@@ -56,7 +68,7 @@ export default class WorldAnvil {
    * @return {Promise<object>}    The World Anvil API response
    * @private
    */
-  async _fetch(endpoint, params={}) {
+  async _fetch(endpoint, params = {}) {
     if ( !this.authToken ) throw new Error("An authentication token has not been set for the World Anvil API.");
 
     // Structure the endpoint
@@ -66,7 +78,7 @@ export default class WorldAnvil {
     params["x-application-key"] = this.applicationKey;
     params["x-auth-token"] = this.authToken;
     const query = Object.entries(params).map(e => `${e[0]}=${e[1]}`).join('&');
-    endpoint += "?"+query;
+    endpoint += "?" + query;
 
     // Submit the request
     console.log(`World Anvil | Submitting API request to ${endpoint}`);
@@ -77,7 +89,7 @@ export default class WorldAnvil {
     return response.json();
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Establish a new connection to the World Anvil API, obtaining a list of Worlds
@@ -90,7 +102,7 @@ export default class WorldAnvil {
     console.log(`World Anvil | Connected to World Anvil API as User ${this.user.username}`);
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Fetch
@@ -101,21 +113,21 @@ export default class WorldAnvil {
     return this._fetch(`article/${articleId}`);
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Fetch all articles from within a World, optionally filtering with a specific search query
    * @param {object} [params]       An optional query parameters
    * @return {Promise<object[]>}    An array of Article objects
    */
-  async getArticles(params={}) {
+  async getArticles(params = {}) {
     params.limit = parseInt(params.limit) || 50;
     params.offset = parseInt(params.offset) || 0;
 
     // Query paged articles until we have retrieved them all
     let hasMore = true;
     let result = null;
-    while ( hasMore ) {
+    while (hasMore) {
       let batch = await this._fetch(`world/${this.worldId}/articles`, params);
       batch.articles = batch.articles || [];
       const nReturned = batch.articles.length;
@@ -129,7 +141,7 @@ export default class WorldAnvil {
     return result;
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Fetch all articles from within a World, optionally filtering with a specific search query
@@ -139,7 +151,7 @@ export default class WorldAnvil {
     return this._fetch("user");
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Fetch the available Worlds for the current User.
@@ -152,7 +164,7 @@ export default class WorldAnvil {
     return this.worlds = request.worlds;
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Fetch the complete data for a specific World and cache it to the API object
@@ -164,5 +176,45 @@ export default class WorldAnvil {
     const world = await this._fetch(`world/${this.worldId}`);
     this.worldId = worldId;
     return this.world = world;
+  }
+
+
+  /**
+   * Prepare the provided CSS by:
+   *   - Replacing all instances of .user-css with .world-anvil
+   *   - Replacing all instances of .user-css-extended with .world-anvil
+   *
+   * Then, save the CSS to a local file and create a link element (as a string)
+   * to include in the content html.
+   *
+   * The provided name string will have any spaces replaced with '_' and the created
+   * file will have the .css extension
+   * @param css                   The CSS to save
+   * @param name                  The name string to be used for the file name
+   * @returns {Promise<string>}   The stylesheet link
+   */
+  async getCssLink(css, name) {
+
+    if ( ! css) return "";
+
+    name = name.replace(/\s/g, '_');
+
+    // Replace user-css and user-css-extended with world-anvil
+    //   - Removes stand alone class
+    css = css.replace(/\.user-css\S*,/g, "");
+    //   - Replaces stacked classes
+    css = css.replace(/\.user-css\S*[\n\s*]\.user-css\S*/g, ".word-anvil");
+    //   - Replaces the rest
+    css = css.replace(/\.user-css\S*/g, ".world-anvil");
+
+    // Store the css file locally for use in the articles
+    let file = new File([css], `${name}.css`);
+    const fd = new FormData();
+    fd.set("source", "data");
+    fd.set("target", "modules/world-anvil/assets");
+    fd.set("upload", file);
+    await fetch('/upload', {method: "POST", body: fd});
+
+    return `<link href="/modules/world-anvil/assets/${name}.css" rel="stylesheet">`;
   }
 }

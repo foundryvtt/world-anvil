@@ -48,7 +48,8 @@ export default class WorldAnvilBrowser extends Application {
       world: world,
       categories: categories,
       displayDraft: this._displayDraft,
-      displayWIP: this._displayWIP
+      displayWIP: this._displayWIP,
+      worldCss: game.settings.get("world-anvil", "worldCssFlag")
     }
   }
 
@@ -159,6 +160,10 @@ export default class WorldAnvilBrowser extends Application {
         return this.render();
       case "toggle-wip":
         this._displayWIP = !this._displayWIP;
+        return this.render();
+      case "world-css":
+        await this.anvil.getCssLink(this.anvil.world.display_css, this.anvil.world.name);
+        ui.notifications.info("World CSS Refreshed");
         return this.render();
     }
   }
