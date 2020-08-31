@@ -191,13 +191,15 @@ export default class WorldAnvil {
    * file will have the .css extension
    * @param css                   The CSS to save
    * @param name                  The name string to be used for the file name
+   * @param type                  The type of the CSS file (world or article)
    * @returns {Promise<string>}   The stylesheet link
    */
-  async getCSSLink(css, name) {
+  async getCSSLink(css, name, type) {
 
     if ( ! css) return "";
 
     name = name.replace(/\s/g, '_');
+    let vttWorldName = game.world.name;
 
     // Replace user-css and user-css-extended with world-anvil
     //   - Removes stand alone class
@@ -208,13 +210,13 @@ export default class WorldAnvil {
     css = css.replace(/\.user-css\S*/g, ".world-anvil");
 
     // Store the css file locally for use in the articles
-    let file = new File([css], `${name}.css`);
+    let file = new File([css], `${type}-${name}.css`);
     const fd = new FormData();
     fd.set("source", "data");
-    fd.set("target", "modules/world-anvil/assets");
+    fd.set("target", `worlds/${vttWorldName}/data`);
     fd.set("upload", file);
     await fetch('/upload', {method: "POST", body: fd});
 
-    return `<link href="/modules/world-anvil/assets/${name}.css" rel="stylesheet">`;
+    return `<link href="/worlds/${vttWorldName}/data/${type}-${name}.css" rel="stylesheet">`;
   }
 }

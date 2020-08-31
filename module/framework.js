@@ -7,11 +7,11 @@
 export async function importArticle(articleId, {entry=null, renderSheet=false}={}) {
   const anvil = game.modules.get("world-anvil").anvil;
   const article = await anvil.getArticle(articleId);
-  const worldCSSLink = anvil.enableWorldCSS ? await anvil.getCSSLink(anvil.world.display_css, anvil.world.name) : "";
-  const articleCssLink = anvil.enableArticleCSS ? await anvil.getCSSLink(article.css_styles, article.title) : "";
+  const worldCSSLink = anvil.enableWorldCSS ? await anvil.getCSSLink(anvil.world.display_css, anvil.world.name, "world") : "";
+  const articleCSSLink = anvil.enableArticleCSS ? await anvil.getCSSLink(article.css_styles, article.title, "article") : "";
   const categoryId = article.category ? article.category.id : "0";
   const folder = game.folders.find(f => f.getFlag("world-anvil", "categoryId") === categoryId);
-  const content = await _getArticleContent(article, worldCSSLink, articleCssLink);
+  const content = await _getArticleContent(article, worldCSSLink, articleCSSLink);
 
   // Update an existing Journal Entry
   if ( entry ) {
@@ -56,10 +56,23 @@ async function _getArticleContent(article, worldCSSLink, articleCSSLink) {
   }
 
   /**
-   * Need 3 sections.
-   * Main Article Content
-   * Main Article Sections
-   * Sidebar information
+   * From the article, gather the information into various types:
+   *    - The body of the article
+   *    - The side panel content (a top section and a bottom section)
+   *    - The side bar content (a top section and a bottom section)
+   *    - The article relationships (how this article relates to others)
+   *
+   * This is the default World Anvil article layout:
+   *    Left side of screen is the body
+   *    Right side of the screen is:
+   *      Side Bar Top
+   *      Panel Top
+   *      Relationships
+   *      Panel Bottom
+   *      Side Bar Bottom
+   *
+   *  Once the various sections are gathered, they are assembled into the
+   *  final Foundry Journal output.
    */
   // Article sections
   if ( article.sections ) {
@@ -84,8 +97,10 @@ async function _getArticleContent(article, worldCSSLink, articleCSSLink) {
     }
   }
 
+  let relationships = getRelations(article.relations);
+
   const div = document.createElement("div");
-  div.innerHTML = assembleContent(article, body, sidePanel);
+  div.innerHTML = assembleContent(article, body, sidePanel, relationships);
 
   // Paragraph Breaks
   const t = document.createTextNode("%p%");
@@ -185,12 +200,12 @@ function getRelations(relations) {
  * @param article     The article object
  * @param body        The body of the article
  * @param sidePanel   The side panel content of the article
+ * @param relationships The relations of this article to others
  * @returns {string}  The assembled content
  */
-function assembleContent(article, body, sidePanel) {
+function assembleContent(article, body, sidePanel, relationships) {
 
   let [leftColumnClass, rightColumnClass] = determineColumns(article);
-  let aside = getRelations(article.relations);
 
   let content = `<h1>${article.title}</h1>\n`;
   content += `<p><a href="${article.url}" title="${article.title} ${game.i18n.localize("WA.OnWA")}" target="_blank">${article.url}</a></p>\n<div class="article-container page"><div class="${leftColumnClass}">${article.content_parsed}`;
@@ -199,10 +214,10 @@ function assembleContent(article, body, sidePanel) {
   if ( sidePanel.sidebarTop || sidePanel.panelTop || aside || sidePanel.panelBottom || sidePanel.sidebarBottom ) {
     content += `<div class="${rightColumnClass}">`;
     if ( sidePanel.sidebarTop ) content += sidePanel.sidebarTop;
-    if ( aside || sidePanel.panelTop || sidePanel.panelBottom ) {
+    if ( relationships || sidePanel.panelTop || sidePanel.panelBottom ) {
       content += `<div class="panel panel-default"><div class="panel-body">`;
       if ( sidePanel.panelTop ) content += sidePanel.panelTop;
-      if ( aside ) content += aside;
+      if ( relationships ) content += relationships;
       if ( sidePanel.panelBottom ) content += sidePanel.panelBottom;
       content += `</div></div>`;
     }

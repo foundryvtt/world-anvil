@@ -162,7 +162,7 @@ export default class WorldAnvilBrowser extends Application {
         this._displayWIP = !this._displayWIP;
         return this.render();
       case "world-css":
-        await this.anvil.getCSSLink(this.anvil.world.display_css, this.anvil.world.name);
+        await this.anvil.getCSSLink(this.anvil.world.display_css, this.anvil.world.name, "world");
         ui.notifications.info("World CSS Refreshed");
         return this.render();
     }
