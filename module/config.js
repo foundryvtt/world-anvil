@@ -54,8 +54,8 @@ export default class WorldAnvilConfig extends FormApplication {
       worlds: anvil.worlds,
       worldId: anvil.worldId,
       authToken: anvil.authToken,
-      worldCssFlag: anvil.worldCssFlag,
-      articleCssFlag: anvil.articleCssFlag
+      enableWorldCSS: anvil.enableWorldCSS,
+      enableArticleCSS: anvil.enableArticleCSS
     };
   }
 
@@ -99,7 +99,7 @@ export default class WorldAnvilConfig extends FormApplication {
       }
     });
 
-    game.settings.register("world-anvil", "worldCssFlag", {
+    game.settings.register("world-anvil", "enableWorldCSS", {
       name: "WA.UseWorldCSS",
       hint: "WA.UseWorldCSSHint",
       scope: "world",
@@ -108,7 +108,7 @@ export default class WorldAnvilConfig extends FormApplication {
       type: Boolean
     });
 
-    game.settings.register("world-anvil", "articleCssFlag", {
+    game.settings.register("world-anvil", "enableArticleCSS", {
       name: "WA.UseArticleCSS",
       hint: "WA.UseArticleCSSHint",
       scope: "world",

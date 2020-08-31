@@ -1,13 +1,16 @@
+
+
 /** --------------------------------------------
     Global Styling Rules
 --------------------------------------------- */
+
 button#world-anvil {
-  flex: 0 0 32px;
+    flex: 0 0 32px;
 }
 button#world-anvil img {
-  position: relative;
-  top: 4px;
-  border: none;
+    position: relative;
+    top: 4px;
+    border: none;
 }
 .wa-link {
   margin: 0;
@@ -16,16 +19,14 @@ button#world-anvil img {
   text-shadow: 0 0 1px #ff6400;
 }
 .wa-link:hover {
-  text-shadow: 0 0 4px red;
-  cursor: pointer;
+    text-shadow: 0 0 4px red;
+    cursor: pointer;
 }
+
 /** --------------------------------------------
     Application Styling Rules
 --------------------------------------------- */
-.world-anvil {
-  /* Article Links */
-  /* Article Filters */
-}
+
 .world-anvil .window-header a {
   color: inherit;
 }
@@ -48,103 +49,161 @@ button#world-anvil img {
 .world-anvil .text-center {
   text-align: center !important;
 }
+.world-anvil .col-md-1 {
+    flex: 8%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-2 {
+    flex: 17%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
 .world-anvil .col-md-3 {
   flex: 25%;
   padding-left: 15px;
   padding-right: 15px;
+}
+.world-anvil .col-md-4 {
+    flex: 33%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-5 {
+    flex: 42%;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 .world-anvil .col-md-6 {
   flex: 50%;
   padding-left: 15px;
   padding-right: 15px;
 }
+.world-anvil .col-md-7 {
+    flex: 58%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-8 {
+    flex: 66%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
 .world-anvil .col-md-9 {
   flex: 75%;
   padding-left: 15px;
   padding-right: 15px;
 }
+.world-anvil .col-md-10 {
+    flex: 83%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-11 {
+    flex: 92%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-12 {
+    flex: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
 .world-anvil .world-description {
-  max-height: 200px;
-  overflow-y: auto;
-  scrollbar-width: thin;
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
 }
+
 .world-anvil header {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  align-items: center;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
 }
-.world-anvil header header.section {
-  border-bottom: 2px solid darkred;
-  margin-bottom: 5px;
+.world-anvil header.section {
+    border-bottom: 2px solid darkred;
+    margin-bottom: 5px;
 }
 .world-anvil header h2 {
-  border-bottom: none;
-  margin: 0;
+    border-bottom: none;
+    margin: 0;
 }
 .world-anvil header h3 {
-  margin: 0;
+    margin: 0;
 }
 .world-anvil header .controls {
-  flex: 1;
-  text-align: right;
+    flex: 1;
+    text-align: right;
 }
+
+/* Article Links */
 .world-anvil .world-anvil-link {
-  flex: 1;
-  margin: 0;
-  padding-left: 20px;
-  background-image: url(icons/wa-icon.svg);
-  background-repeat: no-repeat;
-  background-size: 16px 16px;
-  background-position: 0 50%;
-  color: #191813;
-  text-decoration: none;
+    flex: 1;
+    margin: 0;
+    padding-left: 20px;
+    background-image: url(icons/wa-icon.svg);
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    background-position: 0 50%;
+    color: #191813;
+    text-decoration: none;
 }
+
 .world-anvil a.article-link {
-  color: #191813;
-  text-decoration: none;
+    color: #191813;
+    text-decoration: none;
 }
+
 .world-anvil .world-anvil-control {
-  width: auto;
-  height: 24px;
-  margin: 0;
-  padding: 0 4px;
-  line-height: 24px;
-  text-align: center;
+    width: auto;
+    height: 24px;
+    margin: 0;
+    padding: 0 4px;
+    line-height: 24px;
+    text-align: center;
 }
+
+/* Article Filters */
 .world-anvil .article-filters {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  justify-content: flex-end;
-  align-items: center;
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    justify-content: flex-end;
+    align-items: center;
 }
 .world-anvil .article-filters li {
-  flex: none;
-  margin-left: 3px;
+    flex: none;
+    margin-left: 3px
 }
-.world-anvil .world-anvil .article-filters button.world-anvil-control.inactive {
-  opacity: 0.65;
+.world-anvil .article-filters button.world-anvil-control.inactive {
+    opacity: 0.65;
 }
+
 /** --------------------------------------------
     Journal Entries
 --------------------------------------------- */
+
 .journal-sheet.world-anvil .image-thumb-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
+
 .journal-sheet.world-anvil .image-thumb-container img {
-  max-width: 320px;
-  max-height: 480px;
+    max-width: 320px;
+    max-height: 480px;
 }
+
 dt {
-  font-weight: bold;
+    font-weight: bold;
 }
+
 dd {
-  padding-left: 5px;
-  margin: 3px 0;
+    padding-left: 5px;
+    margin: 3px 0;
 }
+

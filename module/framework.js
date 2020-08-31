@@ -4,14 +4,14 @@
  * @param {JournalEntry|null} entry     An existing Journal Entry to sync
  * @return {Promise<JournalEntry>}
  */
-export async function importArticle(articleId, {entry = null, renderSheet = false} = {}) {
+export async function importArticle(articleId, {entry=null, renderSheet=false}={}) {
   const anvil = game.modules.get("world-anvil").anvil;
   const article = await anvil.getArticle(articleId);
-  const worldCssLink = anvil.worldCss ? await anvil.getCssLink(anvil.world.display_css, anvil.world.name) : "";
-  const articleCssLink = anvil.articleCss ? await anvil.getCssLink(article.css_styles, article.title) : "";
+  const worldCSSLink = anvil.enableWorldCSS ? await anvil.getCSSLink(anvil.world.display_css, anvil.world.name) : "";
+  const articleCssLink = anvil.enableArticleCSS ? await anvil.getCSSLink(article.css_styles, article.title) : "";
   const categoryId = article.category ? article.category.id : "0";
   const folder = game.folders.find(f => f.getFlag("world-anvil", "categoryId") === categoryId);
-  const content = await _getArticleContent(article, worldCssLink, articleCssLink);
+  const content = await _getArticleContent(article, worldCSSLink, articleCssLink);
 
   // Update an existing Journal Entry
   if ( entry ) {
@@ -46,7 +46,7 @@ export async function importArticle(articleId, {entry = null, renderSheet = fals
  * @return {{img: string, html: string}}
  * @private
  */
-async function _getArticleContent(article, worldCssLink, articleCssLink) {
+async function _getArticleContent(article, worldCSSLink, articleCSSLink) {
   let body = "";
   let sidePanel = {
     panelTop: "",
@@ -124,7 +124,7 @@ async function _getArticleContent(article, worldCssLink, articleCssLink) {
   });
 
   // Add any requested World Anvil CSS
-  let html = worldCssLink + articleCssLink + div.innerHTML;
+  let html = worldCSSLink + articleCSSLink + div.innerHTML;
 
   // Regex formatting
   html = html.replace(/%p%/g, "</p>\n<p>");
