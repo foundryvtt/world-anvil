@@ -211,7 +211,7 @@ function assembleContent(article, body, sidePanel, relationships) {
   content += `<p><a href="${article.url}" title="${article.title} ${game.i18n.localize("WA.OnWA")}" target="_blank">${article.url}</a></p>\n<div class="article-container page"><div class="${leftColumnClass}">${article.content_parsed}`;
   if ( body ) content += `${body}</div><hr/>`;
   else content += "</div><hr/>";
-  if ( sidePanel.sidebarTop || sidePanel.panelTop || aside || sidePanel.panelBottom || sidePanel.sidebarBottom ) {
+  if ( sidePanel.sidebarTop || sidePanel.panelTop || relationships || sidePanel.panelBottom || sidePanel.sidebarBottom ) {
     content += `<div class="${rightColumnClass}">`;
     if ( sidePanel.sidebarTop ) content += sidePanel.sidebarTop;
     if ( relationships || sidePanel.panelTop || sidePanel.panelBottom ) {
