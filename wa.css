@@ -33,8 +33,26 @@ button#world-anvil img {
 .world-anvil .window-title {
   color: inherit;
 }
-.world-anvil .article-container {
-  display: flex;
+.world-anvil .padding-10 {
+    padding: 10px;
+}
+.world-anvil .image-thumb-container img {
+    border: unset;
+}
+.world-anvil .body-container {
+    display: flex;
+}
+.world-anvil .horiz-container {
+    display: flex;
+}
+.world-anvil .text-left {
+    text-align: left;
+}
+.world-anvil .text-center {
+    text-align: center;
+}
+.world-anvil .text-right {
+    text-align: right;
 }
 .world-anvil .article-container .sidebar-column {
   flex: 33%;

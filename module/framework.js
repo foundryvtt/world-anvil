@@ -43,64 +43,67 @@ export async function importArticle(articleId, {entry=null, renderSheet=false}={
 /**
  * Transform a World Anvil article HTML into a Journal Entry content and featured image.
  * @param {object} article
+ * @param {string} worldCSSLink
+ * @param {string} articleCSSLink
  * @return {{img: string, html: string}}
  * @private
  */
 async function _getArticleContent(article, worldCSSLink, articleCSSLink) {
-  let body = "";
-  let sidePanel = {
-    panelTop: "",
-    panelBottom: "",
-    sidebarTop: "",
-    sidebarBottom: ""
-  }
 
-  /**
-   * From the article, gather the information into various types:
-   *    - The body of the article
-   *    - The side panel content (a top section and a bottom section)
-   *    - The side bar content (a top section and a bottom section)
-   *    - The article relationships (how this article relates to others)
-   *
-   * This is the default World Anvil article layout:
-   *    Left side of screen is the body
-   *    Right side of the screen is:
-   *      Side Bar Top
-   *      Panel Top
-   *      Relationships
-   *      Panel Bottom
-   *      Side Bar Bottom
-   *
-   *  Once the various sections are gathered, they are assembled into the
-   *  final Foundry Journal output.
-   */
-  // Article sections
-  if ( article.sections ) {
-    for (let [id, section] of Object.entries(article.sections)) {
-      let title = section.title || id.titleCase();
-      switch (title.toLowerCase()) {
-        case 'sidepanelcontent':
-          sidePanel.panelTop += `<div class="sidebar-panel-content">${section.content_parsed}</div><hr/>`;
-          break;
-        case 'sidepanelcontentbottom':
-          sidePanel.panelBottom += `<div class="sidebar-bottom-panel">${section.content_parsed}</div><hr/>`;
-          break;
-        case 'sidebarcontent':
-          sidePanel.sidebarTop += `<div class="sidebar-content">${section.content_parsed}</div><hr/>`;
-          break;
-        case 'sidebarcontentbottom':
-          sidePanel.sidebarBottom += `<div class="sidebar-bottom">${section.content_parsed}</div><hr/>`;
-          break;
-        default:
-          body += `<h2>${title}</h2>\n<p>${section.content_parsed}</p><hr/>`;
-      }
-    }
-  }
-
-  let relationships = getRelations(article.relations);
-
+  // The DIV element that will house the formatted article
   const div = document.createElement("div");
-  div.innerHTML = assembleContent(article, body, sidePanel, relationships);
+
+  // Gather the various parts
+  let columns = determineColumns(article);
+  let sections = getArticleSections(article);
+  let relations = getRelations(article, sections.aside);
+
+  // Assemble the article parts, in order
+  // Left-Side Body
+  let content = `<div class="article-container page"><h1>${article.title}</h1>\n`;
+  content += `<p><a href="${article.url}" title="${article.title} ${game.i18n.localize("WA.OnWA")}" target="_blank">${article.url}</a></p>\n<div class="body-container"><div class="${columns.leftColumn}"><span class="line-spacer d-block">&nbsp;</span>${article.content_parsed}`;
+  if ( sections.body ) content += sections.body;
+
+  // Body footnotes
+  if (sections.footnotes) content += sections.footnotes;
+  content += "</div><hr/>";
+
+  // Sidebar
+  let sidePanel = sections.sidePanel;
+  let relationships = relations.relationships;
+  if ( sidePanel.contains  || relationships ) {
+    content += `<div class="${columns.rightColumn}">`;
+    if ( sidePanel.sidebarTop ) content += sidePanel.sidebarTop;
+    if ( sidePanel.sidebar ) content += sidePanel.sidebar;
+    if ( relationships || sidePanel.panelTop || sidePanel.panel || sidePanel.panelBottom ) {
+      content += `<div class="panel panel-default"><div class="panel-body">`;
+      if ( sidePanel.panelTop ) content += sidePanel.panelTop;
+      if ( relationships ) content += relationships;
+      if ( sidePanel.panel ) content += sidePanel.panel;
+      if ( sidePanel.panelBottom ) content += sidePanel.panelBottom;
+      content += `</div></div>`;
+    }
+    if ( sidePanel.sidebarBottom ) content += sidePanel.sidebarBottom;
+    content += `</div>`;
+  }
+
+  // Main Left and Right sections complete. After this is full width lower page
+  content += `</div>`;
+
+  // Bottom Nav
+  let bottomNav = relations.bottomNav;
+  if (bottomNav.hasNav) {
+    content += `<div class="horiz-container"><div class="col-md-4 text-left">${bottomNav.left}</div><div class="col-md-4 text-center">${bottomNav.center}</div><div class="col-md-4 text-right">${bottomNav.right}</div></div>`;
+    content += `</div>`;
+  }
+
+  // Full width footnotes
+  if (sections.fullfooter) {
+    content += sections.fullfooter;
+  }
+
+  // Disable image source attributes so that they do not begin loading immediately
+  div.innerHTML = content.replace(/src=/g, "data-src=");
 
   // Paragraph Breaks
   const t = document.createTextNode("%p%");
@@ -155,7 +158,7 @@ async function _getArticleContent(article, worldCSSLink, articleCSSLink) {
  * Determine the appropriate column widths based on the "article-content-left" class in the
  * fully rendered content
  * @param article
- * @returns {unknown[]}
+ * @returns {{leftColumn: string, rightColumn: string}}
  */
 function determineColumns(article) {
 
@@ -168,63 +171,136 @@ function determineColumns(article) {
       .filter(c => c.startsWith("col-md"))
       [0];
   let rightColumnClass = "col-md-" + (12 - leftColumnClass.substring(leftColumnClass.lastIndexOf("-")+1));
-  return [leftColumnClass, rightColumnClass];
+  return {
+    leftColumn: leftColumnClass,
+    rightColumn: rightColumnClass
+  };
 }
 
 /**
- * Construct the side panel relationship section
- * @param relations   The relations object of the article
- * @returns {string}  The relation section
+ * Extracts the various parts from the Section portion of the article.
+ * @param article
+ * @returns {{aside: string, sidePanel: {sidebarBottom: string, hasPanel: boolean, sidebar: string, panelTop: string, sidebarTop: string, panel: string, panelBottom: string}, body: string}}
  */
-function getRelations(relations) {
-  let rel = "";
-  if ( relations ) {
-    rel += `<dl>`;
-    for (let [id, section] of Object.entries(relations)) {
-      const title = section.title || id.titleCase();
-      const items = section.items instanceof Array ? section.items : [section.items];  // Items can be one or many
-      const relationList = items.filter(i => i.type !== 'customarticletemplate' && i.type !== 'image')
-          .map(i => `<li><span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span></li>`);
+function getArticleSections(article) {
+  let aside = "";
+  let body = "";
+  let footnotes = "";
+  let fullfooter = "";
+  let sidePanel = {
+    hasPanel: false,
+    panelTop: "",
+    panel: "",
+    panelBottom: "",
+    sidebarTop: "",
+    sidebar: "",
+    sidebarBottom: ""
+  }
 
-      if ( relationList.length > 0 ) {
-        rel += `<dt>${title}:</dt><dd><ul class="list-unstyled">${relationList.join()}</ul></dd>`;
+  if ( article.sections ) {
+    for (let [id, section] of Object.entries(article.sections)) {
+      let title = section.title || id.titleCase();
+      switch (title.toLowerCase()) {
+        case 'sidepanelcontenttop':
+          sidePanel.panelTop += `<div class="sidebar-panel-content">${section.content_parsed}</div><hr/>`;
+          sidePanel.hasPanel = true;
+          break;
+        case 'sidepanelcontent':
+          sidePanel.panel += `<div class="sidebar-panel-content">${section.content_parsed}</div><hr/>`;
+          sidePanel.hasPanel = true;
+          break;
+        case 'sidepanelcontentbottom':
+          sidePanel.panelBottom += `<div class="sidebar-panel-content">${section.content_parsed}</div><hr/>`;
+          sidePanel.hasPanel = true;
+          break;
+        case 'sidebarcontenttop':
+          sidePanel.sidebarTop += `<div class="sidebar-content">${section.content_parsed}</div><hr/>`;
+          sidePanel.hasPanel = true;
+          break;
+        case 'sidebarcontent':
+          sidePanel.sidebar += `<div class="sidebar-content">${section.content_parsed}</div><hr/>`;
+          sidePanel.hasPanel = true;
+          break;
+        case 'sidebarcontentbottom':
+          sidePanel.sidebarBottom += `<div class="sidebar-content">${section.content_parsed}</div><hr/>`;
+          sidePanel.hasPanel = true;
+          break;
+        case 'footnotes':
+          footnotes = `<p>${section.content_parsed}</p>`;
+          break;
+        case 'fullfooter':
+          fullfooter = `<p>${section.content_parsed}</p>`;
+          break;
+        default:
+          if ( section.content.length > 100 ) {
+            body += `<h2>${title}</h2>\n<p>${section.content_parsed}</p><hr/>`;
+          } else {
+            aside += `<dt>${title}</dt><dd>${section.content_parsed}</dd>`
+          }
+      }
+    }
+  }
+  return {
+    body: body,
+    sidePanel: sidePanel,
+    aside: aside,
+    footnotes: footnotes,
+    fullfooter: fullfooter
+  };
+}
+
+/**
+ * Construct the side panel relationship section. This section will also contain any small
+ * asides from World Anvil.
+ * @param article     The article
+ * @param aside       The formatted aside section
+ * @returns [string, object]  The relation section, The bottom Navigation section
+ */
+function getRelations(article, aside) {
+  let bottomNav = {
+    left: "",
+    right: "",
+    center: "",
+    hasNav: false
+  }
+  let rel = "";
+  if ( article.relations ) {
+    rel += `<dl>`;
+    if ( aside ) {
+      rel += aside;
+    }
+    for (let [id, section] of Object.entries(article.relations)) {
+      const title = section.title || id.titleCase();
+      switch (id.toLowerCase()) {
+        case "articlenext":
+          bottomNav.hasNav = true;
+          bottomNav.right = `<span data-article-id="${section.items.id}" data-template="${section.items.type}">${section.items.title} <i class="fas fa-arrow-right"></i></span> `;
+          break;
+        case "articleprevious":
+          bottomNav.hasNav = true;
+          bottomNav.left = `<span data-article-id="${section.items.id}" data-template="${section.items.type}"><i class="fas fa-arrow-left"> ${section.items.title}</i></span> `;
+          break;
+        default:
+          const items = section.items instanceof Array ? section.items : [section.items];  // Items can be one or many
+          const relationList = items.filter(i => i.type !== 'customarticletemplate' && i.type !== 'image')
+              .map(i => `<li><span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span></li>`);
+
+          if ( relationList.length > 0 ) {
+            rel += `<dt>${title}:</dt><dd><ul class="list-unstyled">${relationList.join()}</ul></dd>`;
+          }
       }
     }
     rel += `</dl>`;
-    return rel;
-  } else return "";
-}
 
-/**
- * Build the actual journal content from all the parts
- * @param article     The article object
- * @param body        The body of the article
- * @param sidePanel   The side panel content of the article
- * @param relationships The relations of this article to others
- * @returns {string}  The assembled content
- */
-function assembleContent(article, body, sidePanel, relationships) {
-
-  let [leftColumnClass, rightColumnClass] = determineColumns(article);
-
-  let content = `<h1>${article.title}</h1>\n`;
-  content += `<p><a href="${article.url}" title="${article.title} ${game.i18n.localize("WA.OnWA")}" target="_blank">${article.url}</a></p>\n<div class="article-container page"><div class="${leftColumnClass}">${article.content_parsed}`;
-  if ( body ) content += `${body}</div><hr/>`;
-  else content += "</div><hr/>";
-  if ( sidePanel.sidebarTop || sidePanel.panelTop || relationships || sidePanel.panelBottom || sidePanel.sidebarBottom ) {
-    content += `<div class="${rightColumnClass}">`;
-    if ( sidePanel.sidebarTop ) content += sidePanel.sidebarTop;
-    if ( relationships || sidePanel.panelTop || sidePanel.panelBottom ) {
-      content += `<div class="panel panel-default"><div class="panel-body">`;
-      if ( sidePanel.panelTop ) content += sidePanel.panelTop;
-      if ( relationships ) content += relationships;
-      if ( sidePanel.panelBottom ) content += sidePanel.panelBottom;
-      content += `</div></div>`;
+    if (bottomNav.hasNav) {
+      bottomNav.center = `<span>${article.category.title}</span>`;
     }
-    if ( sidePanel.sidebarBottom ) content += sidePanel.sidebarBottom;
-    content += `</div>`;
-  }
-
-  // Disable image source attributes so that they do not begin loading immediately
-  return content.replace(/src=/g, "data-src=");
+    return {
+      relationships: rel,
+      bottomNav: bottomNav
+    };
+  } else return {
+    relationships: "",
+    bottomNav: bottomNav
+  };
 }
