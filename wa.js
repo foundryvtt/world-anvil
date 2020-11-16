@@ -59,7 +59,7 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
       config.render(true);
     }
   });
-  html.find(".directory-footer").append(button);
+  html.find(".directory-header .action-buttons").append(button);
 
   // Re-render the browser, if it's active
   const browser = Object.values(ui.windows).find(a => a.constructor === WorldAnvilBrowser);
