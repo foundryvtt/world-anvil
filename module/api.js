@@ -31,6 +31,18 @@ export default class WorldAnvil {
     this.worldId = config.worldId;
 
     /**
+     * The Flag to indicate the use of World level CSS
+     * @type{boolean|null}
+     */
+    this.enableWorldCSS = game.settings.get("world-anvil", "enableWorldCSS");
+
+    /**
+     * The Flag to indicate the use of Article level CSS
+     * @type{boolean|null}
+     */
+    this.enableArticleCSS = game.settings.get("world-anvil", "enableArticleCSS");
+
+    /**
      * The currently associated World Anvil User
      * @type {object|null}
      */
@@ -164,5 +176,47 @@ export default class WorldAnvil {
     const world = await this._fetch(`world/${this.worldId}`);
     this.worldId = worldId;
     return this.world = world;
+  }
+
+
+  /**
+   * Prepare the provided CSS by:
+   *   - Replacing all instances of .user-css with .world-anvil
+   *   - Replacing all instances of .user-css-extended with .world-anvil
+   *
+   * Then, save the CSS to a local file and create a link element (as a string)
+   * to include in the content html.
+   *
+   * The provided name string will have any spaces replaced with '_' and the created
+   * file will have the .css extension
+   * @param css                   The CSS to save
+   * @param name                  The name string to be used for the file name
+   * @param type                  The type of the CSS file (world or article)
+   * @returns {Promise<string>}   The stylesheet link
+   */
+  async getCSSLink(css, name, type) {
+
+    if ( ! css) return "";
+
+    name = name.replace(/\s/g, '_');
+    let vttWorldName = game.world.name;
+
+    // Replace user-css and user-css-extended with world-anvil
+    //   - Removes stand alone class
+    css = css.replace(/\.user-css\S*,/g, "");
+    //   - Replaces stacked classes
+    css = css.replace(/\.user-css\S*[\n\s*]\.user-css\S*/g, ".word-anvil");
+    //   - Replaces the rest
+    css = css.replace(/\.user-css\S*/g, ".world-anvil");
+
+    // Store the css file locally for use in the articles
+    let file = new File([css], `${type}-${name}.css`);
+    const fd = new FormData();
+    fd.set("source", "data");
+    fd.set("target", `worlds/${vttWorldName}/data`);
+    fd.set("upload", file);
+    await fetch('/upload', {method: "POST", body: fd});
+
+    return `<link href="/worlds/${vttWorldName}/data/${type}-${name}.css" rel="stylesheet">`;
   }
 }

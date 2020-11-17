@@ -13,17 +13,10 @@ button#world-anvil img {
     border: none;
 }
 .wa-link {
-    padding: 1px 4px 1px 18px;
-    margin: 0;
-    white-space: nowrap;
-    word-break: break-all;
-    background: #DDD;
-    background-image: url(icons/wa-icon.svg);
-    background-repeat: no-repeat;
-    background-size: 14px 14px;
-    background-position: 2px 1px;
-    border: 1px solid #444;
-    border-radius: 2px;
+  margin: 0;
+  white-space: nowrap;
+  word-break: break-all;
+  text-shadow: 0 0 1px #ff6400;
 }
 .wa-link:hover {
     text-shadow: 0 0 4px red;
@@ -34,6 +27,106 @@ button#world-anvil img {
     Application Styling Rules
 --------------------------------------------- */
 
+.world-anvil .window-header a {
+  color: inherit;
+}
+.world-anvil .window-title {
+  color: inherit;
+}
+.world-anvil .padding-10 {
+    padding: 10px;
+}
+.world-anvil .image-thumb-container img {
+    border: unset;
+}
+.world-anvil .body-container {
+    display: flex;
+}
+.world-anvil .horiz-container {
+    display: flex;
+}
+.world-anvil .text-left {
+    text-align: left;
+}
+.world-anvil .text-center {
+    text-align: center;
+}
+.world-anvil .text-right {
+    text-align: right;
+}
+.world-anvil .article-container .sidebar-column {
+  flex: 33%;
+}
+.world-anvil .list-unstyled {
+  padding-left: 0;
+  list-style: none;
+}
+.world-anvil .panel-body {
+  padding: 15px;
+}
+.world-anvil .text-center {
+  text-align: center !important;
+}
+.world-anvil .col-md-1 {
+    flex: 8%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-2 {
+    flex: 17%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-3 {
+  flex: 25%;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.world-anvil .col-md-4 {
+    flex: 33%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-5 {
+    flex: 42%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-6 {
+  flex: 50%;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.world-anvil .col-md-7 {
+    flex: 58%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-8 {
+    flex: 66%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-9 {
+  flex: 75%;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.world-anvil .col-md-10 {
+    flex: 83%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-11 {
+    flex: 92%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.world-anvil .col-md-12 {
+    flex: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
 .world-anvil .world-description {
     max-height: 200px;
     overflow-y: auto;
