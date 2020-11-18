@@ -3,6 +3,14 @@
         <h2>
             <a class="world-anvil-link" href="{{ world.url }}" title="{{ world.name }} {{ localize 'WA.OnWA' }}" target="_blank">{{ world.name }}</a>
         </h2>
+        <div class="controls">
+            <button type="button" class="world-anvil-control" data-action="sync-world" title="{{ localize 'WA.SyncWorld' }}">
+                <i class="fas fa-sync"></i>
+            </button>
+            <button type="button" class="world-anvil-control" data-action="link-world-folders">
+                <i class="fas fa-folder-plus"></i>
+            </button>
+        </div>
     </header>
     <section class="world-description">
         {{{ world.description_parsed }}}
