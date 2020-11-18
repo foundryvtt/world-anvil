@@ -2,9 +2,10 @@
  * Import a single World Anvil article
  * @param {string} articleId            The World Anvil article ID to import
  * @param {JournalEntry|null} entry     An existing Journal Entry to sync
+ * @param {boolean} showNotification    Toggles showing articles update notification
  * @return {Promise<JournalEntry>}
  */
-export async function importArticle(articleId, {entry=null, renderSheet=false}={}) {
+export async function importArticle(articleId, {entry=null, renderSheet=false}={}, showNotification=true) {
   const anvil = game.modules.get("world-anvil").anvil;
   const article = await anvil.getArticle(articleId);
   const categoryId = article.category ? article.category.id : "0";
@@ -18,7 +19,9 @@ export async function importArticle(articleId, {entry=null, renderSheet=false}={
       content: content.html,
       img: content.img
     });
-    ui.notifications.info(`Refreshed World Anvil article ${article.title}`);
+    if(showNotification) {
+      ui.notifications.info(`Refreshed World Anvil article ${article.title}`);
+    }
     return entry;
   }
 
@@ -30,7 +33,10 @@ export async function importArticle(articleId, {entry=null, renderSheet=false}={
     folder: folder ? folder.id : null,
     "flags.world-anvil.articleId": article.id
   }, {renderSheet});
-  ui.notifications.info(`Imported World Anvil article ${article.title}`);
+
+  if(showNotification) {
+    ui.notifications.info(`Imported World Anvil article ${article.title}`);
+  }
   return entry;
 }
 

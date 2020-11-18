@@ -122,44 +122,92 @@ export default class WorldAnvilBrowser extends Application {
 	/* -------------------------------------------- */
 
   /**
-   * Handle left-click events on a directory import button
+   * Handle left click for sync and link on the world, folder and articles for World Anvil.
    * @private
    */
   async _onClickControlButton(event) {
     const button = event.currentTarget;
     const action = button.dataset.action;
+
     switch (action) {
+
+      case "sync-world":
+        ui.notifications.info(`Refreshing World Anvil articles for ${this.anvil.world.name}`);
+        return Promise.all((await this.getArticleCategories()).map(c => this._syncFolder(c, false)));
+
+      case "link-world-folders":
+        let articlesToUpdate = (await this.getArticleCategories())
+            .filter(c => c.link == null)  // If a link exists for a category already don't create the folder
+            .map(c => this._createAndLinkFolder(c, false));
+
+        if(articlesToUpdate.length === 0) {
+          ui.notifications.info(`All categories for ${this.anvil.world.name} are linked already`);
+        } else {
+          ui.notifications.info(`Linking World Anvil categories for ${this.anvil.world.name}`);
+        }
+        return Promise.all(articlesToUpdate);
+
       case "link-folder":
-        const category = this.categories.find(c => c.id === button.dataset.categoryId);
-        await Folder.create({
-          name: `[WA] ${category.title}`,
-          type: "JournalEntry",
-          parent: null,
-          "flags.world-anvil.categoryId": category.id
-        });
-        return Promise.all(category.articles.map(a => {
-          return importArticle(a.id, {renderSheet: false});
-        }));
+        return this._createAndLinkFolder(this.categories.find(c => c.id === button.dataset.categoryId));
+
       case "browse-folder":
         break;
+
       case "link-entry":
         return await importArticle(button.dataset.articleId, {renderSheet: true});
+
       case "browse-entry":
         const entry = game.journal.get(button.dataset.entryId);
         entry.sheet.render(true);
         break;
+
       case "sync-folder":
         let wa_category = this.categories.find(c => c.id === button.dataset.categoryId);
-        return Promise.all(wa_category.articles.map(a => {
-          let article = game.journal.find(e => e.getFlag("world-anvil", "articleId") === a.id);
-          return importArticle(a.id, {entry: article, renderSheet: false});
-        }));
+        return await this._syncFolder(wa_category);
+
       case "toggle-drafts":
         this._displayDraft = !this._displayDraft;
         return this.render();
+
       case "toggle-wip":
         this._displayWIP = !this._displayWIP;
         return this.render();
     }
+  }
+
+  /**
+   * Syncs a World Anvil folder (category) to the Foundry journal.
+   *
+   * @private
+   * @param category The category object from WorldAnvil API.
+   * @param {boolean} showNotification Determines whether to show article notifications or not.
+   * @returns {Promise<JournalEntry[]>} Single promise for importing an article.
+   */
+  async _syncFolder(category, showNotification = true) {
+    return Promise.all(category.articles.map(a => {
+      let article = game.journal.find(e => e.getFlag("world-anvil", "articleId") === a.id);
+      return importArticle(a.id, {entry: article, renderSheet: false}, showNotification);
+    }));
+  }
+
+  /**
+   * Creates and links a folder to the Foundry journal based on the World Anvil category.
+   *
+   * @private
+   * @param category The category object from WorldAnvil API.
+   * @param {boolean} showNotification Determines whether to show article notifications or not.
+   * @returns {Promise<JournalEntry[]>} Single promise for importing an article.
+   */
+  async _createAndLinkFolder(category, showNotification = true) {
+    await Folder.create({
+      name: `[WA] ${category.title}`,
+      type: "JournalEntry",
+      parent: null,
+      "flags.world-anvil.categoryId": category.id
+    });
+
+    return Promise.all(category.articles.map(a => {
+      return importArticle(a.id, {renderSheet: false}, showNotification);
+    }));
   }
 }
