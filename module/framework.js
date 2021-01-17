@@ -52,6 +52,8 @@ function _getArticleContent(article) {
   if ( article.sections ) {
     for ( let [id, section] of Object.entries(article.sections) ) {
       let title = section.title || id.titleCase();
+      if ( title.startsWith("Ggm") ) continue;
+      if ( title === "Displaysidebar" ) continue;
       if ( title === "Sidebarcontent" ) title = "General Details";
 
       // Determine whether the section is body vs. aside (if short)
