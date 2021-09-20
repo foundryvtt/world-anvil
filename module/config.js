@@ -96,5 +96,90 @@ export default class WorldAnvilConfig extends FormApplication {
         if ( app ) app.render();
       }
     });
+
+    game.settings.register("world-anvil", "includeSidebars", {
+      name: "WA.includeSidebarsLabel",
+      hint: "WA.includeSidebarsHint",
+      scope: "world",
+      type: Boolean,
+      default: true,
+      config: true
+    });
+
+
+    game.settings.register("world-anvil", "repeatTitle", {
+      name: "WA.repeatTitleLabel",
+      hint: "WA.repeatTitleHint",
+      scope: "world",
+      type: Boolean,
+      default: true,
+      config: true
+    });
+
+    game.settings.register("world-anvil", "linkOnHeader", {
+      name: "WA.linkOnHeaderLabel",
+      hint: "WA.linkOnHeaderHint",
+      scope: "world",
+      type: Boolean,
+      default: false,
+      config: true
+    });
+
+    game.settings.register("world-anvil", "linkOutsideGMs", {
+      name: "WA.linkOutsideGMsLabel",
+      hint: "WA.linkOutsideGMsHint",
+      scope: "world",
+      type: Boolean,
+      default: false,
+      config: true
+    });
+
+    game.settings.register("world-anvil", "useSecrets", {
+      name: "WA.useSecretsLabel",
+      hint: "WA.useSecretsHint",
+      scope: "world",
+      type: Boolean,
+      default: false,
+      config: true
+    });
+
+
+
+    game.settings.register("world-anvil", "createCharacters", {
+      name: "WA.createCharactersLabel",
+      hint: "WA.createCharactersHint",
+      scope: "world",
+      type: Boolean,
+      default: false,
+      config: true
+    });
+
+    game.settings.register("world-anvil", "characterType", {
+      name: "WA.characterTypeLabel",
+      hint: "WA.characterTypeHint",
+      scope: "world",
+      type: String,
+      default: 'npc',
+      config: true
+    });
+
+    game.settings.register("world-anvil", "characterBio", {
+      name: "WA.characterBioLabel",
+      hint: "WA.characterBioHint",
+      scope: "world",
+      type: String,
+      default: 'biography',
+      config: true
+    });
+
+    game.settings.register("world-anvil", "characterToken", {
+      name: "WA.characterTokenLabel",
+      hint: "WA.characterTokenHint",
+      scope: "world",
+      type: String,
+      default: 'icons/svg/mystery-man.svg',
+      config: true
+    });
+
   }
 }
