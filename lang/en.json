@@ -4,6 +4,33 @@
   "WA.ConfigureLabel": "World Anvil Integration",
   "WA.ConfigureHint": "Configure your World Anvil integration.",
 
+  "WA.includeSidebarsLabel": "Include article sidebars",
+  "WA.includeSidebarsHint": "By unchecking this, you will only import then main article content. Sidebars will be omitted.",
+
+  "WA.repeatTitleLabel": "Title inside journal entries",
+  "WA.repeatTitleHint": "By unchecking this, title won't be repeated on top of each journal entry. Only the link to world anvil article will remain.",
+
+  "WA.linkOnHeaderLabel": "WA link on header",
+  "WA.linkOnHeaderHint": "By checking this, the link to the WA webpage will be displayed on header and removed from the article content.",
+
+  "WA.linkOutsideGMsLabel": "WA link for everyone",
+  "WA.linkOutsideGMsHint": "Allow to choose if the WA link on header should be displayed to everyone or only to GMs.",
+
+  "WA.useSecretsLabel": "Use secrets management system",
+  "WA.useSecretsHint": "By checking this, it will allow you to hide from players what is described as 'Storyteller seeds' inside WA",
+
+  "WA.createCharactersLabel": "Automatically create characters",
+  "WA.createCharactersHint": "By checking this, it will try to automtically create characters when finder character articles",
+
+  "WA.characterTypeLabel": "Default character type",
+  "WA.characterTypeHint": "It will use this template when creating new character",
+
+  "WA.characterBioLabel": "Default character bio field",
+  "WA.characterBioHint": "Will put WA desc inside this field",
+
+  "WA.characterTokenLabel": "Default character token",
+  "WA.characterTokenHint": "Will put this token on the actor",
+
   "WA.ConfigureStep1": "Step 1: Provide a World Anvil user authorization Token from the API Keys Management section of your World Anvil User Dashboard.",
   "WA.ConfigureStep2": "Step 2: Choose which of your available World Anvil worlds you would like to associated with this Foundry VTT World.",
   "WA.ConfigureStep3": "Your World Anvil integration is properly configured!",
@@ -14,7 +41,22 @@
   "WA.WorldIdHint": "Choose World from World Anvil that should be mapped to this World in Foundry Virtual Tabletop.",
   "WA.NoPermissionView": "You do not have permission to view this linked Article.",
 
+  "WA.JournalEntry": "Journal",
   "WA.Sync": "WA Sync",
   "WA.SyncFolder": "Sync Category Folder",
-  "WA.OnWA": "on World Anvil"
+  "WA.OnWA": "on WA",
+  "WA.uncategorized": "Uncategorized Articles",
+
+  "WA.Secrets.Hide.Btn": "Hide secrets",
+  "WA.Secrets.Hide.Header": "Not displayed to players",
+  "WA.Secrets.Display.Btn": "Display secrets",
+  "WA.Secrets.Display.Header": "Revealed secrets",
+
+  "WA.Visibility.Hide.Btn": "Hide from players",
+  "WA.Visibility.Display.Btn": "Display to players",
+
+  "WA.Toggles.Drafts.Btn": "Display Drafts",
+  "WA.Toggles.WIP.Btn": "Display Work in Progress",
+
+  "WA.shortcut.default" : "Shortcut not found"
 }

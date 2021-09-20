@@ -1,0 +1,101 @@
+<section class="world-container">
+    <header class="section">
+        <h2>
+            <a class="world-anvil-link" href="{{ world.url }}" title="{{ world.name }} {{ localize 'WA.OnWA' }}" target="_blank">{{ world.name }}</a>
+        </h2>
+    </header>
+    <section class="world-description">
+        {{{ world.description_parsed }}}
+    </section>
+    <hr/>
+
+    <ul class="article-filters">
+        <li>
+            <button type="button" class="world-anvil-control toggle-drafts {{#unless displayDraft}}inactive{{/unless}}" >
+                <i class="fas fa-feather-alt"></i> {{ localize 'WA.Toggles.Drafts.Btn' }}
+            </button>
+        <li>
+            <button type="button" class="world-anvil-control toggle-wip {{#unless displayWIP}}inactive{{/unless}}" >
+                <i class="fas fa-hammer"></i> {{ localize 'WA.Toggles.WIP.Btn' }}
+            </button>
+        </li>
+    </ul>
+
+    {{#each categories as |c|}}
+    <section class="world-articles" style="margin-left: {{c.margin}}px;">
+        <header class="section">
+            <h2>
+                <a class="world-anvil-link" href="{{ c.url }}" title="{{ c.title }} {{ localize 'WA.OnWA' }}" target="_blank">{{ c.title }}</a>
+            </h2>
+            <div class="controls">
+                {{#if c.folder.displayVisibilityButtons}}
+                    {{#if c.folder.visibleByPlayers }}
+                        <button type="button" class="world-anvil-control hide-folder" data-category-id="{{ c.id }}" title="{{ localize 'WA.Visibility.Hide.Btn' }}">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    {{else}}
+                        <button type="button" class="world-anvil-control display-folder" data-category-id="{{ c.id }}" title="{{ localize 'WA.Visibility.Display.Btn' }}">
+                            <i class="far fa-eye-slash"></i>
+                        </button>
+                    {{/if}}
+                {{/if}}
+                {{#if c.folder.present }}
+                    <button type="button" class="world-anvil-control sync-folder" data-category-id="{{ c.id }}" data-folder-id="{{ c.folder.link.id }}" title="{{ localize 'WA.SyncFolder' }}">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                    <button type="button" class="world-anvil-control browse-folder" data-folder-id="{{ c.folder.link.id }}">
+                        <i class="fas fa-folder"></i> {{ c.folder.link.name }}
+                    </button>
+                {{else}}
+                    <button type="button" class="world-anvil-control link-folder" data-category-id="{{ c.id }}">
+                        <i class="fas fa-folder-plus"></i>
+                    </button>
+                {{/if}}
+            </div>
+        </header>
+        {{#each c.articles as |a|}}
+        <article>
+            <header>
+                <h3>
+                    <a class="article-link" href="{{ a.url }}" title="{{ a.title }} {{ localize 'WA.OnWA' }}" target="_blank" data-article-id="{{ a.id }}">{{ a.title }}</a>
+                </h3>
+                <div class="controls">
+                    {{#if a.entry.displayVisibilityButtons}}
+                        {{#if a.entry.visibleByPlayers }}
+                            <button type="button" class="world-anvil-control hide-entry" data-entry-id="{{ a.entry.link.id }}" title="{{ localize 'WA.Visibility.Hide.Btn' }}">
+                                <i class="far fa-eye"></i>
+                            </button>
+                        {{else}}
+                            <button type="button" class="world-anvil-control display-entry" data-entry-id="{{ a.entry.link.id }}" title="{{ localize 'WA.Visibility.Display.Btn' }}">
+                                <i class="far fa-eye-slash"></i>
+                            </button>
+                        {{/if}}
+                    {{/if}}
+                    {{#if a.entry.displaySecretButtons}}
+                        {{#if a.entry.entrySecretsAreVisible }}
+                            <button type="button" class="world-anvil-control hide-secrets" data-article-id="{{ a.id }}" data-entry-id="{{ a.entry.link.id }}" title="{{ localize 'WA.Secrets.Hide.Btn' }}">
+                                <i class="fas fa-lock-open"></i>
+                            </button>
+                        {{else}}
+                            <button type="button" class="world-anvil-control display-secrets" data-article-id="{{ a.id }}" data-entry-id="{{ a.entry.link.id }}" title="{{ localize 'WA.Secrets.Display.Btn' }}">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                        {{/if}}
+                    {{/if}}
+                    {{#if a.entry.present }}
+                        <button type="button" class="world-anvil-control browse-entry" data-entry-id="{{ a.entry.link.id }}">
+                            <i class="fas fa-link"></i> {{ a.entry.link.name }}
+                        </button>
+                    {{else}}
+                        <button type="button" class="world-anvil-control link-entry" data-article-id="{{ a.id }}">
+                            <i class="fas fa-link"></i>
+                        </button>
+                    {{/if}}
+                </div>
+            </header>
+        </article>
+        {{/each }}
+    </section>
+    <hr/>
+    {{/each}}
+</section>

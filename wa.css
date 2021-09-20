@@ -1,4 +1,4 @@
-
+@import "./css/mystyle.css";
 
 /** --------------------------------------------
     Global Styling Rules
@@ -25,9 +25,16 @@ button#world-anvil img {
     border: 1px solid #444;
     border-radius: 2px;
 }
+.wa-link.not-found {
+    color: darkred;
+}
 .wa-link:hover {
     text-shadow: 0 0 4px red;
     cursor: pointer;
+}
+
+#wa-external-link {
+    color: #f0f0e0;
 }
 
 /** --------------------------------------------
