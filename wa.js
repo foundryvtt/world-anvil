@@ -80,17 +80,29 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
   const articleId = entry.getFlag("world-anvil", "articleId");
   if ( !articleId ) return;
 
-  // Add header button to re-sync (GM Only)
-  if ( game.user.isGM ) {
-    let title = html.find(".window-title");
-    if (title) {
+  const title = html.find(".window-title");
+  if (title) {
+
+    // Add header button to re-sync (GM Only)
+    if ( game.user.isGM ) {
       html.addClass("world-anvil");
       const sync = $(`<a class="wa-sync"><i class="fas fa-sync"></i>${game.i18n.localize("WA.Sync")}</a>`);
       sync.on("click", event => {
         event.preventDefault();
-        importArticle(articleId, {entry});
+        importArticle(articleId, {entry: entry});
       });
       title.after(sync);
+    }
+
+    // Add WA shortcut on header
+    const linkOnHeader = game.settings.get("world-anvil", "linkOnHeader");
+    const linkOutsideGMs = game.settings.get("world-anvil", "linkOutsideGMs");
+    const articleURL = entry.getFlag("world-anvil", "articleURL");
+    if(articleURL && linkOnHeader) {
+      if( game.user.isGM || linkOutsideGMs ) {
+        const link = $(`<a id="wa-external-link" href="${articleURL}"><i class="fas fa-external-link-alt"></i>${game.i18n.localize("WA.OnWA")}</a>`);
+        title.after(link);
+      }
     }
   }
 

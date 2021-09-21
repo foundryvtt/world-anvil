@@ -28,7 +28,7 @@ export async function importArticle(articleId, {entry=null, renderSheet=false}={
     content: content.html,
     img: content.img,
     folder: folder ? folder.id : null,
-    "flags.world-anvil.articleId": article.id
+    "flags.world-anvil": { articleId: article.id, articleURL: article.url }
   }, {renderSheet});
   ui.notifications.info(`Imported World Anvil article ${article.title}`);
   return entry;
@@ -48,34 +48,54 @@ function _getArticleContent(article) {
   let body = "";
   let aside = "";
 
+  const includeSidebars = game.settings.get("world-anvil", "includeSidebars");
+  const repeatTitle = game.settings.get("world-anvil", "repeatTitle");
+  const linkOnHeader = game.settings.get("world-anvil", "linkOnHeader");
+
   // Article sections
   if ( article.sections ) {
     for ( let [id, section] of Object.entries(article.sections) ) {
       let title = section.title || id.titleCase();
       if ( title === "Sidebarcontent" ) title = "General Details";
 
+      // Check if sidebars need to be imported
+      const isSidebar = title?.toLowerCase()?.includes('sidebar') || title?.toLowerCase()?.includes('sidepanel');
+      if( !includeSidebars && isSidebar ) continue;
+
+      if ( title === "Sidebarcontent" ) { title = "General Details" };
+
       // Determine whether the section is body vs. aside (if short)
-      if ( section.content.length > 100 ) {
-        body += `<h2>${title}</h2>\n<p>${section.content_parsed}</p><hr/>`;
+      let contentToAdd = '';
+      const bigContent = (section.content.length > 100); 
+      if( bigContent ) { // Another prior condition will come here later. That's why a rewrote it
+        contentToAdd += `<h2>${title}</h2>`;
+        contentToAdd += `\n<p>${section.content_parsed}</p><hr/>`;
+
       } else {
-        aside += `<dt>${title}</dt><dd>${section.content_parsed}</dd>`
+        contentToAdd += `<dt>${title}</dt>`;
+        contentToAdd += `<dd>${section.content_parsed}</dd>`;
       }
+
+      body += contentToAdd;
     }
   }
 
   // Article relations
   if ( article.relations ) {
     for ( let [id, section] of Object.entries(article.relations) ) {
-      const title = section.title || id.titleCase();
-      const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
-      const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
-      aside += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
+      if( section.items ) { // Some relations, like timelines, have no .items attribute. => Skipped
+        const title = section.title || id.titleCase();
+        const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
+        const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
+        aside += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
+      }
     }
   }
 
   // Combine content sections
-  let content = `<h1>${article.title}</h1>\n`;
-  content += `<p><a href="${article.url}" title="${article.title} ${game.i18n.localize("WA.OnWA")}" target="_blank">${article.url}</a></p>\n<p>${article.content_parsed}</p><hr/>`;
+  let content = repeatTitle ? `<h1>${article.title}</h1>\n` : '';
+  content += linkOnHeader ? '' : `<p><a href="${article.url}" title="${article.title} ${game.i18n.localize("WA.OnWA")}" target="_blank">${article.url}</a></p>\n`;
+  content += `<p>${article.content_parsed}</p><hr/>`;
   if ( aside ) content += `<aside><dl>${aside}</dl></aside>`;
   if ( body ) content += body;
 

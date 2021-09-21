@@ -96,5 +96,43 @@ export default class WorldAnvilConfig extends FormApplication {
         if ( app ) app.render();
       }
     });
+
+    game.settings.register("world-anvil", "includeSidebars", {
+      name: "WA.includeSidebarsLabel",
+      hint: "WA.includeSidebarsHint",
+      scope: "world",
+      type: Boolean,
+      default: true,
+      config: true
+    });
+
+
+    game.settings.register("world-anvil", "repeatTitle", {
+      name: "WA.repeatTitleLabel",
+      hint: "WA.repeatTitleHint",
+      scope: "world",
+      type: Boolean,
+      default: true,
+      config: true
+    });
+
+    game.settings.register("world-anvil", "linkOnHeader", {
+      name: "WA.linkOnHeaderLabel",
+      hint: "WA.linkOnHeaderHint",
+      scope: "world",
+      type: Boolean,
+      default: false,
+      config: true
+    });
+
+    game.settings.register("world-anvil", "linkOutsideGMs", {
+      name: "WA.linkOutsideGMsLabel",
+      hint: "WA.linkOutsideGMsHint",
+      scope: "world",
+      type: Boolean,
+      default: false,
+      config: true
+    });
+
   }
 }
