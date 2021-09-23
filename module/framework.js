@@ -1,3 +1,5 @@
+const DISPLAY_SIDEBAR_SECTION_ID = 'displaySidebar';
+
 /**
  * Import a single World Anvil article
  * @param {string} articleId            The World Anvil article ID to import
@@ -37,6 +39,37 @@ export async function importArticle(articleId, {entry=null, renderSheet=false}={
 
 /* -------------------------------------------- */
 
+/**
+ * Loop through articles section and look for the one named displaysidebar.
+ * Ifit's content is 1 => sidebar are displayed 
+ * @param {entries} sectionsEntries  article sections
+ * @returns TRUE if sidebars should be displayed
+ */
+function _findIfSidebarsAreDisplayed( sectionsEntries ) {
+  return sectionsEntries.filter( ([id, section]) => {
+    return id == DISPLAY_SIDEBAR_SECTION_ID;
+  }).map( ([id, section]) => {
+    return section.content_parsed;
+  }).reduce( (result, current) => {
+    return result || (current == '1');
+  }, false);
+}
+
+/**
+ * For some sectionId, the title will be retrieved from the module translations
+ * @param {string} sectionId The id as retrieved via Object.entries
+ * @param {string} section The section content
+ * @returns The actual title
+ */
+function _localizedTitle( sectionId, section ) {
+
+  const localizedIds = ['sidebarcontent', 'sidepanelcontenttop', 'sidepanelcontent', 'sidebarcontentbottom'];
+  if( localizedIds.includes( sectionId ) ) {
+    return game.i18n.localize('WA.Titles.' + sectionId.titleCase() );
+  }
+
+  return section.title || sectionId.titleCase();
+}
 
 /**
  * Transform a World Anvil article HTML into a Journal Entry content and featured image.
@@ -48,26 +81,31 @@ function _getArticleContent(article) {
   let body = "";
   let aside = "";
 
-  const includeSidebars = game.settings.get("world-anvil", "includeSidebars");
   const repeatTitle = game.settings.get("world-anvil", "repeatTitle");
   const linkOnHeader = game.settings.get("world-anvil", "linkOnHeader");
 
   // Article sections
   if ( article.sections ) {
-    for ( let [id, section] of Object.entries(article.sections) ) {
-      let title = section.title || id.titleCase();
-      if ( title === "Sidebarcontent" ) title = "General Details";
+
+    const sectionsEntries = Object.entries(article.sections) ;
+    const includeSidebars = _findIfSidebarsAreDisplayed(sectionsEntries);
+
+    sectionsEntries.filter( ([id, section]) => {
+      // displaysidebar section is only useful for knowing if sidebars should be displayed
+      if( id == DISPLAY_SIDEBAR_SECTION_ID ) { return false; }
 
       // Check if sidebars need to be imported
-      const isSidebar = title?.toLowerCase()?.includes('sidebar') || title?.toLowerCase()?.includes('sidepanel');
-      if( !includeSidebars && isSidebar ) continue;
+      const isSidebar = id.includes('sidebar') || id.includes('sidepanel');
+      return includeSidebars || !isSidebar;
 
-      if ( title === "Sidebarcontent" ) { title = "General Details" };
+    } ).forEach( ([id, section]) => {
+      // Title can be replaced by a localized name if the section id has been handled
+      const title = _localizedTitle(id, section);
 
       // Determine whether the section is body vs. aside (if short)
       let contentToAdd = '';
-      const bigContent = (section.content.length > 100); 
-      if( bigContent ) { // Another prior condition will come here later. That's why a rewrote it
+      const isLongContent = (section.content.length > 100); 
+      if( isLongContent ) { // Another prior condition will come here later. That's why a rewrote it
         contentToAdd += `<h2>${title}</h2>`;
         contentToAdd += `\n<p>${section.content_parsed}</p><hr/>`;
 
@@ -77,7 +115,7 @@ function _getArticleContent(article) {
       }
 
       body += contentToAdd;
-    }
+    });
   }
 
   // Article relations
