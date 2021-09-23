@@ -121,12 +121,13 @@ function _getArticleContent(article) {
   // Article relations
   if ( article.relations ) {
     for ( let [id, section] of Object.entries(article.relations) ) {
-      if( section.items ) { // Some relations, like timelines, have no .items attribute. => Skipped
-        const title = section.title || id.titleCase();
-        const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
-        const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
-        aside += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
-      }
+      
+      if( !section.items ) { continue; } // Some relations, like timelines, have no .items attribute. => Skipped
+      
+      const title = section.title || id.titleCase();
+      const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
+      const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
+      aside += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
     }
   }
 
