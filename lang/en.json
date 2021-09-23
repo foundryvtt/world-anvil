@@ -4,17 +4,17 @@
   "WA.ConfigureLabel": "World Anvil Integration",
   "WA.ConfigureHint": "Configure your World Anvil integration.",
 
-  "WA.includeSidebarsLabel": "Include article sidebars",
-  "WA.includeSidebarsHint": "By unchecking this, you will only import then main article content. Sidebars will be omitted.",
+  "WA.IncludeSidebarsLabel": "Include article sidebars",
+  "WA.IncludeSidebarsHint": "By unchecking this, you will only import then main article content. Sidebars will be omitted.",
 
-  "WA.repeatTitleLabel": "Title inside journal entries",
-  "WA.repeatTitleHint": "By unchecking this, title won't be repeated on top of each journal entry. Only the link to world anvil article will remain.",
+  "WA.RepeatTitleLabel": "Title inside journal entries",
+  "WA.RepeatTitleHint": "By unchecking this, title won't be repeated on top of each journal entry. Only the link to world anvil article will remain.",
 
-  "WA.linkOnHeaderLabel": "WA link on header",
-  "WA.linkOnHeaderHint": "By checking this, the link to the WA webpage will be displayed on header and removed from the article content.",
+  "WA.LinkOnHeaderLabel": "WA link on header",
+  "WA.LinkOnHeaderHint": "By checking this, the link to the WA webpage will be displayed on header and removed from the article content.",
 
-  "WA.linkOutsideGMsLabel": "WA link for everyone",
-  "WA.linkOutsideGMsHint": "Allow to choose if the WA link on header should be displayed to everyone or only to GMs.",
+  "WA.LinkOutsideGMsLabel": "WA link for everyone",
+  "WA.LinkOutsideGMsHint": "Allow to choose if the WA link on header should be displayed to everyone or only to GMs.",
 
   "WA.ConfigureStep1": "Step 1: Provide a World Anvil user authorization Token from the API Keys Management section of your World Anvil User Dashboard.",
   "WA.ConfigureStep2": "Step 2: Choose which of your available World Anvil worlds you would like to associated with this Foundry VTT World.",

@@ -98,8 +98,8 @@ export default class WorldAnvilConfig extends FormApplication {
     });
 
     game.settings.register("world-anvil", "includeSidebars", {
-      name: "WA.includeSidebarsLabel",
-      hint: "WA.includeSidebarsHint",
+      name: "WA.IncludeSidebarsLabel",
+      hint: "WA.IncludeSidebarsHint",
       scope: "world",
       type: Boolean,
       default: true,
@@ -108,8 +108,8 @@ export default class WorldAnvilConfig extends FormApplication {
 
 
     game.settings.register("world-anvil", "repeatTitle", {
-      name: "WA.repeatTitleLabel",
-      hint: "WA.repeatTitleHint",
+      name: "WA.RepeatTitleLabel",
+      hint: "WA.RepeatTitleHint",
       scope: "world",
       type: Boolean,
       default: true,
@@ -117,8 +117,8 @@ export default class WorldAnvilConfig extends FormApplication {
     });
 
     game.settings.register("world-anvil", "linkOnHeader", {
-      name: "WA.linkOnHeaderLabel",
-      hint: "WA.linkOnHeaderHint",
+      name: "WA.LinkOnHeaderLabel",
+      hint: "WA.LinkOnHeaderHint",
       scope: "world",
       type: Boolean,
       default: false,
@@ -126,8 +126,8 @@ export default class WorldAnvilConfig extends FormApplication {
     });
 
     game.settings.register("world-anvil", "linkOutsideGMs", {
-      name: "WA.linkOutsideGMsLabel",
-      hint: "WA.linkOutsideGMsHint",
+      name: "WA.LinkOutsideGMsLabel",
+      hint: "WA.LinkOutsideGMsHint",
       scope: "world",
       type: Boolean,
       default: false,
