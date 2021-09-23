@@ -78,13 +78,9 @@ function _localizedTitle( sectionId, section ) {
  * @private
  */
 function _getArticleContent(article) {
-  let body = "";
-  let aside = "";
-
-  const repeatTitle = game.settings.get("world-anvil", "repeatTitle");
-  const linkOnHeader = game.settings.get("world-anvil", "linkOnHeader");
 
   // Article sections
+  let sections = "";
   if ( article.sections ) {
 
     const sectionsEntries = Object.entries(article.sections) ;
@@ -103,22 +99,20 @@ function _getArticleContent(article) {
       const title = _localizedTitle(id, section);
 
       // Determine whether the section is body vs. aside (if short)
-      let contentToAdd = '';
       const isLongContent = (section.content.length > 100); 
       if( isLongContent ) { // Another prior condition will come here later. That's why a rewrote it
-        contentToAdd += `<h2>${title}</h2>`;
-        contentToAdd += `\n<p>${section.content_parsed}</p><hr/>`;
+        sections += `<h2>${title}</h2>`;
+        sections += `\n<p>${section.content_parsed}</p><hr/>`;
 
       } else {
-        contentToAdd += `<dt>${title}</dt>`;
-        contentToAdd += `<dd>${section.content_parsed}</dd>`;
+        sections += `<dt>${title}</dt>`;
+        sections += `<dd>${section.content_parsed}</dd>`;
       }
-
-      body += contentToAdd;
     });
   }
 
   // Article relations
+  let aside = "";
   if ( article.relations ) {
     for ( let [id, section] of Object.entries(article.relations) ) {
       
@@ -132,11 +126,9 @@ function _getArticleContent(article) {
   }
 
   // Combine content sections
-  let content = repeatTitle ? `<h1>${article.title}</h1>\n` : '';
-  content += linkOnHeader ? '' : `<p><a href="${article.url}" title="${article.title} ${game.i18n.localize("WA.OnWA")}" target="_blank">${article.url}</a></p>\n`;
-  content += `<p>${article.content_parsed}</p><hr/>`;
+  let content = `<p>${article.content_parsed}</p><hr/>`;
   if ( aside ) content += `<aside><dl>${aside}</dl></aside>`;
-  if ( body ) content += body;
+  if ( sections ) content += sections;
 
   // Disable image source attributes so that they do not begin loading immediately
   content = content.replace(/src=/g, "data-src=");

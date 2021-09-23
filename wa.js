@@ -95,10 +95,9 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
     }
 
     // Add WA shortcut on header
-    const linkOnHeader = game.settings.get("world-anvil", "linkOnHeader");
     const publicArticleLink = game.settings.get("world-anvil", "publicArticleLinks");
     const articleURL = entry.getFlag("world-anvil", "articleURL");
-    if(articleURL && linkOnHeader) {
+    if(articleURL) {
       if( game.user.isGM || publicArticleLink ) {
         const link = $(`<a id="wa-external-link" href="${articleURL}"><i class="fas fa-external-link-alt"></i>${game.i18n.localize("WA.OnWA")}</a>`);
         title.after(link);

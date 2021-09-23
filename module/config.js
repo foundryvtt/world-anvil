@@ -97,24 +97,6 @@ export default class WorldAnvilConfig extends FormApplication {
       }
     });
 
-    game.settings.register("world-anvil", "repeatTitle", {
-      name: "WA.RepeatTitleLabel",
-      hint: "WA.RepeatTitleHint",
-      scope: "world",
-      type: Boolean,
-      default: true,
-      config: true
-    });
-
-    game.settings.register("world-anvil", "linkOnHeader", {
-      name: "WA.LinkOnHeaderLabel",
-      hint: "WA.LinkOnHeaderHint",
-      scope: "world",
-      type: Boolean,
-      default: false,
-      config: true
-    });
-
     game.settings.register("world-anvil", "publicArticleLinks", {
       name: "WA.PublicArticleLinksLabel",
       hint: "WA.PublicArticleLinksHint",
