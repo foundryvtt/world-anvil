@@ -8,16 +8,21 @@ import {importArticle} from "./framework.js";
  * @param {*} category Current raw category, as retrieved from WA API
  * @param {*} rawCategories All raw categories, as retrieved from WA API
  * @param {*} categoryMap A map which each completed on each recursve call which store all categories by their categoryId
+ * @param {int} security A security element that prevents from infinite loop
  * @returns A category tree from this node.
  */
-const buildCategoryBranch = ( category, rawCategories, categoryMap ) => {
+const buildCategoryBranch = ( category, rawCategories, categoryMap, security ) => {
+
+  if( security > 1000 ) { 
+    throw 'Something went wrong. You have more that 1000 category hierarchy levels...';
+  }
 
   const rawChilds = rawCategories.filter( c => {
     return c.parent_category?.id === category.id; 
   }).sort( (a,b) => a.title.localeCompare(b.title));
 
   const childs = rawChilds.map( c => {
-    return buildCategoryBranch(c, rawCategories, categoryMap);
+    return buildCategoryBranch(c, rawCategories, categoryMap, security + 1);
   });
   
   const data = mergeObject( {childs: childs}, category );
@@ -291,7 +296,7 @@ export default class WorldAnvilBrowser extends Application {
       const categoryTree = rawCategories.filter( c => {
         return !c.parent_category;
       }).map( c => {
-        return buildCategoryBranch( c, rawCategories, categoryMap );
+        return buildCategoryBranch( c, rawCategories, categoryMap, 0 );
       }).sort( (a,b) => a.title.localeCompare(b.title) );
       
       // Add a new category ofr uncategorized article
