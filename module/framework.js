@@ -1,3 +1,5 @@
+const DISPLAY_SIDEBAR_SECTION_ID = 'displaySidebar';
+
 /**
  * Import a single World Anvil article
  * @param {string} articleId            The World Anvil article ID to import
@@ -28,7 +30,7 @@ export async function importArticle(articleId, {entry=null, renderSheet=false}={
     content: content.html,
     img: content.img,
     folder: folder ? folder.id : null,
-    "flags.world-anvil.articleId": article.id
+    "flags.world-anvil": { articleId: article.id, articleURL: article.url }
   }, {renderSheet});
   ui.notifications.info(`Imported World Anvil article ${article.title}`);
   return entry;
@@ -37,6 +39,37 @@ export async function importArticle(articleId, {entry=null, renderSheet=false}={
 
 /* -------------------------------------------- */
 
+/**
+ * Loop through articles section and look for the one named displaysidebar.
+ * Ifit's content is 1 => sidebar are displayed 
+ * @param {entries} sectionsEntries  article sections
+ * @returns TRUE if sidebars should be displayed
+ */
+function _findIfSidebarsAreDisplayed( sectionsEntries ) {
+  return sectionsEntries.filter( ([id, section]) => {
+    return id == DISPLAY_SIDEBAR_SECTION_ID;
+  }).map( ([id, section]) => {
+    return section.content_parsed;
+  }).reduce( (result, current) => {
+    return result || (current == '1');
+  }, false);
+}
+
+/**
+ * For some sectionId, the title will be retrieved from the module translations
+ * @param {string} sectionId The id as retrieved via Object.entries
+ * @param {string} section The section content
+ * @returns The actual title
+ */
+function _localizedTitle( sectionId, section ) {
+
+  const localizedIds = ['sidebarcontent', 'sidepanelcontenttop', 'sidepanelcontent', 'sidebarcontentbottom'];
+  if( localizedIds.includes( sectionId ) ) {
+    return game.i18n.localize('WA.Titles.' + sectionId.titleCase() );
+  }
+
+  return section.title || sectionId.titleCase();
+}
 
 /**
  * Transform a World Anvil article HTML into a Journal Entry content and featured image.
@@ -45,27 +78,46 @@ export async function importArticle(articleId, {entry=null, renderSheet=false}={
  * @private
  */
 function _getArticleContent(article) {
-  let body = "";
-  let aside = "";
 
   // Article sections
+  let sections = "";
   if ( article.sections ) {
-    for ( let [id, section] of Object.entries(article.sections) ) {
-      let title = section.title || id.titleCase();
-      if ( title === "Sidebarcontent" ) title = "General Details";
+
+    const sectionsEntries = Object.entries(article.sections) ;
+    const includeSidebars = _findIfSidebarsAreDisplayed(sectionsEntries);
+
+    sectionsEntries.filter( ([id, section]) => {
+      // displaysidebar section is only useful for knowing if sidebars should be displayed
+      if( id == DISPLAY_SIDEBAR_SECTION_ID ) { return false; }
+
+      // Check if sidebars need to be imported
+      const isSidebar = id.includes('sidebar') || id.includes('sidepanel');
+      return includeSidebars || !isSidebar;
+
+    } ).forEach( ([id, section]) => {
+      // Title can be replaced by a localized name if the section id has been handled
+      const title = _localizedTitle(id, section);
 
       // Determine whether the section is body vs. aside (if short)
-      if ( section.content.length > 100 ) {
-        body += `<h2>${title}</h2>\n<p>${section.content_parsed}</p><hr/>`;
+      const isLongContent = (section.content.length > 100); 
+      if( isLongContent ) { // Another prior condition will come here later. That's why a rewrote it
+        sections += `<h2>${title}</h2>`;
+        sections += `\n<p>${section.content_parsed}</p><hr/>`;
+
       } else {
-        aside += `<dt>${title}</dt><dd>${section.content_parsed}</dd>`
+        sections += `<dt>${title}</dt>`;
+        sections += `<dd>${section.content_parsed}</dd>`;
       }
-    }
+    });
   }
 
   // Article relations
+  let aside = "";
   if ( article.relations ) {
     for ( let [id, section] of Object.entries(article.relations) ) {
+      
+      if( !section.items ) { continue; } // Some relations, like timelines, have no .items attribute. => Skipped
+      
       const title = section.title || id.titleCase();
       const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
       const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
@@ -74,10 +126,9 @@ function _getArticleContent(article) {
   }
 
   // Combine content sections
-  let content = `<h1>${article.title}</h1>\n`;
-  content += `<p><a href="${article.url}" title="${article.title} ${game.i18n.localize("WA.OnWA")}" target="_blank">${article.url}</a></p>\n<p>${article.content_parsed}</p><hr/>`;
+  let content = `<p>${article.content_parsed}</p><hr/>`;
   if ( aside ) content += `<aside><dl>${aside}</dl></aside>`;
-  if ( body ) content += body;
+  if ( sections ) content += sections;
 
   // Disable image source attributes so that they do not begin loading immediately
   content = content.replace(/src=/g, "data-src=");

@@ -96,5 +96,15 @@ export default class WorldAnvilConfig extends FormApplication {
         if ( app ) app.render();
       }
     });
+
+    game.settings.register("world-anvil", "publicArticleLinks", {
+      name: "WA.PublicArticleLinksLabel",
+      hint: "WA.PublicArticleLinksHint",
+      scope: "world",
+      type: Boolean,
+      default: false,
+      config: true
+    });
+
   }
 }
