@@ -6,11 +6,13 @@
 
 button#world-anvil {
     flex: 0 0 32px;
+    min-width: inherit;
 }
 button#world-anvil img {
     position: relative;
-    top: 4px;
     border: none;
+    height: 24px;
+    width: auto;
 }
 .wa-link {
     padding: 1px 4px 1px 18px;

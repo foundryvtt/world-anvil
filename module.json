@@ -2,13 +2,19 @@
   "name": "world-anvil",
   "title": "World Anvil Integration",
   "description": "<p>A module to integrate <a href=\"https://worldanvil.com\" title=\"World Anvil\" target=\"_blank\">World Anvil</a> with Foundry Virtual Tabletop.</p>",
-  "version": "1.0.3",
-  "minimumCoreVersion": "0.6.0",
-  "compatibleCoreVersion": "0.7.8",
   "author": "Atropos",
-  "packs": [],
-  "esmodules": ["wa.js"],
-  "styles": ["wa.css"],
+  "authors": [],
+  "url": "https://gitlab.com/foundrynet/world-anvil",
+  "version": "1.1.0",
+  "minimumCoreVersion": "0.6.5",
+  "compatibleCoreVersion": "9",
+  "scripts": [],
+  "esmodules": [
+    "wa.js"
+  ],
+  "styles": [
+    "wa.css"
+  ],
   "languages": [
     {
       "lang": "en",
@@ -16,7 +22,11 @@
       "path": "lang/en.json"
     }
   ],
-  "url": "https://gitlab.com/foundrynet/world-anvil",
+  "packs": [],
+  "system": [],
+  "dependencies": [],
+  "socket": false,
   "manifest": "https://gitlab.com/foundrynet/world-anvil/-/raw/master/module.json",
-  "download": "https://gitlab.com/foundrynet/world-anvil/-/archive/release-1.0.3/world-anvil-release-1.0.3.zip"
+  "download": "https://gitlab.com/foundrynet/world-anvil/-/archive/release-1.1.0/world-anvil-release-1.1.0.zip",
+  "protected": false
 }
