@@ -149,7 +149,7 @@ export default class WorldAnvil {
       offset += nReturned; // Increment the pagination
 
       if ( !result ) result = batch;  // Store the 1st result
-      else result.categories = result.categories.concat(batch.articles); // Append additional results
+      else result.categories = result.categories.concat(batch.categories); // Append additional results
     }
 
     // Return the complete result
