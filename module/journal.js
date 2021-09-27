@@ -5,9 +5,9 @@ import {importArticle} from "./framework.js";
  * Convenience function that build a category branch and subbranches
  * Warning: This method is recursive, and it will the whole raw category tree
  * 
- * @param {*} category Current raw category, as retrieved from WA API
- * @param {*} rawCategories All raw categories, as retrieved from WA API
- * @param {*} categoryMap A map which each completed on each recursve call which store all categories by their categoryId
+ * @param {object} category Current raw category, as retrieved from WA API
+ * @param {object[]} rawCategories All raw categories, as retrieved from WA API
+ * @param {Map} categoryMap A map which each completed on each recursve call which store all categories by their categoryId
  * @param {int} security A security element that prevents from infinite loop
  * @returns A category tree from this node.
  */
@@ -36,10 +36,10 @@ const buildCategoryBranch = ( category, rawCategories, categoryMap, security ) =
  * 
  * While doing this, we fill each article data by adding info on article visibility. 
  * 
- * @param {*} rawArticles All WA articles, as retrieved from WA API
- * @param {*} entries All Journal entries which hae the world-anvil flag
- * @param {*} displayDraft If Draft article are to be taken into account
- * @param {*} displayWIP  If WIP article are to be taken into account
+ * @param {object[]} rawArticles All WA articles, as retrieved from WA API
+ * @param {object[]} entries All Journal entries which hae the world-anvil flag
+ * @param {boolean} displayDraft If Draft article are to be taken into account
+ * @param {boolean} displayWIP  If WIP article are to be taken into account
  * @returns A Map of all WA articles, stored by related categoryIds
  */
 const filterArticlesAndStoreThemByCategoryId = (rawArticles, entries, displayDraft, displayWIP ) => {
@@ -80,10 +80,10 @@ const filterArticlesAndStoreThemByCategoryId = (rawArticles, entries, displayDra
  * Convenience function that go trhough the whole category tree and add data about related articles, and Journal folders
  * Warning: This method is recursive, and it will go through the whole category tree
  * 
- * @param {*} category rawCategory as retrieved from WA API (Will be updated)
- * @param {*} articleMap All WA articles, stored in map will categoryId as key
- * @param {*} folders Current journal entries in the game which have the world-anvil flag
- * @param {*} currentTreeLevel How many parent categories this category have. Will be used on GUI to put a left margin
+ * @param {object} category rawCategory as retrieved from WA API (Will be updated)
+ * @param {Map} articleMap All WA articles, stored in map will categoryId as key
+ * @param {object[]} folders Current journal entries in the game which have the world-anvil flag
+ * @param {int} currentTreeLevel How many parent categories this category have. Will be used on GUI to put a left margin
  * @returns 
  */
 const fillCategoryBranchWithFolderAndArticles = ( category, articleMap, folders, currentTreeLevel ) => {
@@ -118,8 +118,8 @@ const fillCategoryBranchWithFolderAndArticles = ( category, articleMap, folders,
  * While doing this, the empty category with no articles and no child category are filtered.
  * Warning: This method is recursive, and it will create the whole array which will be stored in this.categories
  * 
- * @param {*} category The current node of the category tree which is currently handled
- * @param {*} result And array containing this category and its category childs (recursive)
+ * @param {object} category The current node of the category tree which is currently handled
+ * @param {object[]} result And array containing this category and its category childs (recursive)
  */
 const pushCategoryAndChildsInsideArray = ( category, result ) => {
 
@@ -142,7 +142,7 @@ const pushCategoryAndChildsInsideArray = ( category, result ) => {
  * Check if a Journal exists for this category id. If not create it.
  * Warning: This method is recursive, and it will create the whole folder hierarchy for this folder leaf
  * @param {string} waCategoryId WA category id which match this folder
- * @param {Array} categories All categories, with tree and articles filled
+ * @param {object[]} categories All categories, with tree and articles filled
  * @returns The journal folder
  */
 const createFolderIfNotExists = async (waCategoryId, categories) => {
@@ -174,7 +174,7 @@ const createFolderIfNotExists = async (waCategoryId, categories) => {
  * Try to retrieve an existing article with the given articleId.
  * If found, refresh it. Otherwise : Create it.
  * @param {string} articleId WA article id which match the wanted article
- * @param {*} param1 If renderSheet is set to true, display article after creation.
+ * @param {boolean} renderSheet Optinal parameter. renderSheet is for directly displaying Journal entry after importing it
  * @returns The article Journal entry
  */
 const importOrRefreshArticle = async ( articleId, {renderSheet=false} = {} ) => {
