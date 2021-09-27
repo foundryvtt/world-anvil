@@ -25,7 +25,7 @@ const buildCategoryBranch = ( category, rawCategories, categoryMap, security ) =
     return buildCategoryBranch(c, rawCategories, categoryMap, security + 1);
   });
   
-  const data = mergeObject( {childs: childs}, category );
+  const data = foundry.utils.mergeObject( {childs: childs}, category );
   categoryMap.set( data.id, data );
   return data;
 }
@@ -61,7 +61,7 @@ const filterArticlesAndStoreThemByCategoryId = (rawArticles, entries, displayDra
       visibleByPlayers: visibleByPlayers,
       link: articleLink
     };
-    return mergeObject( {entry: entry}, article);
+    return foundry.utils.mergeObject( {entry: entry}, article);
     
   }).sort( (a,b) => {
     return a.title.localeCompare(b.title);
@@ -106,7 +106,7 @@ const fillCategoryBranchWithFolderAndArticles = ( category, articleMap, folders,
     folder: folder, 
     articles: relatedArticles 
   };
-  mergeObject(data, category);
+  foundry.utils.mergeObject(data, category);
   data.childs = data.childs.map( child => fillCategoryBranchWithFolderAndArticles(child, articleMap, folders, currentTreeLevel + 1) );
 
   return data;
@@ -197,7 +197,7 @@ export default class WorldAnvilBrowser extends Application {
 
   /** @override */
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: "world-anvil-config",
       classes: ["world-anvil"],
       template: "modules/world-anvil/templates/journal.hbs",
