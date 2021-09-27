@@ -11,7 +11,7 @@ import {importArticle} from "./framework.js";
  * @param {int} security A security element that prevents from infinite loop
  * @returns A category tree from this node.
  */
-const buildCategoryBranch = ( category, rawCategories, categoryMap, security ) => {
+function buildCategoryBranch( category, rawCategories, categoryMap, security ) {
 
   if( security > 1000 ) { 
     throw 'Something went wrong. You have more that 1000 category hierarchy levels...';
@@ -42,7 +42,7 @@ const buildCategoryBranch = ( category, rawCategories, categoryMap, security ) =
  * @param {boolean} displayWIP  If WIP article are to be taken into account
  * @returns A Map of all WA articles, stored by related categoryIds
  */
-const filterArticlesAndStoreThemByCategoryId = (rawArticles, entries, displayDraft, displayWIP ) => {
+ function filterArticlesAndStoreThemByCategoryId( rawArticles, entries, displayDraft, displayWIP ) {
   const result = new Map();
   const filteredArticles = rawArticles.filter( article => {
     if ( article.is_draft && !displayDraft ) return false;
@@ -86,7 +86,7 @@ const filterArticlesAndStoreThemByCategoryId = (rawArticles, entries, displayDra
  * @param {int} currentTreeLevel How many parent categories this category have. Will be used on GUI to put a left margin
  * @returns 
  */
-const fillCategoryBranchWithFolderAndArticles = ( category, articleMap, folders, currentTreeLevel ) => {
+ function fillCategoryBranchWithFolderAndArticles( category, articleMap, folders, currentTreeLevel ) {
 
   const relatedArticles = articleMap.get( category.id ) ?? [];
   const categoryLink = folders.find(f => f.getFlag("world-anvil", "categoryId") === category.id) ?? null;
@@ -121,7 +121,7 @@ const fillCategoryBranchWithFolderAndArticles = ( category, articleMap, folders,
  * @param {object} category The current node of the category tree which is currently handled
  * @param {object[]} result And array containing this category and its category childs (recursive)
  */
-const pushCategoryAndChildsInsideArray = ( category, result ) => {
+ function pushCategoryAndChildsInsideArray( category, result ) {
 
   const childResults = [];
   category.childs.forEach( child => {
@@ -145,7 +145,7 @@ const pushCategoryAndChildsInsideArray = ( category, result ) => {
  * @param {object[]} categories All categories, with tree and articles filled
  * @returns The journal folder
  */
-const createFolderIfNotExists = async (waCategoryId, categories) => {
+ async function createFolderIfNotExists( waCategoryId, categories ) {
 
   const category = categories.find( c => c.id === waCategoryId );
   if( category.folder.link ) {
@@ -177,7 +177,7 @@ const createFolderIfNotExists = async (waCategoryId, categories) => {
  * @param {boolean} renderSheet Optinal parameter. renderSheet is for directly displaying Journal entry after importing it
  * @returns The article Journal entry
  */
-const importOrRefreshArticle = async ( articleId, {renderSheet=false} = {} ) => {
+async function importOrRefreshArticle( articleId, {renderSheet=false} = {} ) {
   const article = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
   return importArticle(articleId, {entry: article, renderSheet: renderSheet});
 }
