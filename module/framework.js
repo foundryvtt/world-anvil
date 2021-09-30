@@ -105,8 +105,8 @@ function _getArticleContent(article) {
         sections += `\n<p>${section.content_parsed}</p><hr/>`;
 
       } else {
-        sections += `<dt>${title}</dt>`;
-        sections += `<dd>${section.content_parsed}</dd>`;
+        sections += `<h3>${title}</h3>`;
+        sections += `<p>${section.content_parsed}</p>`;
       }
     });
   }
