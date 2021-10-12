@@ -91,8 +91,10 @@ function buildCategoryBranch( category, rawCategories, categoryMap, security ) {
   const relatedArticles = articleMap.get( category.id ) ?? [];
   const categoryLink = folders.find(f => f.getFlag("world-anvil", "categoryId") === category.id) ?? null;
 
-  const displayVisibilityButtons = relatedArticles.length > 0 && categoryLink != null;
+  const articlesWithVisibilityButton = relatedArticles.find( a => a.entry.displayVisibilityButtons ) ?? false;
   const visibleByPlayers = relatedArticles.find( a => a.entry.visibleByPlayers )?.entry.visibleByPlayers ?? false;
+  
+  const displayVisibilityButtons = categoryLink != null && articlesWithVisibilityButton;
 
   const folder= {
     present: categoryLink != null,
@@ -321,19 +323,56 @@ export default class WorldAnvilBrowser extends Application {
   /** @override */
   activateListeners(html) {
     super.activateListeners(html);
-    html.find("button.world-anvil-control.link-folder").click(this._onClickLinkFolder.bind(this));
-    html.find("button.world-anvil-control.display-folder").click(this._onClickDisplayFolder.bind(this));
-    html.find("button.world-anvil-control.hide-folder").click(this._onClickHideFolder.bind(this));
-    html.find("button.world-anvil-control.sync-folder").click(this._onClickSyncFolder.bind(this));
-    html.find("button.world-anvil-control.link-entry").click(this._onClickLinkEntry.bind(this));
-    html.find("button.world-anvil-control.browse-entry").click(this._onClickBrowseEntry.bind(this));
-    html.find("button.world-anvil-control.display-entry").click(this._onClickDisplayEntry.bind(this));
-    html.find("button.world-anvil-control.hide-entry").click(this._onClickHideEntry.bind(this));
-    html.find("button.world-anvil-control.toggle-drafts").click(this._onClickToggleDrafts.bind(this));
-    html.find("button.world-anvil-control.toggle-wip").click(this._onClickToggleWIP.bind(this));
-}
+    html.find("button.world-anvil-control").click(this._onClickControlButton.bind(this));
+  }
 
 	/* -------------------------------------------- */
+
+   /***
+   * Handle left-click events on a directory import button
+   * @private
+   */
+   async _onClickControlButton(event) {
+    const button = event.currentTarget;
+    const action = button.dataset.action;
+    switch (action) {
+      case "link-folder":
+        return this._linkFolder(button.dataset.categoryId);
+
+      case "browse-folder":
+        break;
+
+      case "link-entry":
+        return this._linkEntry(button.dataset.articleId);
+
+      case "browse-entry":
+        return this._browseEntry(button.dataset.entryId);
+
+      case "sync-folder":
+        return this._syncFolder(button.dataset.categoryId);
+
+      case "toggle-drafts":
+        this._displayDraft = !this._displayDraft;
+        return this.render();
+
+      case "toggle-wip":
+        this._displayWIP = !this._displayWIP;
+        return this.render();
+
+      case "display-folder":
+        return this._displayFolder(button.dataset.categoryId);
+
+      case "hide-folder":
+        return this._hideFolder(button.dataset.categoryId);
+
+      case "display-entry":
+        return this._displayEntry(button.dataset.entryId);
+
+      case "hide-entry":
+        return this._hideEntry(button.dataset.entryId);
+    }
+
+  }
 
   /**
    * Convenience function used to synchronize all articles related to a given category
@@ -351,22 +390,43 @@ export default class WorldAnvilBrowser extends Application {
 
   /**
    * Create a folder for a category and import all related articles
+   * @param {string} categoryId WA category id
    */
-  async _onClickLinkFolder(event) {
-    const button = event.currentTarget;
-    const categoryId = button.dataset.categoryId;
+  async _linkFolder(categoryId) {
     await createFolderIfNotExists(categoryId, this.categories);
+    return this._syncCategoryArticles(categoryId);
+  }
 
+  /**
+   * Import or refresh an article, and then display it
+   * @param {string} articleId WA article id
+   */
+   async _linkEntry(articleId) {
+    return await importOrRefreshArticle(articleId, {renderSheet: true});
+  }
+
+  /**
+   * Display a given Journal entry
+   * @param {string} entryId Foundry journal entry id
+   */
+  async _browseEntry(entryId) {
+    const entry = game.journal.get(entryId);
+    entry.sheet.render(true);
+  }
+
+  /**
+   * Import or refresh every articles inside a category
+   * @param {string} categoryId WA category id
+   */
+   async _syncFolder(categoryId) {
     return this._syncCategoryArticles(categoryId);
   }
 
   /**
    * Make every related article of a category visible. Let child category as they are
+   * @param {string} categoryId WA category id
    */
-  async _onClickDisplayFolder(event) {
-    const button = event.currentTarget;
-    const categoryId = button.dataset.categoryId;
-
+  async _displayFolder(categoryId) {
     const category = this.categories.find(c => c.id === categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
@@ -385,13 +445,10 @@ export default class WorldAnvilBrowser extends Application {
   }
 
   /**
-   * Make every related article of a category hiden. Let child category as they are
+   * Make every related article of a category hidden. Let child category as they are
+   * @param {string} categoryId WA category id
    */
-  async _onClickHideFolder(event) {
-
-    const button = event.currentTarget;
-    const categoryId = button.dataset.categoryId;
-
+  async _hideFolder(categoryId) {
     const category = this.categories.find(c => c.id === categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
@@ -410,41 +467,10 @@ export default class WorldAnvilBrowser extends Application {
   }
 
   /**
-   * Import or refresh every articles inside a category
-   */
-  async _onClickSyncFolder(event) {
-    const button = event.currentTarget;
-    const categoryId = button.dataset.categoryId;
-
-    return this._syncCategoryArticles(categoryId);
-  }
-
-  /**
-   * Import or refresh an article, and then display it
-   */
-  async _onClickLinkEntry(event) {
-    const button = event.currentTarget;
-    
-    return await importOrRefreshArticle(button.dataset.articleId, {renderSheet: true});
-  }
-
-  /**
-   * Display a given Journal entry
-   */
-  async _onClickBrowseEntry(event) {
-    const button = event.currentTarget;
-    
-    const entry = game.journal.get(button.dataset.entryId);
-    entry.sheet.render(true);
-  }
-
-  /**
    * Make an article entry visibile for all players
+   * @param {string} entryId Foundry journal entry id
    */
-   async _onClickDisplayEntry(event) {
-    const button = event.currentTarget;
-    const entryId = button.dataset.entryId;
-    
+   async _displayEntry(entryId) {
     const entry = game.journal.find(j => j.id === entryId) ?? null;
     if( !entry ) { throw 'Can\'t find journal entry with id : ' + entryId; }
 
@@ -458,11 +484,9 @@ export default class WorldAnvilBrowser extends Application {
 
   /**
    * Make an article entry hidden for all players
+   * @param {string} entryId Foundry journal entry id
    */
-   async _onClickHideEntry(event) {
-    const button = event.currentTarget;
-    const entryId = button.dataset.entryId;
-    
+   async _hideEntry(entryId) {
     const entry = game.journal.find(j => j.id === entryId) ?? null;
     if( !entry ) { throw 'Can\'t find journal entry with id : ' + entryId; }
 
@@ -472,22 +496,6 @@ export default class WorldAnvilBrowser extends Application {
 
     await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});
     this.render();
-  }
-
-  /**
-   * Togle display of draft article in the gui
-   */
-   async _onClickToggleDrafts(event) {
-    this._displayDraft = !this._displayDraft;
-    return this.render();
-  }
-
-  /**
-   * Togle display of WIP article in the gui
-   */
-   async _onClickToggleWIP(event) {
-    this._displayWIP = !this._displayWIP;
-    return this.render();
   }
 
 }
