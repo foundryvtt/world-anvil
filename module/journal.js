@@ -93,7 +93,7 @@ function buildCategoryBranch( category, rawCategories, categoryMap, security ) {
 
   const articlesWithVisibilityButton = relatedArticles.find( a => a.entry.displayVisibilityButtons ) ?? false;
   const visibleByPlayers = relatedArticles.find( a => a.entry.visibleByPlayers )?.entry.visibleByPlayers ?? false;
-  
+
   const displayVisibilityButtons = categoryLink != null && articlesWithVisibilityButton;
 
   const folder= {
@@ -332,7 +332,7 @@ export default class WorldAnvilBrowser extends Application {
    * Handle left-click events on a directory import button
    * @private
    */
-   async _onClickControlButton(event) {
+  async _onClickControlButton(event) {
     const button = event.currentTarget;
     const action = button.dataset.action;
     switch (action) {
@@ -402,7 +402,7 @@ export default class WorldAnvilBrowser extends Application {
    * @param {string} articleId WA article id
    */
    async _linkEntry(articleId) {
-    return await importOrRefreshArticle(articleId, {renderSheet: true});
+    return importOrRefreshArticle(articleId, {renderSheet: true});
   }
 
   /**
