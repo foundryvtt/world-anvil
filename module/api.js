@@ -108,21 +108,48 @@ export default class WorldAnvil {
    * @param {object} [params]       An optional query parameters
    * @return {Promise<object[]>}    An array of Article objects
    */
-  async getArticles(params={}) {
-    params.limit = parseInt(params.limit) || 50;
-    params.offset = parseInt(params.offset) || 0;
+  async getArticles({limit=50, offset=0}={}) {
 
     // Query paged articles until we have retrieved them all
     let hasMore = true;
     let result = null;
     while ( hasMore ) {
-      let batch = await this._fetch(`world/${this.worldId}/articles`, params);
+      let batch = await this._fetch(`world/${this.worldId}/articles`, {limit: limit, offset: offset} );
       batch.articles = batch.articles || [];
+
       const nReturned = batch.articles.length;
-      hasMore = nReturned === params.limit;  // There may be more
-      params.offset += nReturned; // Increment the pagination
+      hasMore = nReturned === limit;  // There may be more
+      offset += nReturned; // Increment the pagination
+
       if ( !result ) result = batch;  // Store the 1st result
       else result.articles = result.articles.concat(batch.articles); // Append additional results
+    }
+
+    // Return the complete result
+    return result;
+  }
+ 
+  
+  /**
+   * Fetch all categories from within a World, optionally filtering with a specific search query
+   * @param {object} [params]       An optional query parameters
+   * @return {Promise<object[]>}    An array of Article objects
+   */
+   async getCategories({limit=50, offset=0}={}) {
+
+    // Query paged articles until we have retrieved them all
+    let hasMore = true;
+    let result = null;
+    while ( hasMore ) {
+      let batch = await this._fetch(`world/${this.worldId}/categories`, {limit: limit, offset: offset} );
+      batch.categories = batch.categories || [];
+
+      const nReturned = batch.categories.length;
+      hasMore = nReturned === limit;  // There may be more
+      offset += nReturned; // Increment the pagination
+
+      if ( !result ) result = batch;  // Store the 1st result
+      else result.categories = result.categories.concat(batch.categories); // Append additional results
     }
 
     // Return the complete result
