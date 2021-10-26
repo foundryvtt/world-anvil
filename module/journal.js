@@ -304,7 +304,7 @@ export default class WorldAnvilBrowser extends Application {
       // Add a new category ofr uncategorized article
       const uncategorized = { 
         id: '0', 
-        title: game.i18n.localize('WA.uncategorized'),
+        title: game.i18n.localize('WA.UncategorizedArticles'),
         childs : []
       };
       categoryMap.set(uncategorized.id, uncategorized);

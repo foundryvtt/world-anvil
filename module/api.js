@@ -80,6 +80,39 @@ export default class WorldAnvil {
 	/* -------------------------------------------- */
 
   /**
+   * Retrieve a batch of content from the World Anvil API.
+   * Continue querying paginated content until we have retrieved all results.
+   * @param {string} endpoint         The API endpoint being queried
+   * @param {string} collectionName   The name of the collection in the returned object
+   * @param {number} [limit]          A maximum number of articles to retrieve in this request
+   * @param {number} [offset]         An offset index from which to query a batch of categories
+   * @param {object} [params]         Additional optional query parameters
+   * @return {Promise<object[]>}      An array of returned objects
+   */
+  async _fetchMany(endpoint, collectionName, {limit=50, offset=0, ...params}={}) {
+    let hasMore = true;
+    let result = undefined;
+
+    // Iterate until all results are retrieved
+    while ( hasMore ) {
+      const batch = await this._fetch(`world/${this.worldId}/${endpoint}`, {limit: limit, offset: offset, ...params} );
+      batch[collectionName] = batch[collectionName] || [];
+
+      // Determine whether more results are available
+      const nReturned = batch[collectionName].length;
+      hasMore = nReturned === limit;  // There may be more
+      offset += nReturned; // Increment the pagination
+
+      // Store the query results
+      if ( !result ) result = batch;  // Store the 1st result
+      else result[collectionName] = result[collectionName].concat(batch[collectionName]); // Append additional results
+    }
+    return result;
+  }
+
+	/* -------------------------------------------- */
+
+  /**
    * Establish a new connection to the World Anvil API, obtaining a list of Worlds
    * @param {string} [authToken]
    */
@@ -105,55 +138,23 @@ export default class WorldAnvil {
 
   /**
    * Fetch all articles from within a World, optionally filtering with a specific search query
-   * @param {object} [params]       An optional query parameters
-   * @return {Promise<object[]>}    An array of Article objects
+   * @param {object} [params={}]      Optional query parameters, see _fetchMany
+   * @return {Promise<object[]>}      An array of Article objects
    */
-  async getArticles({limit=50, offset=0}={}) {
-
-    // Query paged articles until we have retrieved them all
-    let hasMore = true;
-    let result = null;
-    while ( hasMore ) {
-      let batch = await this._fetch(`world/${this.worldId}/articles`, {limit: limit, offset: offset} );
-      batch.articles = batch.articles || [];
-
-      const nReturned = batch.articles.length;
-      hasMore = nReturned === limit;  // There may be more
-      offset += nReturned; // Increment the pagination
-
-      if ( !result ) result = batch;  // Store the 1st result
-      else result.articles = result.articles.concat(batch.articles); // Append additional results
-    }
-
-    // Return the complete result
-    return result;
+  async getArticles(params={}) {
+     return this._fetchMany("articles", "articles", params);
   }
- 
+
+	/* -------------------------------------------- */
+
   
   /**
    * Fetch all categories from within a World, optionally filtering with a specific search query
-   * @param {object} [params]       An optional query parameters
-   * @return {Promise<object[]>}    An array of Article objects
+   * @param {object} [params={}]      Optional query parameters, see _fetchMany
+   * @return {Promise<object[]>}      An array of category objects
    */
-   async getCategories({limit=50, offset=0}={}) {
-
-    // Query paged articles until we have retrieved them all
-    let hasMore = true;
-    let result = null;
-    while ( hasMore ) {
-      let batch = await this._fetch(`world/${this.worldId}/categories`, {limit: limit, offset: offset} );
-      batch.categories = batch.categories || [];
-
-      const nReturned = batch.categories.length;
-      hasMore = nReturned === limit;  // There may be more
-      offset += nReturned; // Increment the pagination
-
-      if ( !result ) result = batch;  // Store the 1st result
-      else result.categories = result.categories.concat(batch.categories); // Append additional results
-    }
-
-    // Return the complete result
-    return result;
+   async getCategories(params={}) {
+     return this._fetchMany("categories", "categories", params);
   }
 
 	/* -------------------------------------------- */

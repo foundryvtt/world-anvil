@@ -44,11 +44,9 @@ This module does not currently attempt to preserve permission or visibility cont
 
 ### Custom permission control
 
-GMs will be able to see which entry have been displayed to players via their World Anvil Browser inside Foundry.
+Game-Masters will be able to see which entry have been displayed to players via their World Anvil Browser inside Foundry VTT. Using the World Anvil browser they can manage the visibility of each article or even an entire category:
 
-Inside it, they can manage visibility of each article, or of an entire category: 
-
-![Preview](/README_visibilityManagement.png?raw=true)
+![Preview](docs/README_visibilityManagement.png?raw=true)
 
 -----
 

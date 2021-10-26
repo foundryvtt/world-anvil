@@ -12,11 +12,11 @@
     <ul class="article-filters">
         <li>
             <button type="button" class="world-anvil-control {{#unless displayDraft}}inactive{{/unless}}" data-action="toggle-drafts" >
-                <i class="fas fa-feather-alt"></i> {{ localize 'WA.Toggles.Drafts.Btn' }}
+                <i class="fas fa-feather-alt"></i> {{ localize 'WA.ButtonToggleDraft' }}
             </button>
         <li>
             <button type="button" class="world-anvil-control {{#unless displayWIP}}inactive{{/unless}}" data-action="toggle-wip">
-                <i class="fas fa-hammer"></i> {{ localize 'WA.Toggles.WIP.Btn' }}
+                <i class="fas fa-hammer"></i> {{ localize 'WA.ButtonToggleWIP' }}
             </button>
         </li>
     </ul>
@@ -30,11 +30,11 @@
             <div class="controls">
                 {{#if c.folder.displayVisibilityButtons}}
                     {{#if c.folder.visibleByPlayers }}
-                        <button type="button" class="world-anvil-control" data-action="hide-folder" data-category-id="{{ c.id }}" title="{{ localize 'WA.Visibility.Hide.Btn' }}">
+                        <button type="button" class="world-anvil-control" data-action="hide-folder" data-category-id="{{ c.id }}" title="{{ localize 'WA.ButtonVisibilityHide' }}">
                             <i class="far fa-eye"></i>
                         </button>
                     {{else}}
-                        <button type="button" class="world-anvil-control" data-action="display-folder" data-category-id="{{ c.id }}" title="{{ localize 'WA.Visibility.Display.Btn' }}">
+                        <button type="button" class="world-anvil-control" data-action="display-folder" data-category-id="{{ c.id }}" title="{{ localize 'WA.ButtonVisibilityDisplay' }}">
                             <i class="far fa-eye-slash"></i>
                         </button>
                     {{/if}}
@@ -62,11 +62,11 @@
                 <div class="controls">
                     {{#if a.entry.displayVisibilityButtons}}
                         {{#if a.entry.visibleByPlayers }}
-                            <button type="button" class="world-anvil-control" data-action="hide-entry" data-entry-id="{{ a.entry.link.id }}" title="{{ localize 'WA.Visibility.Hide.Btn' }}">
+                            <button type="button" class="world-anvil-control" data-action="hide-entry" data-entry-id="{{ a.entry.link.id }}" title="{{ localize 'WA.ButtonVisibilityHide' }}">
                                 <i class="far fa-eye"></i>
                             </button>
                         {{else}}
-                            <button type="button" class="world-anvil-control" data-action="display-entry" data-entry-id="{{ a.entry.link.id }}" title="{{ localize 'WA.Visibility.Display.Btn' }}">
+                            <button type="button" class="world-anvil-control" data-action="display-entry" data-entry-id="{{ a.entry.link.id }}" title="{{ localize 'WA.ButtonVisibilityDisplay' }}">
                                 <i class="far fa-eye-slash"></i>
                             </button>
                         {{/if}}

@@ -62,12 +62,10 @@ function _findIfSidebarsAreDisplayed( sectionsEntries ) {
  * @returns The actual title
  */
 function _localizedTitle( sectionId, section ) {
-
   const localizedIds = ['sidebarcontent', 'sidepanelcontenttop', 'sidepanelcontent', 'sidebarcontentbottom'];
   if( localizedIds.includes( sectionId ) ) {
-    return game.i18n.localize('WA.Titles.' + sectionId.titleCase() );
+    return game.i18n.localize("WA.HeaderGeneralDetails");
   }
-
   return section.title || sectionId.titleCase();
 }
 

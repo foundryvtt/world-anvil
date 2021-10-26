@@ -20,16 +20,12 @@
   "WA.Sync": "WA Sync",
   "WA.SyncFolder": "Sync Category Folder",
   "WA.OnWA": "on World Anvil",
-  "WA.uncategorized": "Uncategorized Articles",
+  "WA.UncategorizedArticles": "Uncategorized Articles",
 
-  "WA.Visibility.Hide.Btn": "Hide from players",
-  "WA.Visibility.Display.Btn": "Display to players",
+  "WA.ButtonVisibilityHide": "Hide from players",
+  "WA.ButtonVisibilityDisplay": "Display to players",
+  "WA.ButtonToggleDraft": "Display Drafts",
+  "WA.ButtonToggleWIP": "Display Work in Progress",
 
-  "WA.Toggles.Drafts.Btn": "Display Drafts",
-  "WA.Toggles.WIP.Btn": "Display Work in Progress",
-
-  "WA.Titles.Sidebarcontent": "General Details",
-  "WA.Titles.Sidepanelcontenttop": "General Details",
-  "WA.Titles.Sidepanelcontent": "General Details",
-  "WA.Titles.Sidebarcontentbottom": "General Details"
+  "WA.HeaderGeneralDetails": "General Details"
 }
