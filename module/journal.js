@@ -1,34 +1,4 @@
-import {importArticle} from "./framework.js";
-
-
-/**
- * Convenience function that build a category branch and subbranches
- * Warning: This method is recursive, and it will the whole raw category tree
- * 
- * @param {object} category Current raw category, as retrieved from WA API
- * @param {object[]} rawCategories All raw categories, as retrieved from WA API
- * @param {Map} categoryMap A map which each completed on each recursve call which store all categories by their categoryId
- * @param {int} security A security element that prevents from infinite loop
- * @returns A category tree from this node.
- */
-function buildCategoryBranch( category, rawCategories, categoryMap, security ) {
-
-  if( security > 1000 ) { 
-    throw 'Something went wrong. You have more that 1000 category hierarchy levels...';
-  }
-
-  const rawChilds = rawCategories.filter( c => {
-    return c.parent_category?.id === category.id; 
-  }).sort( (a,b) => a.title.localeCompare(b.title));
-
-  const childs = rawChilds.map( c => {
-    return buildCategoryBranch(c, rawCategories, categoryMap, security + 1);
-  });
-  
-  const data = foundry.utils.mergeObject( {childs: childs}, category );
-  categoryMap.set( data.id, data );
-  return data;
-}
+import {importArticle, getCategories} from "./framework.js";
 
 /**
  * Before filling the category tree, this method helps to store all WA article inside a map with category id as keys.
@@ -109,7 +79,7 @@ function buildCategoryBranch( category, rawCategories, categoryMap, security ) {
     articles: relatedArticles 
   };
   foundry.utils.mergeObject(data, category);
-  data.childs = data.childs.map( child => fillCategoryBranchWithFolderAndArticles(child, articleMap, folders, currentTreeLevel + 1) );
+  data.children = data.children.map( child => fillCategoryBranchWithFolderAndArticles(child, articleMap, folders, currentTreeLevel + 1) );
 
   return data;
 }
@@ -126,7 +96,7 @@ function buildCategoryBranch( category, rawCategories, categoryMap, security ) {
  function pushCategoryAndChildsInsideArray( category, result ) {
 
   const childResults = [];
-  category.childs.forEach( child => {
+  category.children.forEach( child => {
     pushCategoryAndChildsInsideArray(child, childResults);
   });
 
@@ -280,42 +250,21 @@ export default class WorldAnvilBrowser extends Application {
     return this.articles;
   }
 
+	/* -------------------------------------------- */
+
   /**
    * Get all World Anvil categories and cache them to this Application instance.
    * Then sort them and build a tree taking parents into account
-   * @return {Promise<object[]>}
+   * @return {Promise<{all: Map<string, Category>, tree: Category[]}>}
    * @private
    */
    async _getCategories() {
-
-    if ( !this._rawCategories ) {
-
-      // API request
-      const request = await this.anvil.getCategories();
-      const rawCategories = request?.categories ?? [];
-      const categoryMap = new Map();
-
-      const categoryTree = rawCategories.filter( c => {
-        return !c.parent_category;
-      }).map( c => {
-        return buildCategoryBranch( c, rawCategories, categoryMap, 0 );
-      }).sort( (a,b) => a.title.localeCompare(b.title) );
-      
-      // Add a new category ofr uncategorized article
-      const uncategorized = { 
-        id: '0', 
-        title: game.i18n.localize('WA.UncategorizedArticles'),
-        childs : []
-      };
-      categoryMap.set(uncategorized.id, uncategorized);
-      categoryTree.push(uncategorized);
-
-      this._rawCategories = {
-        all: categoryMap,
-        tree: categoryTree
-      };
-    }
-    return this._rawCategories;
+    if (this._rawCategories) return this._rawCategories;
+    const {categories, tree} = await getCategories();
+    return this._rawCategories = {
+      all: categories,
+      tree: tree.children.concat(tree.uncategorized)
+    };
   }
 
 	/* -------------------------------------------- */

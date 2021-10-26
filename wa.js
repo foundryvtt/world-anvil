@@ -1,7 +1,7 @@
 import WorldAnvil from "./module/api.js";
 import WorldAnvilConfig from "./module/config.js";
 import WorldAnvilBrowser from "./module/journal.js";
-import {importArticle} from "./module/framework.js";
+import * as api from "./module/framework.js";
 
 
 /**
@@ -17,7 +17,7 @@ Hooks.once("init", () => {
   module.anvil = new WorldAnvil();
 
   // Register some helper functions
-  module.importArticle = importArticle;
+  module.api = api;
 });
 
 

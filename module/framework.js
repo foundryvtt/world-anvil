@@ -181,3 +181,78 @@ function _getArticleContent(article) {
     img: image
   }
 }
+
+/* -------------------------------------------- */
+/*  Category Management                         */
+/* -------------------------------------------- */
+
+/**
+ * @typedef {Object} Category
+ * @property {string} id              The category ID
+ * @property {string} title           The category title
+ * @property {number} position        The category position in sort order
+ * @property {Category[]} [children]  An array of child Category objects
+ */
+
+/**
+ * Get the category tree structure for this World.
+ * @returns {Promise<{categories: Map<string, Category>, tree: Category[]}>}
+ */
+export async function getCategories() {
+  const anvil = game.modules.get("world-anvil").anvil;
+
+  // API Request
+  const request = await anvil.getCategories();
+  const pending = request?.categories || [];
+  const categories = new Map(pending.map(c => [c.id, c]));
+  if ( !categories.size ) return categories;
+
+  // Build the tree, tracking uncategorized results
+  const tree = {id: undefined, title: "WA.CategoriesPrimary", position: 0};
+  let _depth = 0;
+  tree.uncategorized = _buildCategoryBranch(tree, pending, _depth);
+  tree.uncategorized.sort(_sortCategories);
+  return {categories, tree};
+}
+
+/* -------------------------------------------- */
+
+/**
+ * Recursively build a branch of the category tree.
+ * @param {Category} parent             A parent category
+ * @param {Category[]} categories       Categories which have not yet been allocated to a parent
+ * @param {number} _depth               Recursive overflow protection
+ * @returns {Category[]}                Categories which still have not been allocated to a parent
+ * @private
+ */
+function _buildCategoryBranch(parent, categories, _depth=0) {
+  if ( _depth > 1000 ) throw new Error("Recursive category depth exceeded. Something went wrong!");
+  _depth++;
+
+  // Allocate pending categories which have this parent category
+  let [pending, children] = categories.partition(c => c["parent_category"] === parent.id);
+  children.sort(_sortCategories);
+  parent["children"] = children;
+
+  // Recursively build child branches
+  for ( let c of children ) {
+    pending = _buildCategoryBranch(c, pending, _depth);
+  }
+  return pending;
+}
+
+/* -------------------------------------------- */
+
+/**
+ * A comparison function for sorting categories
+ * @param {Category} a              The first category
+ * @param {Category} b              The second category
+ * @returns {number}                The comparison between the two
+ * @private
+ */
+function _sortCategories(a, b) {
+  if ( Number.isNumeric(a.position) && Number.isNumeric(b.position) ) return a.position - b.position;
+  return a.title.localeCompare(b.title);
+}
+
+/* -------------------------------------------- */

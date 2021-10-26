@@ -7,6 +7,9 @@
   "WA.PublicArticleLinksLabel": "WA link for everyone",
   "WA.PublicArticleLinksHint": "Allow to choose if the WA link on header should be displayed to everyone or only to GMs.",
 
+  "WA.CategoriesPrimary": "Primary Categories",
+  "WA.CategoriesUncategorized": "Uncategorized Categories",
+
   "WA.ConfigureStep1": "Step 1: Provide a World Anvil user authorization Token from the API Keys Management section of your World Anvil User Dashboard.",
   "WA.ConfigureStep2": "Step 2: Choose which of your available World Anvil worlds you would like to associated with this Foundry VTT World.",
   "WA.ConfigureStep3": "Your World Anvil integration is properly configured!",
