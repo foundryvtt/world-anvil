@@ -14,59 +14,20 @@ button#world-anvil img {
     height: 24px;
     width: auto;
 }
-.wa-link {
-    padding: 1px 4px 1px 18px;
-    margin: 0;
-    white-space: nowrap;
-    word-break: break-all;
-    background: #DDD;
-    background-image: url(icons/wa-icon.svg);
-    background-repeat: no-repeat;
-    background-size: 14px 14px;
-    background-position: 2px 1px;
-    border: 1px solid #444;
-    border-radius: 2px;
-}
-.wa-link:hover {
-    text-shadow: 0 0 4px red;
-    cursor: pointer;
-}
 
 /** --------------------------------------------
     Application Styling Rules
 --------------------------------------------- */
 
-.world-anvil .world-description {
+/* World Overview */
+#world-anvil-browser .world-description {
     max-height: 200px;
     overflow-y: auto;
     scrollbar-width: thin;
 }
 
-.world-anvil header {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-items: center;
-}
-.world-anvil header.section {
-    border-bottom: 2px solid darkred;
-    margin-bottom: 5px;
-}
-.world-anvil header h2 {
-    border-bottom: none;
-    margin: 0;
-}
-.world-anvil header h3 {
-    margin: 0;
-}
-.world-anvil header .controls {
-    flex: 1;
-    text-align: right;
-}
-
 /* Article Links */
-.world-anvil .world-anvil-link {
+#world-anvil-browser .world-anvil-link {
     flex: 1;
     margin: 0;
     padding-left: 20px;
@@ -78,35 +39,78 @@ button#world-anvil img {
     text-decoration: none;
 }
 
-.world-anvil a.article-link {
+#world-anvil-browser a.article-link {
     color: #191813;
     text-decoration: none;
 }
 
-.world-anvil .world-anvil-control {
-    width: auto;
+
+
+/* General Rules */
+#world-anvil-browser .controls {
+    flex: none;
+}
+#world-anvil-browser .world-anvil-control {
+    width: 32px;
     height: 24px;
     margin: 0;
     padding: 0 4px;
     line-height: 24px;
     text-align: center;
 }
+#world-anvil-browser .world-anvil-control.inactive {
+    opacity: 0.65;
+}
+
+/* Categories */
+#world-anvil-browser .category-header {
+    align-items: center;
+    padding: 0.5em 0;
+    margin: 0;
+    border-top: 1px solid #782e22;
+    border-bottom: 1px solid #782e22;
+}
+#world-anvil-browser .category-title {
+    margin: 0;
+    border: none;
+}
+#world-anvil-browser .subcategories {
+    margin-left: 0.5em;
+    padding-left: 0.5em;
+    border-left: 2px solid rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+}
+#world-anvil-browser .subcategories .category-header:first-child {
+    border-top: none;
+}
+
+/* Articles */
+#world-anvil-browser .article {
+    align-items: center;
+    padding: 0.25em 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+}
+#world-anvil-browser .article:last-child {
+    border-bottom: none;
+}
+#world-anvil-browser .article-title {
+    margin: 0;
+    cursor: pointer;
+}
+#world-anvil-browser .article-title:hover {
+    text-shadow: 0 0 4px red;
+}
+
 
 /* Article Filters */
-.world-anvil .article-filters {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    justify-content: flex-end;
-    align-items: center;
+#world-anvil-browser .article-filters {
+    margin-top: 1em;
+    padding: 0.25em 0;
+    border-top: 1px solid #782e22;
 }
-.world-anvil .article-filters li {
-    flex: none;
+#world-anvil-browser .article-filters button {
+    flex: auto;
     margin-left: 3px
-}
-.world-anvil .article-filters button.world-anvil-control.inactive {
-    opacity: 0.65;
 }
 
 /** --------------------------------------------

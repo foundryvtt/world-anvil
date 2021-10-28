@@ -37,7 +37,7 @@ export default class WorldAnvil {
     this.user = null;
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Report whether we have connected to the World Anvil service by obtaining the User
@@ -47,7 +47,7 @@ export default class WorldAnvil {
     return !!this.user;
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Submit an API request to a World Anvil API endpoint
@@ -56,8 +56,8 @@ export default class WorldAnvil {
    * @return {Promise<object>}    The World Anvil API response
    * @private
    */
-  async _fetch(endpoint, params={}) {
-    if ( !this.authToken ) throw new Error("An authentication token has not been set for the World Anvil API.");
+  async _fetch(endpoint, params = {}) {
+    if (!this.authToken) throw new Error("An authentication token has not been set for the World Anvil API.");
 
     // Structure the endpoint
     endpoint = `https://www.worldanvil.com/api/aragorn/${endpoint}`;
@@ -66,31 +66,64 @@ export default class WorldAnvil {
     params["x-application-key"] = this.applicationKey;
     params["x-auth-token"] = this.authToken;
     const query = Object.entries(params).map(e => `${e[0]}=${e[1]}`).join('&');
-    endpoint += "?"+query;
+    endpoint += "?" + query;
 
     // Submit the request
     console.log(`World Anvil | Submitting API request to ${endpoint}`);
     const response = await fetch(endpoint);
-    if ( response.status !== 200 ) {
+    if (response.status !== 200) {
       throw new Error(`World Anvil API request failed for endpoint ${endpoint}`);
     }
     return response.json();
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
+
+  /**
+   * Retrieve a batch of content from the World Anvil API.
+   * Continue querying paginated content until we have retrieved all results.
+   * @param {string} endpoint         The API endpoint being queried
+   * @param {string} collectionName   The name of the collection in the returned object
+   * @param {number} [limit]          A maximum number of articles to retrieve in this request
+   * @param {number} [offset]         An offset index from which to query a batch of categories
+   * @param {object} [params]         Additional optional query parameters
+   * @return {Promise<object[]>}      An array of returned objects
+   */
+  async _fetchMany(endpoint, collectionName, {limit = 50, offset = 0, ...params} = {}) {
+    let hasMore = true;
+    let result = undefined;
+
+    // Iterate until all results are retrieved
+    while (hasMore) {
+      const batch = await this._fetch(`world/${this.worldId}/${endpoint}`, {limit: limit, offset: offset, ...params});
+      batch[collectionName] = batch[collectionName] || [];
+
+      // Determine whether more results are available
+      const nReturned = batch[collectionName].length;
+      hasMore = nReturned === limit;  // There may be more
+      offset += nReturned; // Increment the pagination
+
+      // Store the query results
+      if (!result) result = batch;  // Store the 1st result
+      else result[collectionName] = result[collectionName].concat(batch[collectionName]); // Append additional results
+    }
+    return result;
+  }
+
+  /* -------------------------------------------- */
 
   /**
    * Establish a new connection to the World Anvil API, obtaining a list of Worlds
    * @param {string} [authToken]
    */
   async connect(authToken) {
-    if ( authToken !== undefined ) this.authToken = authToken;
-    if ( !this.authToken ) return;
+    if (authToken !== undefined) this.authToken = authToken;
+    if (!this.authToken) return;
     this.user = await this.getUser();
     console.log(`World Anvil | Connected to World Anvil API as User ${this.user.username}`);
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Fetch
@@ -101,35 +134,30 @@ export default class WorldAnvil {
     return this._fetch(`article/${articleId}`);
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Fetch all articles from within a World, optionally filtering with a specific search query
-   * @param {object} [params]       An optional query parameters
-   * @return {Promise<object[]>}    An array of Article objects
+   * @param {object} [params={}]      Optional query parameters, see _fetchMany
+   * @return {Promise<object[]>}      An array of Article objects
    */
-  async getArticles(params={}) {
-    params.limit = parseInt(params.limit) || 50;
-    params.offset = parseInt(params.offset) || 0;
-
-    // Query paged articles until we have retrieved them all
-    let hasMore = true;
-    let result = null;
-    while ( hasMore ) {
-      let batch = await this._fetch(`world/${this.worldId}/articles`, params);
-      batch.articles = batch.articles || [];
-      const nReturned = batch.articles.length;
-      hasMore = nReturned === params.limit;  // There may be more
-      params.offset += nReturned; // Increment the pagination
-      if ( !result ) result = batch;  // Store the 1st result
-      else result.articles = result.articles.concat(batch.articles); // Append additional results
-    }
-
-    // Return the complete result
-    return result;
+  async getArticles(params = {}) {
+    return this._fetchMany("articles", "articles", params);
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
+
+
+  /**
+   * Fetch all categories from within a World, optionally filtering with a specific search query
+   * @param {object} [params={}]      Optional query parameters, see _fetchMany
+   * @return {Promise<object[]>}      An array of category objects
+   */
+  async getCategories(params = {}) {
+    return this._fetchMany("categories", "categories", params);
+  }
+
+  /* -------------------------------------------- */
 
   /**
    * Fetch all articles from within a World, optionally filtering with a specific search query
@@ -139,7 +167,7 @@ export default class WorldAnvil {
     return this._fetch("user");
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Fetch the available Worlds for the current User.
@@ -147,12 +175,12 @@ export default class WorldAnvil {
    * @return {Promise<object>}
    */
   async getWorlds() {
-    if ( !this.connected ) return [];
+    if (!this.connected) return [];
     const request = await this._fetch(`user/${this.user.id}/worlds`);
     return this.worlds = request.worlds;
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Fetch the complete data for a specific World and cache it to the API object
@@ -160,7 +188,7 @@ export default class WorldAnvil {
    * @return {Promise<object>}    An array of Article objects
    */
   async getWorld(worldId) {
-    if ( worldId !== undefined ) this.worldId = worldId;
+    if (worldId !== undefined) this.worldId = worldId;
     const world = await this._fetch(`world/${this.worldId}`);
     this.worldId = worldId;
     return this.world = world;

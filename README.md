@@ -42,6 +42,12 @@ All functionality of this module is restricted to Gamemaster users only.
 
 This module does not currently attempt to preserve permission or visibility control settings from World Anvil when importing content into Foundry VTT. Instead any imported content will be private only for the Gamemaster user who imported it.
 
+### Custom permission control
+
+Game-Masters will be able to see which entry have been displayed to players via their World Anvil Browser inside Foundry VTT. Using the World Anvil browser they can manage the visibility of each article or even an entire category:
+
+![Preview](docs/README_visibilityManagement.png?raw=true)
+
 -----
 
 ## Updating/Syncing an Article

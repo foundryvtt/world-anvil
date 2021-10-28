@@ -6,7 +6,7 @@ export default class WorldAnvilConfig extends FormApplication {
 
   /** @override */
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: "world-anvil-config",
       template: "modules/world-anvil/templates/config.html",
       width: 600,
