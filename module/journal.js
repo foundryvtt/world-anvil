@@ -1,176 +1,56 @@
-import {importArticle, getCategories} from "./framework.js";
-
-/**
- * Before filling the category tree, this method helps to store all WA article inside a map with category id as keys.
- * This is used to avoid looping on the whole article array each time a category leaf is filled.
- * 
- * While doing this, we fill each article data by adding info on article visibility. 
- * 
- * @param {object[]} rawArticles All WA articles, as retrieved from WA API
- * @param {object[]} entries All Journal entries which hae the world-anvil flag
- * @param {boolean} displayDraft If Draft article are to be taken into account
- * @param {boolean} displayWIP  If WIP article are to be taken into account
- * @returns A Map of all WA articles, stored by related categoryIds
- */
- function filterArticlesAndStoreThemByCategoryId( rawArticles, entries, displayDraft, displayWIP ) {
-  const result = new Map();
-  const filteredArticles = rawArticles.filter( article => {
-    if ( article.is_draft && !displayDraft ) return false;
-    if ( article.is_wip && !displayWIP ) return false;
-    return true;
-
-  }).map( article => {
-    const articleLink = entries.find(j => j.getFlag("world-anvil", "articleId") === article.id) ?? null;
-
-    const displayVisibilityButtons = articleLink != null;
-    const visibleByPlayers = articleLink?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
-
-    const entry = {
-      present: articleLink != null,
-      displayVisibilityButtons: displayVisibilityButtons,
-      visibleByPlayers: visibleByPlayers,
-      link: articleLink
-    };
-    return foundry.utils.mergeObject( {entry: entry}, article);
-    
-  }).sort( (a,b) => {
-    return a.title.localeCompare(b.title);
-  });
-  
-  filteredArticles.forEach( article => {
-    const categoryId = article.category?.id ?? '0';
-
-    const mapValue = result.get(categoryId) ?? [];
-    result.set( categoryId, mapValue.concat( [article] ) );
-  });
-  return result;  
-}
-
-/**
- * Convenience function that go trhough the whole category tree and add data about related articles, and Journal folders
- * Warning: This method is recursive, and it will go through the whole category tree
- * 
- * @param {object} category rawCategory as retrieved from WA API (Will be updated)
- * @param {Map} articleMap All WA articles, stored in map will categoryId as key
- * @param {object[]} folders Current journal entries in the game which have the world-anvil flag
- * @param {int} currentTreeLevel How many parent categories this category have. Will be used on GUI to put a left margin
- * @returns 
- */
- function fillCategoryBranchWithFolderAndArticles( category, articleMap, folders, currentTreeLevel ) {
-
-  const relatedArticles = articleMap.get( category.id ) ?? [];
-  const categoryLink = folders.find(f => f.getFlag("world-anvil", "categoryId") === category.id) ?? null;
-
-  const articlesWithVisibilityButton = relatedArticles.find( a => a.entry.displayVisibilityButtons ) ?? false;
-  const visibleByPlayers = relatedArticles.find( a => a.entry.visibleByPlayers )?.entry.visibleByPlayers ?? false;
-
-  const displayVisibilityButtons = categoryLink != null && articlesWithVisibilityButton;
-
-  const folder= {
-    present: categoryLink != null,
-    displayVisibilityButtons: displayVisibilityButtons,
-    visibleByPlayers: visibleByPlayers,
-    link: categoryLink
-  };
-
-  const data = { 
-    margin: currentTreeLevel * 20,
-    folder: folder, 
-    articles: relatedArticles 
-  };
-  foundry.utils.mergeObject(data, category);
-  data.children = data.children.map( child => fillCategoryBranchWithFolderAndArticles(child, articleMap, folders, currentTreeLevel + 1) );
-
-  return data;
-}
-
-/**
- * Used on the final step on building this.categories.
- * It goes from filled category stored as a tree to a simple array. Link between categories remain.
- * While doing this, the empty category with no articles and no child category are filtered.
- * Warning: This method is recursive, and it will create the whole array which will be stored in this.categories
- * 
- * @param {object} category The current node of the category tree which is currently handled
- * @param {object[]} result And array containing this category and its category childs (recursive)
- */
- function pushCategoryAndChildsInsideArray( category, result ) {
-
-  const childResults = [];
-  category.children.forEach( child => {
-    pushCategoryAndChildsInsideArray(child, childResults);
-  });
-
-  if( category.articles.length > 0 || childResults.length > 0 ) {
-    // Only put categories that aren't empty
-    result.push( category );
-    childResults.forEach( childResult => {
-      result.push(childResult);
-    });
-  }
-}
-
-
-/**
- * Check if a Journal exists for this category id. If not create it.
- * Warning: This method is recursive, and it will create the whole folder hierarchy for this folder leaf
- * @param {string} waCategoryId WA category id which match this folder
- * @param {object[]} categories All categories, with tree and articles filled
- * @returns The journal folder
- */
- async function createFolderIfNotExists( waCategoryId, categories ) {
-
-  const category = categories.find( c => c.id === waCategoryId );
-  if( category.folder.link ) {
-    return category.folder.link;
-  }
-
-  const parentCategoryId = category.parent_category?.id ?? null;
-  let parentFolderId = null;
-  if( parentCategoryId ) {
-    const parentFolder = await createFolderIfNotExists(parentCategoryId, categories);
-    parentFolderId = parentFolder.id;
-  }
-  const folderTitle = parentFolderId ? category.title : '[WA] ' + category.title;
-
-  category.folder.link = await Folder.create({
-    name: folderTitle,
-    type: "JournalEntry",
-    parent: parentFolderId,
-    "flags.world-anvil.categoryId": waCategoryId
-  });
-
-  return category.folder.link;
-}
-
-/**
- * Try to retrieve an existing article with the given articleId.
- * If found, refresh it. Otherwise : Create it.
- * @param {string} articleId WA article id which match the wanted article
- * @param {boolean} renderSheet Optinal parameter. renderSheet is for directly displaying Journal entry after importing it
- * @returns The article Journal entry
- */
-async function importOrRefreshArticle( articleId, {renderSheet=false} = {} ) {
-  const article = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
-  return importArticle(articleId, {entry: article, renderSheet: renderSheet});
-}
-
+import {importArticle, getArticleContent, getCategories, getCategoryFolder} from "./framework.js";
 
 /**
  * A World Anvil Directory that allows you to see and manage your World Anvil content in Foundry VTT
  */
 export default class WorldAnvilBrowser extends Application {
-  constructor(...args) {
-    super(...args);
-    this._displayDraft = true;
-    this._displayWIP = true;
+
+  /**
+   * An array of Articles which appear in this World
+   * TODO: Refactor as Map
+   * @type {Article[]}
+   */
+  articles;
+
+  /**
+   * A mapping of Categories which appear in this World
+   * @type {Map<string, Category>}
+   */
+  categories;
+
+  /**
+   * An in-memory store of uncategorized articles
+   * @type {Category}
+   */
+  uncategorized = {
+    id: "uncategorized",
+    title: game.i18n.localize("WA.CategoryUncategorized"),
+    position: 9e9,
+    articles: [],
+    folder: null,
+    isUncategorized: true
   }
 
-	/* -------------------------------------------- */
+  /**
+   * Flag whether to display draft articles
+   * @type {boolean}
+   * @private
+   */
+  _displayDraft = true;
+
+  /**
+   * Flag whether to display WIP articles
+   * @type {boolean}
+   * @private
+   */
+  _displayWIP = true;
+
+  /* -------------------------------------------- */
 
   /** @override */
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
-      id: "world-anvil-config",
+      id: "world-anvil-browser",
       classes: ["world-anvil"],
       template: "modules/world-anvil/templates/journal.hbs",
       width: 720,
@@ -198,10 +78,10 @@ export default class WorldAnvilBrowser extends Application {
   /** @override */
   async getData() {
     const world = this.anvil.world || await this.anvil.getWorld(this.anvil.worldId);
-    const categories = await this.getArticleCategories();
+    const tree = await this.getContentTree();
     return {
       world: world,
-      categories: categories,
+      tree: tree,
       displayDraft: this._displayDraft,
       displayWIP: this._displayWIP
     }
@@ -211,28 +91,53 @@ export default class WorldAnvilBrowser extends Application {
 
   /**
    * Obtain and organize the articles for the World
-   * @return {Promise<void>}
+   * @return {Promise<Category[]>}
    */
-  async getArticleCategories() {
+  async getContentTree() {
 
-    // Get folders and articles that could map to WA content
-    const rawCategories = await this._getCategories();
+    // Get all articles and folders from the World Anvil API
+    const {categories, tree} = await this._getCategories();
     const articles = await this._getArticles();
+    let contentTree = tree.children;
 
+    // Get all Folder and JournalEntry documents which contain imported World Anvil data
     const folders = game.folders.filter(f => (f.data.type === "JournalEntry") && f.data.flags["world-anvil"]);
     const entries = game.journal.filter(j => j.data.flags["world-anvil"]);
 
-    // Building a category tree filled with related article and journal entries
-    const articleMap = filterArticlesAndStoreThemByCategoryId(articles, entries, this._displayDraft, this._displayWIP )
-    const updatedTree = rawCategories.tree.map( category => fillCategoryBranchWithFolderAndArticles(category, articleMap, folders, 0));
+    // Reset status of each category
+    this.uncategorized.articles = [];
+    this.uncategorized.folder = folders.find(f => f.getFlag("world-anvil", "categoryId") === "uncategorized");
+    for ( let [id, category] of categories ) {
+      category.folder = folders.find(f => f.getFlag("world-anvil", "categoryId") === id);
+      category.articles = [];
+    }
 
-    // Remove empty ones and store it back into an array
-    const sortedCategories = [];
-    updatedTree.forEach( category => {
-      pushCategoryAndChildsInsideArray(category, sortedCategories); 
-    });
+    // Organize articles into their parent category
+    for ( let article of articles ) {
 
-    return this.categories = sortedCategories;
+      // Skip articles which should not be displayed
+      if ( (article.state !== "public") && !game.user.isGM ) continue;
+      if ( article.is_draft && !this._displayDraft ) continue;
+      if ( article.is_wip && !this._displayWIP ) continue;
+
+      // Check linked entry permissions
+      article.entry = entries.find(e => e.getFlag("world-anvil", "articleId") === article.id);
+      if ( article.entry && !article.entry.visible ) continue;
+
+      // Get the category to which the article belongs
+      const category = categories.get(article.category?.id) || this.uncategorized;
+      category.articles.push(article);
+    }
+
+    // Sort articles within each category
+    for ( let category of categories.values() ) {
+      category.articles.sort(this.constructor._sortArticles);
+    }
+    if ( this.uncategorized.articles.length ) {
+      this.uncategorized.articles.sort(this.constructor._sortArticles);
+      contentTree = contentTree.concat([this.uncategorized]);
+    }
+    return contentTree;
   }
 
 	/* -------------------------------------------- */
@@ -259,12 +164,26 @@ export default class WorldAnvilBrowser extends Application {
    * @private
    */
    async _getCategories() {
-    if (this._rawCategories) return this._rawCategories;
-    const {categories, tree} = await getCategories();
-    return this._rawCategories = {
-      all: categories,
-      tree: tree.children.concat(tree.uncategorized)
-    };
+    if ( !this.categories ) {
+      const {categories, tree} = await getCategories();
+      this.categories = categories;
+      this.tree = tree;
+    }
+    return {categories: this.categories, tree: this.tree};
+  }
+
+	/* -------------------------------------------- */
+
+  /**
+   * A comparison function for sorting articles within a category
+   * @param {Article} a               The first article
+   * @param {Article} b               The second article
+   * @returns {number}                The comparison between the two
+   * @private
+   */
+  static _sortArticles(a, b) {
+    if ( Number.isNumeric(a.position) && Number.isNumeric(b.position) ) return a.position - b.position;
+    return a.title.localeCompare(b.title);
   }
 
 	/* -------------------------------------------- */
@@ -272,7 +191,33 @@ export default class WorldAnvilBrowser extends Application {
   /** @override */
   activateListeners(html) {
     super.activateListeners(html);
+    html.find(".article-title").click(this._onClickArticleTitle.bind(this));
     html.find("button.world-anvil-control").click(this._onClickControlButton.bind(this));
+  }
+
+	/* -------------------------------------------- */
+
+  /**
+   * Handle left-click events on an article title
+   * @private
+   */
+  async _onClickArticleTitle(event) {
+    event.preventDefault();
+    const el = event.currentTarget.closest(".article");
+
+    // Already imported entry
+    let entry = game.journal.get(el.dataset.entryId);
+    if ( entry ) return entry.sheet.render(true);
+
+    // New temporary entry
+    const article = await this.anvil.getArticle(el.dataset.articleId);
+    const content = getArticleContent(article);
+    entry = new JournalEntry({
+      name: article.title,
+      content: content.html,
+      img: content.img
+    });
+    return entry.sheet.render(true, {editable: false});
   }
 
 	/* -------------------------------------------- */
@@ -285,98 +230,70 @@ export default class WorldAnvilBrowser extends Application {
     const button = event.currentTarget;
     const action = button.dataset.action;
     switch (action) {
-      case "link-folder":
-        return this._linkFolder(button.dataset.categoryId);
 
-      case "browse-folder":
-        break;
-
-      case "link-entry":
-        return this._linkEntry(button.dataset.articleId);
-
-      case "browse-entry":
-        return this._browseEntry(button.dataset.entryId);
-
-      case "sync-folder":
-        return this._syncFolder(button.dataset.categoryId);
-
+      // Header control buttons
+      case "import-all":
+        return this._importAll();
+      case "sync-all":
+        return this._syncAll();
       case "toggle-drafts":
         this._displayDraft = !this._displayDraft;
         return this.render();
-
       case "toggle-wip":
         this._displayWIP = !this._displayWIP;
         return this.render();
 
+      // Category control buttons
+      case "sync-folder":
+        return this._syncFolder(button.closest(".category").dataset.categoryId);
       case "display-folder":
-        return this._displayFolder(button.dataset.categoryId);
-
+        return this._displayFolder(button.closest(".category").dataset.categoryId);
       case "hide-folder":
-        return this._hideFolder(button.dataset.categoryId);
+        return this._hideFolder(button.closest(".category").dataset.categoryId);
 
+      // Article control buttons
+      case "sync-entry":
+        return this._syncEntry(button.closest(".article").dataset.articleId);
       case "display-entry":
-        return this._displayEntry(button.dataset.entryId);
-
+        return this._displayEntry(button.closest(".article").dataset.entryId);
       case "hide-entry":
-        return this._hideEntry(button.dataset.entryId);
+        return this._hideEntry(button.closest(".article").dataset.entryId);
     }
-
   }
+
+  /* -------------------------------------------- */
 
   /**
-   * Convenience function used to synchronize all articles related to a given category
-   * This is not recursive, and doesn't go the category childs
-   * @param {string} categoryId WA category id
-   * @returns A promise which waits that all articles are refresh or imported
+   * Fully link a category by creating a Folder and importing all its contained articles.
+   * @param {string} categoryId     World Anvil category ID
    */
-  _syncCategoryArticles(categoryId) {
-
-    const waCategory = this.categories.find( c => c.id === categoryId );
-    return Promise.all(waCategory.articles.map(a => {
-      return importOrRefreshArticle(a.id);
-    }));
+  async _syncFolder(categoryId) {
+    const category = this.categories.get(categoryId) || this.uncategorized;
+    ui.notifications.info(`Bulk importing articles in ${category.title}, please be patient.`);
+    for ( let a of category.articles ) {
+      await importArticle(a.id, {notify: false});
+    }
+    ui.notifications.info(`Done importing articles in ${category.title}!`);
   }
 
-  /**
-   * Create a folder for a category and import all related articles
-   * @param {string} categoryId WA category id
-   */
-  async _linkFolder(categoryId) {
-    await createFolderIfNotExists(categoryId, this.categories);
-    return this._syncCategoryArticles(categoryId);
-  }
+  /* -------------------------------------------- */
 
   /**
    * Import or refresh an article, and then display it
-   * @param {string} articleId WA article id
+   * @param {string} categoryId     World Anvil article ID
    */
-   async _linkEntry(articleId) {
-    return importOrRefreshArticle(articleId, {renderSheet: true});
+   async _syncEntry(articleId) {
+    return importArticle(articleId);
   }
 
-  /**
-   * Display a given Journal entry
-   * @param {string} entryId Foundry journal entry id
-   */
-  async _browseEntry(entryId) {
-    const entry = game.journal.get(entryId);
-    entry.sheet.render(true);
-  }
-
-  /**
-   * Import or refresh every articles inside a category
-   * @param {string} categoryId WA category id
-   */
-   async _syncFolder(categoryId) {
-    return this._syncCategoryArticles(categoryId);
-  }
+  /* -------------------------------------------- */
 
   /**
    * Make every related article of a category visible. Let child category as they are
    * @param {string} categoryId WA category id
    */
   async _displayFolder(categoryId) {
-    const category = this.categories.find(c => c.id === categoryId);
+    const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
       return a.entry.link?.data.permission.default < CONST.ENTITY_PERMISSIONS.OBSERVER;
@@ -393,12 +310,14 @@ export default class WorldAnvilBrowser extends Application {
     this.render();
   }
 
+  /* -------------------------------------------- */
+
   /**
    * Make every related article of a category hidden. Let child category as they are
    * @param {string} categoryId WA category id
    */
   async _hideFolder(categoryId) {
-    const category = this.categories.find(c => c.id === categoryId);
+    const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
       return a.entry.link?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
@@ -414,6 +333,8 @@ export default class WorldAnvilBrowser extends Application {
     }
     this.render();
   }
+
+  /* -------------------------------------------- */
 
   /**
    * Make an article entry visibile for all players
@@ -431,6 +352,8 @@ export default class WorldAnvilBrowser extends Application {
     this.render();
   }
 
+  /* -------------------------------------------- */
+
   /**
    * Make an article entry hidden for all players
    * @param {string} entryId Foundry journal entry id
@@ -447,4 +370,24 @@ export default class WorldAnvilBrowser extends Application {
     this.render();
   }
 
+  /* -------------------------------------------- */
+
+  async _importAll() {
+    ui.notifications.info("Bulk importing articles from World Anvil, please be patient.");
+    for ( let a of this.articles ) {
+      await importArticle(a.id, {notify: false, renderSheet: false});
+    }
+    ui.notifications.info("Bulk article import completed successfully!")
+  }
+
+  /* -------------------------------------------- */
+
+  async _syncAll() {
+    ui.notifications.info("Bulk importing articles from World Anvil, please be patient.");
+    for ( let article of this.articles ) {
+      if ( !article.entry ) continue;
+      await importArticle(article.id, {notify: false, renderSheet: false});
+    }
+    ui.notifications.info("Bulk importing articles from World Anvil, please be patient.");
+  }
 }

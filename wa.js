@@ -89,7 +89,7 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
       const sync = $(`<a class="wa-sync"><i class="fas fa-sync"></i>${game.i18n.localize("WA.Sync")}</a>`);
       sync.on("click", event => {
         event.preventDefault();
-        importArticle(articleId, {entry});
+        api.importArticle(articleId);
       });
       title.after(sync);
     }
@@ -123,6 +123,6 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
     if ( !game.user.isGM ) {
       return ui.notifications.warn(game.i18n.localize("WA.NoPermissionView"));
     }
-    return importArticle(articleId, {renderSheet: true});
+    return api.importArticle(articleId, {renderSheet: true});
   });
 });
