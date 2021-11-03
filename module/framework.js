@@ -280,7 +280,8 @@ export async function getCategories() {
     id: CATEGORY_ID.uncategorized, 
     title: game.i18n.localize('WA.CategoryUncategorized'),
     children : [],
-    parent: tree
+    parent: tree,
+    isUncategorized: true
   };
   categories.set(uncategorized.id, uncategorized);
   tree.children.push(uncategorized);
