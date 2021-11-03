@@ -26,11 +26,18 @@ const DISPLAY_SIDEBAR_SECTION_ID = 'displaySidebar';
  * @param {object} [options={}]         Additional options for journal entry import
  * @return {Promise<JournalEntry>}
  */
-export async function importArticle(articleId, {notify=true, options={}}={}) {
+export async function importArticle(articleId, {notify=true, categories=null, options={}}={}) {
+
+  // Set up categories
+  if( !categories ) { 
+    const def = await getCategories();
+    categories = def.categories; 
+  } else {
+    refreshCategoryFolders(categories);
+  }
 
   // Get the article data from the API
-  const anvil = game.modules.get("world-anvil").anvil;
-  const article = await anvil.getArticle(articleId);
+  const article = await getWAArticle(articleId, categories);
   const content = getArticleContent(article);
 
   // Update an existing Journal Entry
@@ -46,12 +53,7 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
   }
 
   // Determine the Folder which contains this article
-  let folder = null;
-  if ( article.category ) {
-    folder = await getCategoryFolder(article.category);
-  } else {
-    folder = await getRootFolder();
-  }
+  const folder = await getCategoryFolder(article.category);
 
   // Create a new Journal Entry
   entry = await JournalEntry.create({
@@ -63,6 +65,24 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
   }, options);
   if ( notify ) ui.notifications.info(`Imported World Anvil article ${article.title}`);
   return entry;
+}
+
+/**
+ * Retrieve article from WA and set its categroy child
+ * @param {string} articleId article Id in WA
+ * @param {Map} categories Map of all categories, as computed in getCategories
+ * @returns Article data as given by WA api. Its category attribute as been fetched
+ */
+async function getWAArticle(articleId, categories) {
+  const anvil = game.modules.get("world-anvil").anvil;
+  const article = await anvil.getArticle(articleId);
+  if( article.category ) {
+    article.category = categories.get(article.category.id);
+  } else {
+    article.category = categories.get(CATEGORY_ID.uncategorized);
+    
+  }
+  return article;
 }
 
 /* -------------------------------------------- */
@@ -205,6 +225,11 @@ function _getLocalizedTitle( sectionId, section ) {
 /*  Category Management                         */
 /* -------------------------------------------- */
 
+export const CATEGORY_ID = {
+  root: 'root',
+  uncategorized: 'uncategorized'
+};
+
 /**
  * @typedef {Object} Category
  * @property {string} id              The category ID
@@ -235,13 +260,41 @@ export async function getCategories() {
 
   // Build the tree, tracking uncategorized results
   let _depth = 0;
-  const tree = {id: null, title: "Root", position: 0, children: [], folder: null};
-  const uncategorized = _buildCategoryBranch(tree, pending, _depth);
+  const tree = {
+    id: CATEGORY_ID.root, 
+    title:  `[WA] ${anvil.world.name}`, 
+    position: 0, 
+    children: [], 
+    folder: null
+  };
+  categories.set( tree.id, tree );
 
-  // Handle uncategorized categories
-  uncategorized.sort(_sortCategories);
-  tree.children.push(...uncategorized);
+
+  const ignored = _buildCategoryBranch(tree, pending, _depth);
+  ignored.forEach( c => {
+    console.warn('World-Anvil | This category has been ignored : ' + c.title )
+  });
+
+  // Uncategorized (at the end)
+  const uncategorized = { 
+    id: CATEGORY_ID.uncategorized, 
+    title: game.i18n.localize('WA.CategoryUncategorized'),
+    children : [],
+    parent: tree
+  };
+  categories.set(uncategorized.id, uncategorized);
+  tree.children.push(uncategorized);
+
+
+  refreshCategoryFolders(categories);
   return {categories, tree};
+}
+
+export function refreshCategoryFolders(categories) {
+  const folders = game.folders.filter(f => (f.data.type === "JournalEntry") && f.data.flags["world-anvil"]);
+  for ( let [id, category] of categories ) {
+    category.folder = folders.find(f => f.getFlag("world-anvil", "categoryId") === id);
+  }
 }
 
 /* -------------------------------------------- */
@@ -252,46 +305,20 @@ export async function getCategories() {
  * @returns {Promise<Folder>}         The Folder document which contains entries in this category
  */
 export async function getCategoryFolder(category) {
-  if ( category === undefined ) return getRootFolder();
   if ( category.folder ) return category.folder;
   if ( category.parent && !category.parent.folder ) await getCategoryFolder(category.parent);
 
   // Check whether a Folder already exists for this Category
-  let folder = game.folders.find(f => f.getFlag("world-anvil", "categoryId") === category.id);
+  const folder = game.folders.find(f => f.getFlag("world-anvil", "categoryId") === category.id);
   if ( folder ) return category.folder = folder;
-
-  // Create a root-level folder if one does not yet exist
-  let parent = category.parent?.folder;
-  if ( !parent ) parent = await getRootFolder();
 
   // Create a new Folder
   return category.folder = await Folder.create({
     name: category.title,
     type: "JournalEntry",
-    parent: parent.id,
+    parent: category.parent?.folder?.id,
+    sorting: 'm',
     "flags.world-anvil.categoryId": category.id
-  });
-}
-
-/* -------------------------------------------- */
-
-/**
- * Get or create a root-level Folder for all imported content
- * @returns {Promise<Folder>}         The root Folder for this World
- */
-export async function getRootFolder() {
-
-  // Determine whether a root folder already exists
-  let root = game.folders.find(f => (f.data.type === "JournalEntry") && f.getFlag("world-anvil", "root"));
-  if ( root ) return root;
-
-  // Create a root folder
-  const anvil = game.modules.get("world-anvil").anvil;
-  return Folder.create({
-    name: `[WA] ${anvil.world.name}`,
-    type: "JournalEntry",
-    parent: null,
-    "flags.world-anvil.root": true
   });
 }
 
@@ -310,7 +337,10 @@ function _buildCategoryBranch(parent, categories, _depth=0) {
   _depth++;
 
   // Allocate pending categories which have this parent category
-  let [pending, children] = categories.partition(c => c["parent_category"] === parent.id);
+  let [pending, children] = categories.partition(c => {
+    const parentId = c.parent_category?.id ?? CATEGORY_ID.root;
+    return parentId === parent.id;
+  });
   children.forEach(c => c.parent = parent);
   children.sort(_sortCategories);
   parent["children"] = children;
