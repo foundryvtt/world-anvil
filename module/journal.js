@@ -1,4 +1,4 @@
-import {importArticle, getArticleContent, getCategories, getCategoryFolder} from "./framework.js";
+import {importArticle, getArticleContent, getCategories, refreshCategoryFolders, CATEGORY_ID} from "./framework.js";
 
 /**
  * A World Anvil Directory that allows you to see and manage your World Anvil content in Foundry VTT
@@ -17,19 +17,6 @@ export default class WorldAnvilBrowser extends Application {
    * @type {Map<string, Category>}
    */
   categories;
-
-  /**
-   * An in-memory store of uncategorized articles
-   * @type {Category}
-   */
-  uncategorized = {
-    id: "uncategorized",
-    title: game.i18n.localize("WA.CategoryUncategorized"),
-    position: 9e9,
-    articles: [],
-    folder: null,
-    isUncategorized: true
-  }
 
   /**
    * Flag whether to display draft articles
@@ -101,42 +88,40 @@ export default class WorldAnvilBrowser extends Application {
     let contentTree = tree.children;
 
     // Get all Folder and JournalEntry documents which contain imported World Anvil data
-    const folders = game.folders.filter(f => (f.data.type === "JournalEntry") && f.data.flags["world-anvil"]);
-    const entries = game.journal.filter(j => j.data.flags["world-anvil"]);
+    refreshCategoryFolders(categories);
 
     // Reset status of each category
-    this.uncategorized.articles = [];
-    this.uncategorized.folder = folders.find(f => f.getFlag("world-anvil", "categoryId") === "uncategorized");
     for ( let [id, category] of categories ) {
-      category.folder = folders.find(f => f.getFlag("world-anvil", "categoryId") === id);
       category.articles = [];
     }
+    const uncategorized = categories.get( CATEGORY_ID.uncategorized );
 
     // Organize articles into their parent category
+    const entries = game.journal.filter(j => j.data.flags["world-anvil"]);
     for ( let article of articles ) {
 
       // Skip articles which should not be displayed
-      if ( (article.state !== "public") && !game.user.isGM ) continue;
       if ( article.is_draft && !this._displayDraft ) continue;
       if ( article.is_wip && !this._displayWIP ) continue;
 
       // Check linked entry permissions
       article.entry = entries.find(e => e.getFlag("world-anvil", "articleId") === article.id);
-      if ( article.entry && !article.entry.visible ) continue;
+      article.visibleByPlayers = article.entry?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
 
       // Get the category to which the article belongs
-      const category = categories.get(article.category?.id) || this.uncategorized;
+      const category = categories.get(article.category?.id) || uncategorized;
       category.articles.push(article);
     }
 
     // Sort articles within each category
     for ( let category of categories.values() ) {
-      category.articles.sort(this.constructor._sortArticles);
+      category.articles.sort( (a,b) => a.title.localeCompare(b.title) );
     }
-    if ( this.uncategorized.articles.length ) {
-      this.uncategorized.articles.sort(this.constructor._sortArticles);
-      contentTree = contentTree.concat([this.uncategorized]);
-    }
+
+    // Add empty attribute on categories. 
+    this._calculateCategoryEmptyness(this.tree);
+    this._calculateCategoryVisibility(this.tree);
+
     return contentTree;
   }
 
@@ -170,20 +155,6 @@ export default class WorldAnvilBrowser extends Application {
       this.tree = tree;
     }
     return {categories: this.categories, tree: this.tree};
-  }
-
-	/* -------------------------------------------- */
-
-  /**
-   * A comparison function for sorting articles within a category
-   * @param {Article} a               The first article
-   * @param {Article} b               The second article
-   * @returns {number}                The comparison between the two
-   * @private
-   */
-  static _sortArticles(a, b) {
-    if ( Number.isNumeric(a.position) && Number.isNumeric(b.position) ) return a.position - b.position;
-    return a.title.localeCompare(b.title);
   }
 
 	/* -------------------------------------------- */
@@ -233,9 +204,9 @@ export default class WorldAnvilBrowser extends Application {
 
       // Header control buttons
       case "import-all":
-        return this._importAll();
+        return this._importCategory(this.tree);
       case "sync-all":
-        return this._syncAll();
+        return this._importCategory(this.tree, {onlyExistingOnes:true} );
       case "toggle-drafts":
         this._displayDraft = !this._displayDraft;
         return this.render();
@@ -268,12 +239,8 @@ export default class WorldAnvilBrowser extends Application {
    * @param {string} categoryId     World Anvil category ID
    */
   async _syncFolder(categoryId) {
-    const category = this.categories.get(categoryId) || this.uncategorized;
-    ui.notifications.info(`Bulk importing articles in ${category.title}, please be patient.`);
-    for ( let a of category.articles ) {
-      await importArticle(a.id, {notify: false});
-    }
-    ui.notifications.info(`Done importing articles in ${category.title}!`);
+    const category = this.categories.get(categoryId);
+    await this._importCategory(category);
   }
 
   /* -------------------------------------------- */
@@ -283,7 +250,7 @@ export default class WorldAnvilBrowser extends Application {
    * @param {string} categoryId     World Anvil article ID
    */
    async _syncEntry(articleId) {
-    return importArticle(articleId);
+    return importArticle(articleId, {categories: this.categories});
   }
 
   /* -------------------------------------------- */
@@ -296,10 +263,10 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return a.entry.link?.data.permission.default < CONST.ENTITY_PERMISSIONS.OBSERVER;
+      return !a.entry?.data.permission.default < CONST.ENTITY_PERMISSIONS.OBSERVER;
     }).map( a => {
       return {
-        _id: a.entry.link.id,
+        _id: a.entry.id,
         permission: { default: CONST.ENTITY_PERMISSIONS.OBSERVER }
       }
     });
@@ -320,10 +287,10 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return a.entry.link?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
+      return a.entry?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
     }).map( a => {
       return {
-        _id: a.entry.link.id,
+        _id: a.entry.id,
         permission: { default: CONST.ENTITY_PERMISSIONS.NONE }
       }
     });
@@ -372,22 +339,62 @@ export default class WorldAnvilBrowser extends Application {
 
   /* -------------------------------------------- */
 
-  async _importAll() {
-    ui.notifications.info("Bulk importing articles from World Anvil, please be patient.");
-    for ( let a of this.articles ) {
-      await importArticle(a.id, {notify: false, renderSheet: false});
+  async _importCategory( category, {onlyExistingOnes=false} = {} ) {
+    ui.notifications.info(`Bulk importing articles in ${category.title}, please be patient.`);
+    const articles = this._articlesFromNode(category);
+    for ( const article of articles ) {
+      if ( onlyExistingOnes && !article.entry ) continue;
+      await importArticle(article.id, {categories: this.categories, notify: false, renderSheet: false});
     }
     ui.notifications.info("Bulk article import completed successfully!")
   }
 
-  /* -------------------------------------------- */
+  /**
+   * See for this category and its subcategory if it has content or not.
+   * A category is empty if it has no articles and its subcategory are empty too
+   * Set its empty attribute.
+   * @param {object} node Category tree branch. Can be the root element
+   */
+  _calculateCategoryEmptyness( node ) {
 
-  async _syncAll() {
-    ui.notifications.info("Bulk importing articles from World Anvil, please be patient.");
-    for ( let article of this.articles ) {
-      if ( !article.entry ) continue;
-      await importArticle(article.id, {notify: false, renderSheet: false});
+    node.children.forEach(child => this._calculateCategoryEmptyness(child) );
+
+    const noArticle = node.articles.length == 0;
+    const emptyChildren = node.children.reduce( (empty, current) => {
+      return empty && current.empty;
+    }, true);
+
+    node.empty = noArticle && emptyChildren;
+  }
+
+  /**
+   * See for this category and its subcategory if its content is visible or not.
+   * A category is visible if it at least one of its articles is visible
+   * Set its visibility attribute.
+   * @param {object} node Category tree branch. Can be the root element
+   */
+   _calculateCategoryVisibility( node ) {
+
+    node.children.forEach(child => this._calculateCategoryVisibility(child) );
+
+    node.displayVisibilityButtons = node.folder && node.articles.findIndex( a => a.entry ) != -1;
+    node.visibleByPlayers = node.articles.findIndex( a => a.visibleByPlayers ) != -1;
+  }
+
+  /**
+   * Retrieve a part of the articles, sorted in a way that upper leaf will be handled before the lower ones
+   * @param {object} node Category tree branch. Can be the root element
+   * @returns {object[]} All articles, with the ones from the upper leaf first
+   */
+  _articlesFromNode( node ) {
+    const result = [];
+    if( node.articles ) { // Some node have no articles (like the root one)
+      result.push(...node.articles);
     }
-    ui.notifications.info("Bulk importing articles from World Anvil, please be patient.");
+    node.children.forEach(child => {
+      result.push(...this._articlesFromNode(child) );
+    });
+    return result;
   }
 }
+

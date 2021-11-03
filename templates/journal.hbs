@@ -1,57 +1,84 @@
 {{#*inline "categoryPartial"}}
-<section class="category" data-category-id="{{ this.id }}" data-folder-id="{{ this.folder.id }}">
-    <header class="category-header flexrow">
-        <h2 class="category-title">{{ this.title }}</h2>
-        <div class="controls">
-            {{#unless this.isUncategorized}}
-            <button type="button" class="world-anvil-control">
-                <a class="world-anvil-link" href="{{this.url}}" title="{{ localize 'WA.ButtonOnWA' }}" target="_blank"></a>
-            </button>
-            {{/unless}}
-            {{#if this.folder }}
-                <button type="button" class="world-anvil-control" data-action="sync-folder" title="{{ localize 'WA.ButtonSyncCategory' }}">
-                    <i class="fas fa-sync fa-fw"></i>
-                </button>
-            {{else}}
-                <button type="button" class="world-anvil-control" data-action="sync-folder" title="{{ localize 'WA.ButtonImportCategory' }}">
-                    <i class="fas fa-folder-plus fa-fw"></i>
-                </button>
+    {{#unless this.empty}}
+        <section class="category" data-category-id="{{ this.id }}" data-folder-id="{{ this.folder.id }}">
+            <header class="category-header flexrow">
+                <h2 class="category-title">{{ this.title }}</h2>
+                <div class="controls">
+
+                    {{#if this.displayVisibilityButtons }}
+                        {{#if this.visibleByPlayers }}
+                            <button type="button" class="world-anvil-control" data-action="hide-folder" data-category-id="{{ this.id }}" title="{{ localize 'WA.ButtonVisibilityHide' }}">
+                                <i class="far fa-eye"></i>
+                            </button>
+                        {{else}}
+                            <button type="button" class="world-anvil-control" data-action="display-folder" data-category-id="{{ c.id }}" title="{{ localize 'WA.ButtonVisibilityDisplay' }}">
+                                <i class="far fa-eye-slash"></i>
+                            </button>
+                        {{/if}}
+                    {{/if}}
+
+                    {{#if this.folder }}
+                        <button type="button" class="world-anvil-control" data-action="sync-folder" title="{{ localize 'WA.ButtonSyncCategory' }}">
+                            <i class="fas fa-sync fa-fw"></i>
+                        </button>
+                    {{else}}
+                        <button type="button" class="world-anvil-control" data-action="sync-folder" title="{{ localize 'WA.ButtonImportCategory' }}">
+                            <i class="fas fa-folder-plus fa-fw"></i>
+                        </button>
+                    {{/if}}
+
+                    {{#unless this.isUncategorized}}
+                        <button type="button" class="world-anvil-control">
+                            <a class="world-anvil-link" href="{{this.url}}" title="{{ localize 'WA.ButtonOnWA' }}" target="_blank"></a>
+                        </button>
+                    {{/unless}}
+                </div>
+            </header>
+
+            {{#if this.children.length}}
+            <section class="subcategories">
+            {{#each this.children}}
+                {{> "categoryPartial"}}
+            {{/each}}
+            </section>
             {{/if}}
-        </div>
-    </header>
 
-    {{#if this.children.length}}
-    <section class="subcategories">
-    {{#each this.children}}
-        {{> "categoryPartial"}}
-    {{/each}}
-    </section>
-    {{/if}}
-
-    <section class="articles">
-    {{#each this.articles}}
-        {{> "articlePartial"}}
-    {{/each}}
-    </section>
-</section>
+            <section class="articles">
+            {{#each this.articles}}
+                {{> "articlePartial"}}
+            {{/each}}
+            </section>
+        </section>
+    {{/unless}}
 {{/inline}}
 
 {{#*inline "articlePartial"}}
 <article class="article flexrow" data-article-id="{{ this.id }}" data-entry-id="{{ this.entry.id }}">
     <h3 class="article-title">{{ this.title }}</h3>
     <div class="controls">
+        {{#if this.entry }}
+
+            {{#if this.visibleByPlayers }}
+                <button type="button" class="world-anvil-control" data-action="hide-entry" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonVisibilityHide' }}">
+                    <i class="far fa-eye"></i>
+                </button>
+            {{else}}
+                <button type="button" class="world-anvil-control" data-action="display-entry" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonVisibilityDisplay' }}">
+                    <i class="far fa-eye-slash"></i>
+                </button>
+            {{/if}}
+
+            <button type="button" class="world-anvil-control" data-action="sync-entry" title="{{localize 'WA.ButtonSyncArticle'}}">
+                <i class="fas fa-sync fa-fw"></i>
+            </button>
+        {{else}}
+            <button type="button" class="world-anvil-control" data-action="sync-entry" title="{{localize 'WA.ButtonImportArticle'}}">
+                <i class="fas fa-file-import fa-fw"></i>
+            </button>
+        {{/if}}
         <button type="button" class="world-anvil-control">
             <a class="world-anvil-link" href="{{this.url}}" title="{{ localize 'WA.ButtonOnWA' }}" target="_blank"></a>
         </button>
-        {{#if this.entry }}
-        <button type="button" class="world-anvil-control" data-action="sync-entry" title="{{localize 'WA.ButtonSyncArticle'}}">
-            <i class="fas fa-sync fa-fw"></i>
-        </button>
-        {{else}}
-        <button type="button" class="world-anvil-control" data-action="sync-entry" title="{{localize 'WA.ButtonImportArticle'}}">
-            <i class="fas fa-file-import fa-fw"></i>
-        </button>
-        {{/if}}
     </div>
 </article>
 {{/inline}}
