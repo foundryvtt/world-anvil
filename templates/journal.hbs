@@ -7,11 +7,11 @@
 
                     {{#if this.displayVisibilityButtons }}
                         {{#if this.visibleByPlayers }}
-                            <button type="button" class="world-anvil-control" data-action="hide-folder" data-category-id="{{ this.id }}" title="{{ localize 'WA.Visibility.Hide.Btn' }}">
+                            <button type="button" class="world-anvil-control" data-action="hide-folder" data-category-id="{{ this.id }}" title="{{ localize 'WA.ButtonVisibilityHide' }}">
                                 <i class="far fa-eye"></i>
                             </button>
                         {{else}}
-                            <button type="button" class="world-anvil-control" data-action="display-folder" data-category-id="{{ c.id }}" title="{{ localize 'WA.Visibility.Display.Btn' }}">
+                            <button type="button" class="world-anvil-control" data-action="display-folder" data-category-id="{{ c.id }}" title="{{ localize 'WA.ButtonVisibilityDisplay' }}">
                                 <i class="far fa-eye-slash"></i>
                             </button>
                         {{/if}}
@@ -59,11 +59,11 @@
         {{#if this.entry }}
 
             {{#if this.visibleByPlayers }}
-                <button type="button" class="world-anvil-control" data-action="hide-entry" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.Visibility.Hide.Btn' }}">
+                <button type="button" class="world-anvil-control" data-action="hide-entry" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonVisibilityHide' }}">
                     <i class="far fa-eye"></i>
                 </button>
             {{else}}
-                <button type="button" class="world-anvil-control" data-action="display-entry" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.Visibility.Display.Btn' }}">
+                <button type="button" class="world-anvil-control" data-action="display-entry" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonVisibilityDisplay' }}">
                     <i class="far fa-eye-slash"></i>
                 </button>
             {{/if}}
