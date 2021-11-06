@@ -37,6 +37,12 @@ export default class WorldAnvil {
     this.user = null;
   }
 
+  /**
+   * A cached storage of World data
+   * @private
+   */
+  world = null;
+
   /* -------------------------------------------- */
 
   /**
@@ -188,6 +194,7 @@ export default class WorldAnvil {
    * @return {Promise<object>}    An array of Article objects
    */
   async getWorld(worldId) {
+    if ( this.world?.id === worldId ) return this.world;
     if (worldId !== undefined) this.worldId = worldId;
     const world = await this._fetch(`world/${this.worldId}`);
     this.worldId = worldId;

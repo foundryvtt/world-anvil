@@ -1,4 +1,4 @@
-import {importArticle, getArticleContent, getCategories, refreshCategoryFolders, CATEGORY_ID} from "./framework.js";
+import {importArticle, getArticleContent, getCategories, associateCategoryFolders, CATEGORY_ID} from "./framework.js";
 
 /**
  * A World Anvil Directory that allows you to see and manage your World Anvil content in Foundry VTT
@@ -83,15 +83,14 @@ export default class WorldAnvilBrowser extends Application {
   async getContentTree() {
 
     // Get all articles and folders from the World Anvil API
-    const {categories, tree} = await this._getCategories();
+    const {categories, tree} = await getCategories();
+    this.categories = categories;
+    this.tree = tree;
     const articles = await this._getArticles();
     let contentTree = tree.children;
 
-    // Get all Folder and JournalEntry documents which contain imported World Anvil data
-    refreshCategoryFolders(categories);
-
     // Reset status of each category
-    for ( let [id, category] of categories ) {
+    for ( let category of categories.values() ) {
       category.articles = [];
     }
     const uncategorized = categories.get( CATEGORY_ID.uncategorized );
@@ -118,10 +117,8 @@ export default class WorldAnvilBrowser extends Application {
       category.articles.sort( (a,b) => a.title.localeCompare(b.title) );
     }
 
-    // Add empty attribute on categories. 
-    this._calculateCategoryEmptyness(this.tree);
-    this._calculateCategoryVisibility(this.tree);
-
+    // Add empty attribute on categories.
+    this._calculateCategoryVisibility(tree);
     return contentTree;
   }
 
@@ -138,23 +135,6 @@ export default class WorldAnvilBrowser extends Application {
       this.articles = request.articles;
     }
     return this.articles;
-  }
-
-	/* -------------------------------------------- */
-
-  /**
-   * Get all World Anvil categories and cache them to this Application instance.
-   * Then sort them and build a tree taking parents into account
-   * @return {Promise<{all: Map<string, Category>, tree: Category[]}>}
-   * @private
-   */
-   async _getCategories() {
-    if ( !this.categories ) {
-      const {categories, tree} = await getCategories();
-      this.categories = categories;
-      this.tree = tree;
-    }
-    return {categories: this.categories, tree: this.tree};
   }
 
 	/* -------------------------------------------- */
@@ -206,7 +186,7 @@ export default class WorldAnvilBrowser extends Application {
       case "import-all":
         return this._importCategory(this.tree);
       case "sync-all":
-        return this._importCategory(this.tree, {onlyExistingOnes:true} );
+        return this._importCategory(this.tree, {sync: true} );
       case "toggle-drafts":
         this._displayDraft = !this._displayDraft;
         return this.render();
@@ -339,33 +319,42 @@ export default class WorldAnvilBrowser extends Application {
 
   /* -------------------------------------------- */
 
-  async _importCategory( category, {onlyExistingOnes=false} = {} ) {
+  /**
+   * Import all articles contained within a single Category.
+   * @param {Category} category           The Category for which we are importing content
+   * @param {boolean} [sync=false]        Only sync articles which have already been imported
+   * @private
+   */
+  async _importCategory( category, {sync=false} = {} ) {
     ui.notifications.info(`Bulk importing articles in ${category.title}, please be patient.`);
-    const articles = this._articlesFromNode(category);
+    const articles = this._getAllArticlesUnderCategory(category);
     for ( const article of articles ) {
-      if ( onlyExistingOnes && !article.entry ) continue;
+      if ( sync && !article.entry ) continue;
       await importArticle(article.id, {categories: this.categories, notify: false, renderSheet: false});
     }
     ui.notifications.info("Bulk article import completed successfully!")
   }
 
+  /* -------------------------------------------- */
+
   /**
-   * See for this category and its subcategory if it has content or not.
-   * A category is empty if it has no articles and its subcategory are empty too
-   * Set its empty attribute.
+   * Create an array of all articles which belong to a certain category node.
+   * Recursively add articles belonging to sub-categories.
    * @param {object} node Category tree branch. Can be the root element
+   * @returns {object[]} All articles, with the ones from the upper leaf first
    */
-  _calculateCategoryEmptyness( node ) {
-
-    node.children.forEach(child => this._calculateCategoryEmptyness(child) );
-
-    const noArticle = node.articles.length == 0;
-    const emptyChildren = node.children.reduce( (empty, current) => {
-      return empty && current.empty;
-    }, true);
-
-    node.empty = noArticle && emptyChildren;
+  _getAllArticlesUnderCategory( node ) {
+    const result = [];
+    for ( let article of (node.articles || []) ) {
+      result.push(article);
+    }
+    for ( let category of node.children ) {
+      result.push(...this._getAllArticlesUnderCategory(category));
+    }
+    return result;
   }
+
+  /* -------------------------------------------- */
 
   /**
    * See for this category and its subcategory if its content is visible or not.
@@ -374,27 +363,9 @@ export default class WorldAnvilBrowser extends Application {
    * @param {object} node Category tree branch. Can be the root element
    */
    _calculateCategoryVisibility( node ) {
-
     node.children.forEach(child => this._calculateCategoryVisibility(child) );
-
-    node.displayVisibilityButtons = node.folder && node.articles.findIndex( a => a.entry ) != -1;
-    node.visibleByPlayers = node.articles.findIndex( a => a.visibleByPlayers ) != -1;
-  }
-
-  /**
-   * Retrieve a part of the articles, sorted in a way that upper leaf will be handled before the lower ones
-   * @param {object} node Category tree branch. Can be the root element
-   * @returns {object[]} All articles, with the ones from the upper leaf first
-   */
-  _articlesFromNode( node ) {
-    const result = [];
-    if( node.articles ) { // Some node have no articles (like the root one)
-      result.push(...node.articles);
-    }
-    node.children.forEach(child => {
-      result.push(...this._articlesFromNode(child) );
-    });
-    return result;
+    node.displayVisibilityButtons = node.folder && node.articles.findIndex( a => a.entry ) !== -1;
+    node.visibleByPlayers = node.articles.findIndex( a => a.visibleByPlayers ) !== -1;
   }
 }
 
