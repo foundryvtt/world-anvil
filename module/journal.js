@@ -117,6 +117,14 @@ export default class WorldAnvilBrowser extends Application {
       category.articles.sort( (a,b) => a.title.localeCompare(b.title) );
     }
 
+    // Add .hasVisibleChildren on each category
+    for ( let category of categories.values() ) {
+      const childArticles = category.children.reduce( (result, child) => {
+        return result.concat( this._getAllArticlesUnderCategory( child ) );
+      }, []);
+      category.hasVisibleChildren = childArticles.length > 0;
+    }
+
     // Add empty attribute on categories.
     this._calculateCategoryVisibility(tree);
     return contentTree;

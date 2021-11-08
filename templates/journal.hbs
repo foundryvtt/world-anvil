@@ -33,7 +33,7 @@
         </div>
     </header>
 
-    {{#if this.children.length}}
+    {{#if this.hasVisibleChildren}}
     <section class="subcategories">
     {{#each this.children}}
         {{> "categoryPartial"}}
