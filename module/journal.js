@@ -357,15 +357,20 @@ export default class WorldAnvilBrowser extends Application {
   /* -------------------------------------------- */
 
   /**
-   * See for this category and its subcategory if its content is visible or not.
-   * A category is visible if it at least one of its articles is visible
-   * Set its visibility attribute.
+   * Recursive
+   * Set .displayVisibilityButtons, .visibleByPlayers, .hasChildrenWithContent, .hasContent
+   * Article visibility : default permission on article is at least OBSERVER
+   * Category visibility : is visible if it at least one of its articles is visible
+   * Category with content : Has some articles (visible or not) or has a child which have some
    * @param {object} node Category tree branch. Can be the root element
    */
    _calculateCategoryVisibility( node ) {
     node.children.forEach(child => this._calculateCategoryVisibility(child) );
     node.displayVisibilityButtons = node.folder && node.articles.findIndex( a => a.entry ) !== -1;
     node.visibleByPlayers = node.articles.findIndex( a => a.visibleByPlayers ) !== -1;
+
+    node.hasChildrenWithContent = node.children.filter( child => child.hasContent).length > 0;
+    node.hasContent = node.hasChildrenWithContent || node.articles.length > 0;
   }
 }
 
