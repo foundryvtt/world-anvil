@@ -34,5 +34,6 @@
   "WA.ButtonImportCategory": "Import Category",
   "WA.ButtonSyncCategory": "Sync Category",
 
-  "WA.HeaderGeneralDetails": "General Details"
+  "WA.Header.GeneralDetails": "General Details",
+  "WA.Header.Seeded": "Secrets"
 }

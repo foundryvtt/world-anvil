@@ -1,4 +1,4 @@
-import {importArticle, getArticleContent, getCategories, associateCategoryFolders, CATEGORY_ID} from "./framework.js";
+import {importArticle, getArticleContent, getCategories, CATEGORY_ID} from "./framework.js";
 
 /**
  * A World Anvil Directory that allows you to see and manage your World Anvil content in Foundry VTT
