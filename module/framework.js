@@ -119,7 +119,9 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
     const oldWaFlagSecrets = entry.data.flags["world-anvil"]?.secrets;
     if( oldWaFlagSecrets ) {
       for( let [secretId, secretValue] of Object.entries(oldWaFlagSecrets) ) {
-        newWaFlag.secrets[secretId] = secretValue;
+        if( newWaFlag.secrets.hasOwnProperty(secretId) ) { // Do not add unknwon secrets reference here
+          newWaFlag.secrets[secretId] = secretValue;
+        }
       }
     };
 

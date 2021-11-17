@@ -107,6 +107,13 @@ export default class WorldAnvilBrowser extends Application {
       article.entry = entries.find(e => e.getFlag("world-anvil", "articleId") === article.id);
       article.visibleByPlayers = article.entry?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
 
+      // For secrets
+      article.hasSecrets = article.entry?.getFlag("world-anvil", "hasSecrets") ?? false;
+      if( article.hasSecrets ) {
+        const secrets = article.entry.getFlag("world-anvil", "secrets");
+        article.someSecretsAreHidden = Object.values(secrets).some( v => !v );
+      }
+
       // Get the category to which the article belongs
       const category = categories.get(article.category?.id) || uncategorized;
       category.articles.push(article);
@@ -209,6 +216,12 @@ export default class WorldAnvilBrowser extends Application {
         return this._displayEntry(button.closest(".article").dataset.entryId);
       case "hide-entry":
         return this._hideEntry(button.closest(".article").dataset.entryId);
+
+      // Article secrets buttons
+      case "reveal-secrets":
+        return this._revealSecrets(button.closest(".article").dataset.entryId);
+      case "hide-secrets":
+        return this._hideSecrets(button.closest(".article").dataset.entryId);
     }
   }
 
@@ -316,6 +329,46 @@ export default class WorldAnvilBrowser extends Application {
     await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});
     this.render();
   }
+
+
+  /* -------------------------------------------- */
+
+  /**
+   * Reval all secrets related to an article
+   * @param {string} entryId Foundry journal entry id
+   */
+   async _revealSecrets(entryId) {
+    const entry = game.journal.find(j => j.id === entryId) ?? null;
+    if( !entry ) { throw 'Can\'t find journal entry with id : ' + entryId; }
+
+    const newSecretFlag = {};
+    for( let secretId of Object.keys( entry.getFlag("world-anvil", "secrets") ) ) {
+      newSecretFlag[secretId] = true;
+    }
+
+    await entry.setFlag("world-anvil", "secrets", newSecretFlag);
+    this.render();
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Hide all secrets related to an article
+   * @param {string} entryId Foundry journal entry id
+   */
+   async _hideSecrets(entryId) {
+    const entry = game.journal.find(j => j.id === entryId) ?? null;
+    if( !entry ) { throw 'Can\'t find journal entry with id : ' + entryId; }
+
+    const newSecretFlag = {};
+    for( let secretId of Object.keys( entry.getFlag("world-anvil", "secrets") ) ) {
+      newSecretFlag[secretId] = false;
+    }
+
+    await entry.setFlag("world-anvil", "secrets", newSecretFlag);
+    this.render();
+  }
+
 
   /* -------------------------------------------- */
 

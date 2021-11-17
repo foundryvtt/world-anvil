@@ -69,6 +69,18 @@
                 </button>
             {{/if}}
 
+            {{#if this.hasSecrets }}
+                {{#if this.someSecretsAreHidden }}
+                    <button type="button" class="world-anvil-control" data-action="reveal-secrets" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonSecretReveal' }}">
+                        <i class="fas fa-lock"></i>
+                    </button>
+                {{else}}
+                    <button type="button" class="world-anvil-control" data-action="hide-secrets" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonSecretHide' }}">
+                        <i class="fas fa-lock-open"></i>
+                    </button>
+                {{/if}}
+            {{/if}}
+
             <button type="button" class="world-anvil-control" data-action="sync-entry" title="{{localize 'WA.ButtonSyncArticle'}}">
                 <i class="fas fa-sync fa-fw"></i>
             </button>

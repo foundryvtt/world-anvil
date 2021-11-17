@@ -24,6 +24,8 @@
 
   "WA.ButtonImportAll": "Import All",
   "WA.ButtonSyncAll": "Sync All",
+  "WA.ButtonSecretHide": "Hide all secrets from players",
+  "WA.ButtonSecretReveal": "Reveal all secrets to players",
   "WA.ButtonVisibilityHide": "Hide from players",
   "WA.ButtonVisibilityDisplay": "Display to players",
   "WA.ButtonToggleDraft": "Display Drafts",
