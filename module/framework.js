@@ -306,6 +306,11 @@ async function _getCategories({cache=true}={}) {
   // Create a new category mapping
   categories.clear();
 
+  // Make sure WA world has already been retrieved
+  if( !anvil.world ) {
+    await anvil.getWorld(anvil.worldId);
+  }
+
   // Add a root node
   const root = {
     id: CATEGORY_ID.root,
