@@ -34,7 +34,7 @@ When importing a category, it will become a Folder in your Journal sidebar and a
 
 When importing a single article, it will become a new Journal Entry in your Journal sidebar which you can move to a Folder of your choice.
 
-![World Anvil Browser](https://foundryvtt.s3.us-west-2.amazonaws.com/website-media-dev/user_1/screen/world-anvil-browser-2020-06-10.jpg)
+![World Anvil Browser](docs/README_main_capture.png?raw=true)
 
 ### Permission Controls
 
@@ -46,7 +46,6 @@ This module does not currently attempt to preserve permission or visibility cont
 
 Game-Masters will be able to see which entry have been displayed to players via their World Anvil Browser inside Foundry VTT. Using the World Anvil browser they can manage the visibility of each article or even an entire category:
 
-![Preview](docs/README_visibilityManagement.png?raw=true)
 
 -----
 
