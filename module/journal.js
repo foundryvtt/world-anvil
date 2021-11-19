@@ -46,12 +46,6 @@ export default class WorldAnvilBrowser extends Application {
     });
   }
 
-  /** Utility method to re-render the browser, if it's active */
-  static refresh( forceRender = false ) {
-    const browser = Object.values(ui.windows).find(a => a.constructor === WorldAnvilBrowser);
-    if ( browser ) browser.render(forceRender);    
-  }
-
 	/* -------------------------------------------- */
 
   get anvil() {

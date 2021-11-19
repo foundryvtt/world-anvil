@@ -16,6 +16,10 @@ Hooks.once("init", () => {
   const module = game.modules.get("world-anvil");
   module.anvil = new WorldAnvil();
 
+  // Register Applications
+  module.browser = new WorldAnvilBrowser();
+  module.config = new WorldAnvilConfig();
+
   // Register some helper functions
   module.api = api;
 });
@@ -45,6 +49,8 @@ Hooks.once("ready", () => {
 Hooks.on("renderJournalDirectory", (app, html, data) => {
   if ( !game.user.isGM ) return;
 
+  const module = game.modules.get("world-anvil");
+
   // Add the World Anvil Button
   const button = $(`<button type="button" id="world-anvil">
     <img src="modules/world-anvil/icons/wa-icon.svg" title="${game.i18n.localize("WA.SidebarButton")}"/>
@@ -52,17 +58,15 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
   button.on("click", ev => {
     const anvil = game.modules.get("world-anvil").anvil;
     if ( anvil.worldId ) {
-      const journal = new WorldAnvilBrowser();
-      journal.render(true);
+      module.browser.render(true);
     } else {
-      const config = new WorldAnvilConfig();
-      config.render(true);
+      module.config.render(true);
     }
   });
   html.find(".directory-header .action-buttons").append(button);
 
   // Re-render the browser, if it's active
-  WorldAnvilBrowser.refresh();
+  module.browser.render(false);
 });
 
 
@@ -127,9 +131,12 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
   if ( game.user.isGM ) {
 
     const toggleSecret = async (event, newValue) => {
+
       const secretId = event.currentTarget.id;
       await entry.setFlag("world-anvil", "secrets." + secretId, newValue);
-      WorldAnvilBrowser.refresh();
+
+      const module = game.modules.get("world-anvil");
+      module.browser.render(false);
     };
 
     const htmlReveleadSecrets = html.find(cssSecrets + "." + api.ARTICLE_CSS_CLASSES.SECRET_REVEALED_SUFFIX);
