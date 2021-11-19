@@ -22,10 +22,10 @@ export const CATEGORY_ID = {
  * Each div got a css class related to what it is
  */
 export const ARTICLE_CSS_CLASSES = {
-  ALL_PARTS: 'wa-parent', // On every parts
+  ALL_PARTS: 'wa-section', // On every parts
   MAIN_CONTENT: 'main-content',
-  PUBLIC_SECTION: 'public-section',
-  SECRET_SECTION: 'secret-section',
+  PUBLIC_SECTION: 'public',
+  SECRET_SECTION: 'wa-secret',
   SECRET_HIDDEN_SUFFIX: 'hidden', // Dynamically added when journal is displayed
   SECRET_REVEALED_SUFFIX: 'revealed' // Dynamically added when journal is displayed
 };
@@ -189,7 +189,7 @@ export function getArticleContent(article) {
 
       // Each section data are stored inside a separated div
       const cssClass = ARTICLE_CSS_CLASSES.ALL_PARTS + " " + ARTICLE_CSS_CLASSES.PUBLIC_SECTION;
-      publicSections += `<div id="${id}" class="${cssClass}">`;
+      publicSections += `<section id="${id}" class="${cssClass}">`;
 
       // Title can be replaced by a localized name if the section id has been handled
       const title = _getLocalizedTitle(id, section);
@@ -208,7 +208,7 @@ export function getArticleContent(article) {
       }
 
       // End main section div
-      publicSections += "</div>";
+      publicSections += "</section>";
     }
 
     // Format secrets data
@@ -227,9 +227,9 @@ export function getArticleContent(article) {
         secretIds.push( secretId );
 
         // Each secret is stored inside a separated div
-        secretSections += `<div id="${secretId}" class="${cssClass}"><hr/>`;
+        secretSections += `<section id="${secretId}" class="${cssClass}">`;
         secretSections += `\n<p><h3${secret}</p>`;
-        secretSections += "</div>";
+        secretSections += "</section>";
       });
     }
   }
@@ -250,9 +250,9 @@ export function getArticleContent(article) {
   }
 
   // Combine content sections
-  let content = `<div class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
+  let content = `<section class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
   content += `<p>${article.content_parsed}</p>`;
-  content += "</div><hr/>";
+  content += "</section><hr/>";
 
   if ( aside ) content += `<aside><dl>${aside}</dl></aside>`;
   if ( publicSections ) content += publicSections;

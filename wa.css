@@ -138,9 +138,13 @@ dd {
     margin: 3px 0;
 }
 
-.wa-parent.secret-section {
+.wa-section.wa-secret {
     cursor: pointer;
-    padding-left: 30px;
+    margin-top: 5px;
+    padding: 0 5px 0 30px;
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+    background: rgba(53, 0, 121, 0.05);
     background-image: url('icons/hidden_secret.png');
     background-repeat: no-repeat;
     background-position-x: left;
@@ -148,22 +152,22 @@ dd {
     background-size: 28px;
 }
 
-.wa-parent.secret-section:hover {
+.wa-section.wa-secret:hover {
     box-shadow: 0 0 5px darkblue inset;
 }
 
-.wa-parent.secret-section.hidden {
+.wa-section.wa-secret.hidden {
     background-image: url('icons/hidden_secret.png');
 }
 
-.wa-parent.secret-section.hidden:hover {
+.wa-section.wa-secret.hidden:hover {
     background-image: url('icons/hidden_secret_hover.png');
 }
 
-.wa-parent.secret-section.revealed {
+.wa-section.wa-secret.revealed {
     background-image: url('icons/revealed_secret.png');
 }
 
-.wa-parent.secret-section.revealed:hover {
+.wa-section.wa-secret.revealed:hover {
     background-image: url('icons/revealed_secret_hover.png');
 }
