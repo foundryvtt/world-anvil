@@ -62,8 +62,7 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
   html.find(".directory-header .action-buttons").append(button);
 
   // Re-render the browser, if it's active
-  const browser = Object.values(ui.windows).find(a => a.constructor === WorldAnvilBrowser);
-  if ( browser ) browser.render(false);
+  WorldAnvilBrowser.refresh();
 });
 
 
@@ -126,17 +125,18 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
 
   // Capture click on secrets for gms to toggle their display
   if ( game.user.isGM ) {
-    const htmlReveleadSecrets = html.find(cssSecrets + "." + api.ARTICLE_CSS_CLASSES.SECRET_REVEALED_SUFFIX);
-    htmlReveleadSecrets.click( event => {
+
+    const toggleSecret = async (event, newValue) => {
       const secretId = event.currentTarget.id;
-      entry.setFlag("world-anvil", "secrets." + secretId, false);
-    });
+      await entry.setFlag("world-anvil", "secrets." + secretId, newValue);
+      WorldAnvilBrowser.refresh();
+    };
+
+    const htmlReveleadSecrets = html.find(cssSecrets + "." + api.ARTICLE_CSS_CLASSES.SECRET_REVEALED_SUFFIX);
+    htmlReveleadSecrets.click( event => toggleSecret(event, false) );
 
     const htmlHiddenSecrets = html.find(cssSecrets + "." + api.ARTICLE_CSS_CLASSES.SECRET_HIDDEN_SUFFIX);
-    htmlHiddenSecrets.click( event => {
-      const secretId = event.currentTarget.id;
-      entry.setFlag("world-anvil", "secrets." + secretId, true);
-    });
+    htmlHiddenSecrets.click( event => toggleSecret(event, true) );
   }
   
 
