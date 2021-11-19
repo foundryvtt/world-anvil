@@ -67,7 +67,8 @@ If you would like to contribute to making this software better, merge requests a
 
 ### Contributors
 
-Thanks to the following individuals for their contributions to this module.
+Thanks to the following individuals for their valued contributions to this module.
 
 * Dimitris from World Anvil
+* Adrien Schiehle
 * Megastrukur
