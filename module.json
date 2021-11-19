@@ -5,8 +5,8 @@
   "author": "Atropos",
   "authors": [],
   "url": "https://gitlab.com/foundrynet/world-anvil",
-  "version": "1.1.0",
-  "minimumCoreVersion": "0.6.5",
+  "version": "1.2.0",
+  "minimumCoreVersion": "0.7.6",
   "compatibleCoreVersion": "9",
   "scripts": [],
   "esmodules": [
@@ -25,8 +25,6 @@
   "packs": [],
   "system": [],
   "dependencies": [],
-  "socket": false,
   "manifest": "https://gitlab.com/foundrynet/world-anvil/-/raw/master/module.json",
-  "download": "https://gitlab.com/foundrynet/world-anvil/-/archive/release-1.1.0/world-anvil-release-1.1.0.zip",
-  "protected": false
+  "download": "https://gitlab.com/foundrynet/world-anvil/-/archive/release-1.2.0/world-anvil-release-1.2.0.zip"
 }
