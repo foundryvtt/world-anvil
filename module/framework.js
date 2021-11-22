@@ -20,6 +20,7 @@ export const CATEGORY_ID = {
 /**
  * Article main content, sections and secrets are all stored is separated div.
  * Each div got a css class related to what it is
+ * @enum {string}
  */
 export const ARTICLE_CSS_CLASSES = {
   ALL_PARTS: 'wa-section', // On every parts
