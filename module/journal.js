@@ -109,11 +109,7 @@ export default class WorldAnvilBrowser extends Application {
 
       // For secrets
       article.hasSecrets = article.entry?.getFlag("world-anvil", "hasSecrets") ?? false;
-      if( article.hasSecrets ) {
-        const secrets = article.entry.getFlag("world-anvil", "secrets");
-        article.someSecretsAreHidden = Object.values(secrets).some( v => !v );
-      }
-
+      
       // Get the category to which the article belongs
       const category = categories.get(article.category?.id) || uncategorized;
       category.articles.push(article);

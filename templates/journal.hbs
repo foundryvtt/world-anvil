@@ -59,6 +59,12 @@
     <div class="controls">
         {{#if this.entry }}
 
+            {{#if this.hasSecrets }}
+                <button type="button" class="world-anvil-control has-secret inactive" title="{{localize 'WA.ButtonSecretInfo'}}">
+                    <i class="fas fa-lock"></i>
+                </button>
+            {{/if}}
+
             {{#if this.visibleByPlayers }}
                 <button type="button" class="world-anvil-control" data-action="hide-entry" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonVisibilityHide' }}">
                     <i class="far fa-eye"></i>
@@ -67,18 +73,6 @@
                 <button type="button" class="world-anvil-control" data-action="display-entry" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonVisibilityDisplay' }}">
                     <i class="far fa-eye-slash"></i>
                 </button>
-            {{/if}}
-
-            {{#if this.hasSecrets }}
-                {{#if this.someSecretsAreHidden }}
-                    <button type="button" class="world-anvil-control" data-action="reveal-secrets" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonSecretReveal' }}">
-                        <i class="fas fa-lock"></i>
-                    </button>
-                {{else}}
-                    <button type="button" class="world-anvil-control" data-action="hide-secrets" data-entry-id="{{ this.entry.id }}" title="{{ localize 'WA.ButtonSecretHide' }}">
-                        <i class="fas fa-lock-open"></i>
-                    </button>
-                {{/if}}
             {{/if}}
 
             <button type="button" class="world-anvil-control" data-action="sync-entry" title="{{localize 'WA.ButtonSyncArticle'}}">

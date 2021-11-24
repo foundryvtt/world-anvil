@@ -108,45 +108,6 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
     }
   }
 
-  // Handle Journal Entry secrets
-  const secrets = entry.getFlag("world-anvil", "secrets");
-  const cssSecrets = "." + api.ARTICLE_CSS_CLASSES.ALL_PARTS + "." + api.ARTICLE_CSS_CLASSES.SECRET_SECTION;
-  const htmlSecrets = html.find(cssSecrets);
-  for( let htmlSecret of htmlSecrets ) {
-    const secretId = htmlSecret.id;
-    const revealed = secrets[secretId] ?? false;
-    if ( game.user.isGM ) { // Not the same treatment for GM who sees all secret and other players
-      htmlSecret.classList.add( revealed ? api.ARTICLE_CSS_CLASSES.SECRET_REVEALED_SUFFIX : api.ARTICLE_CSS_CLASSES.SECRET_HIDDEN_SUFFIX );
-
-    } else { // For players
-      if( revealed ) {
-        htmlSecret.classList.replace(api.ARTICLE_CSS_CLASSES.SECRET_SECTION, api.ARTICLE_CSS_CLASSES.PUBLIC_SECTION);
-      } else {
-        htmlSecret.innerHTML = "";
-      }
-    }
-  }
-
-  // Capture click on secrets for gms to toggle their display
-  if ( game.user.isGM ) {
-
-    const toggleSecret = async (event, newValue) => {
-
-      const secretId = event.currentTarget.id;
-      await entry.setFlag("world-anvil", "secrets." + secretId, newValue);
-
-      const module = game.modules.get("world-anvil");
-      module.browser.render(false);
-    };
-
-    const htmlReveleadSecrets = html.find(cssSecrets + "." + api.ARTICLE_CSS_CLASSES.SECRET_REVEALED_SUFFIX);
-    htmlReveleadSecrets.click( event => toggleSecret(event, false) );
-
-    const htmlHiddenSecrets = html.find(cssSecrets + "." + api.ARTICLE_CSS_CLASSES.SECRET_HIDDEN_SUFFIX);
-    htmlHiddenSecrets.click( event => toggleSecret(event, true) );
-  }
-  
-
   // Activate cross-link listeners
   html.find(".wa-link").click(event => {
     event.preventDefault();

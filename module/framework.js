@@ -26,9 +26,7 @@ export const ARTICLE_CSS_CLASSES = {
   ALL_PARTS: 'wa-section', // On every parts
   MAIN_CONTENT: 'main-content',
   PUBLIC_SECTION: 'public',
-  SECRET_SECTION: 'wa-secret',
-  SECRET_HIDDEN_SUFFIX: 'hidden', // Dynamically added when journal is displayed
-  SECRET_REVEALED_SUFFIX: 'revealed' // Dynamically added when journal is displayed
+  SECRET_SECTION: 'secret'
 };
 
 /* -------------------------------------------- */
@@ -62,6 +60,16 @@ export const ARTICLE_CSS_CLASSES = {
  * @property {string} cover           A cover image URL
  * @property {JournalEntry} [entry]   A linked JournalEntry document for this article
  */
+
+/**
+ * @typedef {Object} ParsedArticleResult    Used by the hook WorldAnvilParseArticle to retrieve data from additional modules
+ * @property {string[]} handledSections     Sections that should be ignored by the core module when parsing the article
+ * @property {string[]} handledRelations    Relations that should be ignored by the core module when parsing the article
+ * @property {string} contentOnTop          Content that should be put on top of the journal entry, before what is parsed from the core module.
+ * @property {number} contentOnBottom       Content that should be put on bottom of the journal entry, after what is parsed from the core module.
+ * @property {object} waFlags               Additionnal flags that should be added to "flags.world-anvil" when creating or updating a journal entry
+ */
+
 
 /* -------------------------------------------- */
 /*  Cached Data                                 */
@@ -101,36 +109,17 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
   // Format Article content
   const content = getArticleContent(article);
 
-  // Create entry flags with references on each secrets
-  const newWaFlag = {
-    articleId: article.id, 
-    articleURL: article.url,
-    hasSecrets: content.secrets.length > 0,
-    secrets: {}
-  };
-  content.secrets.forEach( secretId => {
-    newWaFlag.secrets[secretId] = false;
-  });
-
   // Update an existing Journal Entry
   let entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
   if ( entry ) {
 
-    // Update waFlag with already shared secrets
-    const oldWaFlagSecrets = entry.data.flags["world-anvil"]?.secrets;
-    if( oldWaFlagSecrets ) {
-      for( let [secretId, secretValue] of Object.entries(oldWaFlagSecrets) ) {
-        if( newWaFlag.secrets.hasOwnProperty(secretId) ) { // Do not add unknwon secrets reference here
-          newWaFlag.secrets[secretId] = secretValue;
-        }
-      }
-    };
+    Hooks.callAll(`WorldAnvilUpdateJournalEntryFlags`, entry, content.waFlags);
 
     await entry.update({
       name: article.title,
       content: content.html,
       img: content.img,
-      "flags.world-anvil": newWaFlag
+      "flags.world-anvil": content.waFlags
     });
     if ( notify ) ui.notifications.info(`Refreshed World Anvil article ${article.title}`);
     return entry;
@@ -145,7 +134,7 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
     content: content.html,
     img: content.img,
     folder: folder.id,
-    "flags.world-anvil": newWaFlag
+    "flags.world-anvil": content.waFlags
   }, options);
   if ( notify ) ui.notifications.info(`Imported World Anvil article ${article.title}`);
   return entry;
@@ -161,10 +150,23 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
  */
 export function getArticleContent(article) {
 
+  // Allow other modules to parse article content. a ParsedArticleResult
+  const fromHooks = {
+    handledSections: [],
+    handledRelations: [],
+    contentOnTop: "",
+    contentOnBottom: "",
+    waFlags: {}
+  };
+  Hooks.callAll(`WorldAnvilParseArticle`, article, fromHooks);
+
+  // Build article flags which will be put inside journal entry
+  const waFlags = { articleId: article.id,  articleURL: article.url };
+  foundry.utils.mergeObject(waFlags, fromHooks.waFlags);
+
   // Article sections
   let publicSections = "";
   let secretSections = "";
-  const secretIds = [];
   if ( article.sections ) {
 
     // Determine whether sidebars are displayed for this article
@@ -177,6 +179,7 @@ export function getArticleContent(article) {
     const ignoredSectionIds = [DISPLAY_SIDEBAR_SECTION_ID, "issystem"];
     const entries = Object.entries(article.sections).filter( ([id, section]) => {
       if( ignoredSectionIds.includes(id) ) { return false; }
+      if( fromHooks.handledSections.includes(id) ) { return false; }
       if( !includeSidebars ) {
         return !id.includes("sidebar") && !id.includes("sidepanel");
       }
@@ -214,33 +217,23 @@ export function getArticleContent(article) {
 
     // Format secrets data
     const secretEntries = entries.filter( ([id, section]) => secretSectionIds.includes(id) );
+    waFlags.hasSecrets = waFlags.hasSecrets || secretEntries.length > 0; // set the hasSecrets flag. Take into account the another module could have already set it previously
     for ( let [id, section] of secretEntries ) {
-
-      // Parse section. Each paragraph with a <h3> is handled as a separated secret
-      const secrets = section.content_parsed.split('<h3');
-
-      secrets.forEach( (secret, index) => {
-
-        if( secret.trim() === "" ) return; // If h3 are used, fist element is often empty
-
-        const cssClass = ARTICLE_CSS_CLASSES.ALL_PARTS + " " + ARTICLE_CSS_CLASSES.SECRET_SECTION;
-        const secretId = id + "-" + index;
-        secretIds.push( secretId );
-
-        // Each secret is stored inside a separated div
-        secretSections += `<section id="${secretId}" class="${cssClass}">`;
-        secretSections += `\n<p><h3${secret}</p>`;
-        secretSections += "</section>";
-      });
+      const cssClass = ARTICLE_CSS_CLASSES.ALL_PARTS + " " + ARTICLE_CSS_CLASSES.SECRET_SECTION;
+      secretSections += `<section id="${id}" class="${cssClass}">`;
+      secretSections += `\n${section.content_parsed}`;
+      secretSections += "</section>";
     }
   }
 
   // Article relations
   let aside = "";
   if ( article.relations ) {
+
     for ( let [id, section] of Object.entries(article.relations) ) {
       
       if( !section.items ) { continue; } // Some relations, like timelines, have no .items attribute. => Skipped
+      if( fromHooks.handledRelations.includes(id) ) { continue; }
       
       const title = section.title || id.titleCase();
       const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
@@ -248,16 +241,20 @@ export function getArticleContent(article) {
       
       aside += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
     }
+
+    if( aside ) { aside = `<aside><dl>${aside}</dl></aside>`; }
   }
 
   // Combine content sections
-  let content = `<section class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
+  let content = fromHooks.contentOnTop;
+  content += `<section class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
   content += `<p>${article.content_parsed}</p>`;
   content += "</section><hr/>";
 
-  if ( aside ) content += `<aside><dl>${aside}</dl></aside>`;
-  if ( publicSections ) content += publicSections;
-  if ( secretSections ) content += secretSections;
+  content += aside;
+  content += publicSections;
+  content += secretSections;
+  content += fromHooks.contentOnBottom;
 
   // Disable image source attributes so that they do not begin loading immediately
   content = content.replace(/src=/g, "data-src=");
@@ -306,11 +303,11 @@ export function getArticleContent(article) {
   let html = div.innerHTML;
   html = html.replace(/%p%/g, "</p>\n<p>");
 
-  // Return content, image and secretIds
+  // Return content, image and flags
   return {
     html: html,
     img: image,
-    secrets: secretIds
+    waFlags: waFlags
   }
 }
 

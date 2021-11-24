@@ -138,36 +138,3 @@ dd {
     margin: 3px 0;
 }
 
-.wa-section.wa-secret {
-    cursor: pointer;
-    margin-top: 5px;
-    padding: 0 5px 0 30px;
-    border-top: 1px solid #666;
-    border-bottom: 1px solid #666;
-    background: rgba(53, 0, 121, 0.05);
-    background-image: url('icons/hidden_secret.png');
-    background-repeat: no-repeat;
-    background-position-x: left;
-    background-position-y: center;
-    background-size: 28px;
-}
-
-.wa-section.wa-secret:hover {
-    box-shadow: 0 0 5px darkblue inset;
-}
-
-.wa-section.wa-secret.hidden {
-    background-image: url('icons/hidden_secret.png');
-}
-
-.wa-section.wa-secret.hidden:hover {
-    background-image: url('icons/hidden_secret_hover.png');
-}
-
-.wa-section.wa-secret.revealed {
-    background-image: url('icons/revealed_secret.png');
-}
-
-.wa-section.wa-secret.revealed:hover {
-    background-image: url('icons/revealed_secret_hover.png');
-}
