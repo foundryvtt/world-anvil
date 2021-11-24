@@ -145,7 +145,7 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
 /**
  * Transform a World Anvil article HTML into a Journal Entry content and featured image.
  * @param {object} article
- * @return {{img: string, html: string, secrets: string[]}}
+ * @return {{img: string, html: string, waFlags: object}}
  * @private
  */
 export function getArticleContent(article) {
