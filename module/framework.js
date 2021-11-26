@@ -17,6 +17,18 @@ export const CATEGORY_ID = {
   uncategorized: 'uncategorized'
 };
 
+/**
+ * Article main content, sections and secrets are all stored is separated div.
+ * Each div got a css class related to what it is
+ * @enum {string}
+ */
+export const ARTICLE_CSS_CLASSES = {
+  ALL_PARTS: 'wa-section', // On every parts
+  MAIN_CONTENT: 'main-content',
+  PUBLIC_SECTION: 'public',
+  SECRET_SECTION: 'secret'
+};
+
 /* -------------------------------------------- */
 /*   Type Definitions                           */
 /* -------------------------------------------- */
@@ -48,6 +60,14 @@ export const CATEGORY_ID = {
  * @property {string} cover           A cover image URL
  * @property {JournalEntry} [entry]   A linked JournalEntry document for this article
  */
+
+/**
+ * @typedef {Object} ParsedArticleResult    Used by the hook WAParseArticle. It contains primary data which could be altered by additional modules
+ * @property {string} html                  What will become the journal entry content. Is in html format
+ * @property {Image} img                    What will become the journal entry image.
+ * @property {object} waFlags               Journal entry flags which will be store inside entry.data.flags["world-anvil"]
+ */
+
 
 /* -------------------------------------------- */
 /*  Cached Data                                 */
@@ -90,10 +110,14 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
   // Update an existing Journal Entry
   let entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
   if ( entry ) {
+
+    Hooks.callAll(`WAUpdateJournalEntry`, entry, content);
+
     await entry.update({
       name: article.title,
       content: content.html,
-      img: content.img
+      img: content.img,
+      "flags.world-anvil": content.waFlags
     });
     if ( notify ) ui.notifications.info(`Refreshed World Anvil article ${article.title}`);
     return entry;
@@ -103,12 +127,14 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
   const folder = await getCategoryFolder(article.category);
 
   // Create a new Journal Entry
+  Hooks.callAll(`WACreateJournalEntry`, entry, content);
+
   entry = await JournalEntry.create({
     name: article.title,
     content: content.html,
     img: content.img,
     folder: folder.id,
-    "flags.world-anvil": { articleId: article.id, articleURL: article.url }
+    "flags.world-anvil": content.waFlags
   }, options);
   if ( notify ) ui.notifications.info(`Imported World Anvil article ${article.title}`);
   return entry;
@@ -119,29 +145,51 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
 /**
  * Transform a World Anvil article HTML into a Journal Entry content and featured image.
  * @param {object} article
- * @return {{img: string, html: string}}
+ * @return {ParsedArticleResult}
  * @private
  */
 export function getArticleContent(article) {
+
+  // Build article flags which will be put inside journal entry
+  const waFlags = { articleId: article.id,  articleURL: article.url };
 
   // Article sections
   let sections = "";
   if ( article.sections ) {
 
+    const sectionEntries = Array.from(Object.entries(article.sections));
+
     // Determine whether sidebars are displayed for this article
-    const includeSidebars = Array.from(Object.entries(article.sections)).some(s => {
+    const includeSidebars = sectionEntries.some(s => {
       const [id, section] = s;
       if ( id !== DISPLAY_SIDEBAR_SECTION_ID ) return false;
       return section.content_parsed === "1"
     });
 
-    // Format section data
-    for ( let [id, section] of Object.entries(article.sections) ) {
+    // Determine whether there are secrets inside this article
+    const secretSectionIds = ["seeded"];
+    waFlags.hasSecrets = sectionEntries.some(s => {
+      const [id, section] = s;
+      return secretSectionIds.includes(id);
+    });
 
-      // Ignore some sections
-      if( id === DISPLAY_SIDEBAR_SECTION_ID ) continue; // Only useful for knowing if sidebars are present
-      const isSidebar = id.includes("sidebar") || id.includes("sidepanel");
-      if ( !includeSidebars && isSidebar ) continue;
+    // Filter sections, removing ignored ones.
+    const ignoredSectionIds = [DISPLAY_SIDEBAR_SECTION_ID, "issystem"];
+    const filteredEntries = sectionEntries.filter( ([id, section]) => {
+      if( ignoredSectionIds.includes(id) ) { return false; }
+      if( !includeSidebars ) {
+        return !id.includes("sidebar") && !id.includes("sidepanel");
+      }
+      return true;
+    });
+
+    // Format section data
+    for ( let [id, section] of filteredEntries ) {
+
+      // Each section data are stored inside a separated div
+      const isSecretSection = secretSectionIds.includes(id);
+      const cssClass = ARTICLE_CSS_CLASSES.ALL_PARTS + " " + ( isSecretSection ?  ARTICLE_CSS_CLASSES.SECRET_SECTION : ARTICLE_CSS_CLASSES.PUBLIC_SECTION );
+      sections += `<section data-section-id="${id}" class="${cssClass}">`;
 
       // Title can be replaced by a localized name if the section id has been handled
       const title = _getLocalizedTitle(id, section);
@@ -158,27 +206,37 @@ export function getArticleContent(article) {
         sections += `<dl><dt>${title}</dt>`;
         sections += `<dd>${section.content_parsed}</dd></dl>`;
       }
+
+      // End main section div
+      sections += "</section>";
     }
   }
 
   // Article relations
   let aside = "";
   if ( article.relations ) {
+
     for ( let [id, section] of Object.entries(article.relations) ) {
       
       if( !section.items ) { continue; } // Some relations, like timelines, have no .items attribute. => Skipped
+      if( fromHooks.handledRelations.includes(id) ) { continue; }
       
       const title = section.title || id.titleCase();
       const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
       const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
+      
       aside += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
     }
+
+    if( aside ) { aside = `<aside><dl>${aside}</dl></aside>`; }
   }
 
   // Combine content sections
-  let content = `<p>${article.content_parsed}</p><hr/>`;
-  if ( aside ) content += `<aside><dl>${aside}</dl></aside>`;
-  if ( sections ) content += sections;
+  let content = `<section class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
+  content += `<p>${article.content_parsed}</p>`;
+  content += "</section><hr/>";
+  content += aside;
+  content += sections;
 
   // Disable image source attributes so that they do not begin loading immediately
   content = content.replace(/src=/g, "data-src=");
@@ -227,11 +285,15 @@ export function getArticleContent(article) {
   let html = div.innerHTML;
   html = html.replace(/%p%/g, "</p>\n<p>");
 
-  // Return content and image
-  return {
+  // Return content, image and flags
+  const parsedData = {
     html: html,
-    img: image
+    img: image,
+    waFlags: waFlags
   }
+  Hooks.callAll(`WAParseArticle`, article, parsedData);
+
+  return parsedData;
 }
 
 /* -------------------------------------------- */
@@ -243,9 +305,15 @@ export function getArticleContent(article) {
  * @returns The actual title
  */
 function _getLocalizedTitle( sectionId, section ) {
-  const localizedIds = ['sidebarcontent', 'sidepanelcontenttop', 'sidepanelcontent', 'sidebarcontentbottom'];
-  if( localizedIds.includes( sectionId ) ) {
-    return game.i18n.localize("WA.HeaderGeneralDetails");
+
+  // For each sectionId, we try to retrieve a matching translation.
+  // Except for generalDetailsIds, which will all have 'WA.Header.GeneralDetails' for translation
+  const generalDetailsIds = ['sidebarcontent', 'sidepanelcontenttop', 'sidepanelcontent', 'sidebarcontentbottom'];
+  const key = generalDetailsIds.includes(sectionId) ? "WA.Header.GeneralDetails" : "WA.Header." + sectionId.titleCase();
+  
+  const localized = game.i18n.localize(key);
+  if( localized != key ) { // Meaning the translation was found
+    return localized;
   }
   return section.title || sectionId.titleCase();
 }
@@ -368,7 +436,7 @@ export async function getCategoryFolder(category) {
   if ( category.parent && !category.parent.folder ) await getCategoryFolder(category.parent);
 
   // Check whether a Folder already exists for this Category
-  const folder = game.folders.find(f => f.getFlag("world-anvil", "categoryId") === category.id);
+  const folder = game.folders.find(f => ( f.data.type === "JournalEntry" ) && ( f.getFlag("world-anvil", "categoryId") === category.id) );
   if ( folder ) return category.folder = folder;
 
   // Create a new Folder
