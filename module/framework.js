@@ -436,7 +436,7 @@ export async function getCategoryFolder(category) {
   if ( category.parent && !category.parent.folder ) await getCategoryFolder(category.parent);
 
   // Check whether a Folder already exists for this Category
-  const folder = game.folders.find(f => f.data.type === "JournalEntry" && f.getFlag("world-anvil", "categoryId") === category.id);
+  const folder = game.folders.find(f => ( f.data.type === "JournalEntry" ) && ( f.getFlag("world-anvil", "categoryId") === category.id) );
   if ( folder ) return category.folder = folder;
 
   // Create a new Folder
