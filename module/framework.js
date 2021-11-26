@@ -62,12 +62,10 @@ export const ARTICLE_CSS_CLASSES = {
  */
 
 /**
- * @typedef {Object} ParsedArticleResult    Used by the hook WorldAnvilParseArticle to retrieve data from additional modules
- * @property {string[]} handledSections     Sections that should be ignored by the core module when parsing the article
- * @property {string[]} handledRelations    Relations that should be ignored by the core module when parsing the article
- * @property {string} contentOnTop          Content that should be put on top of the journal entry, before what is parsed from the core module.
- * @property {number} contentOnBottom       Content that should be put on bottom of the journal entry, after what is parsed from the core module.
- * @property {object} waFlags               Additionnal flags that should be added to "flags.world-anvil" when creating or updating a journal entry
+ * @typedef {Object} ParsedArticleResult    Used by the hook WAParseArticle. It contains primary data which could be altered by additional modules
+ * @property {string} html                  What will become the journal entry content. Is in html format
+ * @property {Image} img                    What will become the journal entry image.
+ * @property {object} waFlags               Journal entry flags which will be store inside entry.data.flags["world-anvil"]
  */
 
 
@@ -113,7 +111,7 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
   let entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
   if ( entry ) {
 
-    Hooks.callAll(`WorldAnvilUpdateJournalEntryFlags`, entry, content.waFlags);
+    Hooks.callAll(`WAUpdateJournalEntry`, entry, content);
 
     await entry.update({
       name: article.title,
@@ -129,6 +127,8 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
   const folder = await getCategoryFolder(article.category);
 
   // Create a new Journal Entry
+  Hooks.callAll(`WACreateJournalEntry`, entry, content);
+
   entry = await JournalEntry.create({
     name: article.title,
     content: content.html,
@@ -145,55 +145,51 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
 /**
  * Transform a World Anvil article HTML into a Journal Entry content and featured image.
  * @param {object} article
- * @return {{img: string, html: string, waFlags: object}}
+ * @return {ParsedArticleResult}
  * @private
  */
 export function getArticleContent(article) {
 
-  // Allow other modules to parse article content. a ParsedArticleResult
-  const fromHooks = {
-    handledSections: [],
-    handledRelations: [],
-    contentOnTop: "",
-    contentOnBottom: "",
-    waFlags: {}
-  };
-  Hooks.callAll(`WorldAnvilParseArticle`, article, fromHooks);
-
   // Build article flags which will be put inside journal entry
   const waFlags = { articleId: article.id,  articleURL: article.url };
-  foundry.utils.mergeObject(waFlags, fromHooks.waFlags);
 
   // Article sections
-  let publicSections = "";
-  let secretSections = "";
+  let sections = "";
   if ( article.sections ) {
 
+    const sectionEntries = Array.from(Object.entries(article.sections));
+
     // Determine whether sidebars are displayed for this article
-    const includeSidebars = Array.from(Object.entries(article.sections)).some(s => {
+    const includeSidebars = sectionEntries.some(s => {
       const [id, section] = s;
       if ( id !== DISPLAY_SIDEBAR_SECTION_ID ) return false;
       return section.content_parsed === "1"
     });
 
+    // Determine whether there are secrets inside this article
+    const secretSectionIds = ["seeded"];
+    waFlags.hasSecrets = sectionEntries.some(s => {
+      const [id, section] = s;
+      return secretSectionIds.includes(id);
+    });
+
+    // Filter sections, removing ignored ones.
     const ignoredSectionIds = [DISPLAY_SIDEBAR_SECTION_ID, "issystem"];
-    const entries = Object.entries(article.sections).filter( ([id, section]) => {
+    const filteredEntries = sectionEntries.filter( ([id, section]) => {
       if( ignoredSectionIds.includes(id) ) { return false; }
-      if( fromHooks.handledSections.includes(id) ) { return false; }
       if( !includeSidebars ) {
         return !id.includes("sidebar") && !id.includes("sidepanel");
       }
       return true;
     });
 
-    // Format public section data
-    const secretSectionIds = ["seeded"];
-    const publicEntries = entries.filter( ([id, section]) => !secretSectionIds.includes(id) );
-    for ( let [id, section] of publicEntries ) {
+    // Format section data
+    for ( let [id, section] of filteredEntries ) {
 
       // Each section data are stored inside a separated div
-      const cssClass = ARTICLE_CSS_CLASSES.ALL_PARTS + " " + ARTICLE_CSS_CLASSES.PUBLIC_SECTION;
-      publicSections += `<section id="${id}" class="${cssClass}">`;
+      const isSecretSection = secretSectionIds.includes(id);
+      const cssClass = ARTICLE_CSS_CLASSES.ALL_PARTS + " " + ( isSecretSection ?  ARTICLE_CSS_CLASSES.SECRET_SECTION : ARTICLE_CSS_CLASSES.PUBLIC_SECTION );
+      sections += `<section data-section-id="${id}" class="${cssClass}">`;
 
       // Title can be replaced by a localized name if the section id has been handled
       const title = _getLocalizedTitle(id, section);
@@ -201,28 +197,18 @@ export function getArticleContent(article) {
       // Display long-format content as a paragraph section with a header
       const isLongContent = section.content.length > 100;
       if( isLongContent ) {
-        publicSections += `<h2>${title}</h2>`;
-        publicSections += `\n<p>${section.content_parsed}</p><hr/>`;
+        sections += `<h2>${title}</h2>`;
+        sections += `\n<p>${section.content_parsed}</p><hr/>`;
       }
 
       // Display short-format content as a details list
       else {
-        publicSections += `<dl><dt>${title}</dt>`;
-        publicSections += `<dd>${section.content_parsed}</dd></dl>`;
+        sections += `<dl><dt>${title}</dt>`;
+        sections += `<dd>${section.content_parsed}</dd></dl>`;
       }
 
       // End main section div
-      publicSections += "</section>";
-    }
-
-    // Format secrets data
-    const secretEntries = entries.filter( ([id, section]) => secretSectionIds.includes(id) );
-    waFlags.hasSecrets = waFlags.hasSecrets || secretEntries.length > 0; // set the hasSecrets flag. Take into account the another module could have already set it previously
-    for ( let [id, section] of secretEntries ) {
-      const cssClass = ARTICLE_CSS_CLASSES.ALL_PARTS + " " + ARTICLE_CSS_CLASSES.SECRET_SECTION;
-      secretSections += `<section id="${id}" class="${cssClass}">`;
-      secretSections += `\n${section.content_parsed}`;
-      secretSections += "</section>";
+      sections += "</section>";
     }
   }
 
@@ -246,15 +232,11 @@ export function getArticleContent(article) {
   }
 
   // Combine content sections
-  let content = fromHooks.contentOnTop;
-  content += `<section class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
+  let content = `<section class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
   content += `<p>${article.content_parsed}</p>`;
   content += "</section><hr/>";
-
   content += aside;
-  content += publicSections;
-  content += secretSections;
-  content += fromHooks.contentOnBottom;
+  content += sections;
 
   // Disable image source attributes so that they do not begin loading immediately
   content = content.replace(/src=/g, "data-src=");
@@ -304,11 +286,14 @@ export function getArticleContent(article) {
   html = html.replace(/%p%/g, "</p>\n<p>");
 
   // Return content, image and flags
-  return {
+  const parsedData = {
     html: html,
     img: image,
     waFlags: waFlags
   }
+  Hooks.callAll(`WAParseArticle`, article, parsedData);
+
+  return parsedData;
 }
 
 /* -------------------------------------------- */
@@ -321,11 +306,13 @@ export function getArticleContent(article) {
  */
 function _getLocalizedTitle( sectionId, section ) {
 
+  // For each sectionId, we try to retrieve a matching translation.
+  // Except for generalDetailsIds, which will all have 'WA.Header.GeneralDetails' for translation
   const generalDetailsIds = ['sidebarcontent', 'sidepanelcontenttop', 'sidepanelcontent', 'sidebarcontentbottom'];
   const key = generalDetailsIds.includes(sectionId) ? "WA.Header.GeneralDetails" : "WA.Header." + sectionId.titleCase();
   
   const localized = game.i18n.localize(key);
-  if( localized != key ) {
+  if( localized != key ) { // Meaning the translation was found
     return localized;
   }
   return section.title || sectionId.titleCase();
