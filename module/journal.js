@@ -106,9 +106,6 @@ export default class WorldAnvilBrowser extends Application {
       // Check linked entry permissions
       article.entry = entries.find(e => e.getFlag("world-anvil", "articleId") === article.id);
       article.visibleByPlayers = article.entry?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
-
-      // For secrets
-      article.hasSecrets = article.entry?.getFlag("world-anvil", "hasSecrets") ?? false;
       
       // Get the category to which the article belongs
       const category = categories.get(article.category?.id) || uncategorized;

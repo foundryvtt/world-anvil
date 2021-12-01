@@ -3,21 +3,33 @@ import WorldAnvilConfig from "./module/config.js";
 import WorldAnvilBrowser from "./module/journal.js";
 import * as api from "./module/framework.js";
 
+let module = undefined;
 
 /**
  * Initialization actions taken on Foundry Virtual Tabletop client init.
  */
 Hooks.once("init", () => {
+  module = game.modules.get("world-anvil");
 
   // Register settings menu
   WorldAnvilConfig.registerSettings();
 
-  // Register the World Anvil module
-  const module = game.modules.get("world-anvil");
+  /**
+   * A singleton instance of the WorldAnvil client
+   * @type {WorldAnvil}
+   */
   module.anvil = new WorldAnvil();
 
-  // Register Applications
+  /**
+   * A singleton instance of the WorldAnvilBrowser UI for importing content
+   * @type {WorldAnvilBrowser}
+   */
   module.browser = new WorldAnvilBrowser();
+
+  /**
+   * A singleton instance of the WorldAnvilConfig UI for configuring account integration
+   * @type {WorldAnvilConfig}
+   */
   module.config = new WorldAnvilConfig();
 
   // Register some helper functions
@@ -33,10 +45,7 @@ Hooks.once("init", () => {
  */
 Hooks.once("ready", () => {
   if ( !game.user.isGM ) return;
-
-  // Connect to World Anvil
-  const anvil = game.modules.get("world-anvil").anvil;
-  anvil.connect();
+  return module.anvil.connect();
 });
 
 
@@ -48,8 +57,6 @@ Hooks.once("ready", () => {
  */
 Hooks.on("renderJournalDirectory", (app, html, data) => {
   if ( !game.user.isGM ) return;
-
-  const module = game.modules.get("world-anvil");
 
   // Add the World Anvil Button
   const button = $(`<button type="button" id="world-anvil">
@@ -92,7 +99,7 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
       const sync = $(`<a class="wa-sync"><i class="fas fa-sync"></i>${game.i18n.localize("WA.Sync")}</a>`);
       sync.on("click", event => {
         event.preventDefault();
-        api.importArticle(articleId);
+        return api.importArticle(articleId);
       });
       title.after(sync);
     }

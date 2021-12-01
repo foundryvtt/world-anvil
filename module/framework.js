@@ -107,35 +107,85 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
   // Format Article content
   const content = getArticleContent(article);
 
-  // Update an existing Journal Entry
+  // Update an existing JournalEntry, or create a new one
   let entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
-  if ( entry ) {
+  if ( entry ) return _updateExistingEntry(entry, article, content, options);
+  return _createNewEntry(article, content, options)
 
-    Hooks.callAll(`WAUpdateJournalEntry`, entry, content);
+}
 
-    await entry.update({
-      name: article.title,
-      content: content.html,
-      img: content.img,
-      "flags.world-anvil": content.waFlags
-    });
-    if ( notify ) ui.notifications.info(`Refreshed World Anvil article ${article.title}`);
-    return entry;
-  }
+/* -------------------------------------------- */
 
-  // Determine the Folder which contains this article
+/**
+ * Update an existing JournalEntry document using the contents of an Article
+ * @param {JournalEntry} entry              The JournalEntry to update
+ * @param {Article} article                 The original Article
+ * @param {ParsedArticleResult} content     The parsed article content
+ * @param {DocumentModificationContext} options Entry update options
+ * @returns {Promise<JournalEntry>}         The updated entry
+ * @private
+ */
+async function _updateExistingEntry(entry, article, content, options) {
+  /**
+   * A hook event that fires when the user is updating an existing JournalEntry from a WorldAnvil article.
+   * @function WAUpdateJournalEntry
+   * @memberof hookEvents
+   * @param {JournalEntry} entry            The JournalEntry document being updated
+   * @param {Article} article               The original Article
+   * @param {ParsedArticleResult} content   The parsed article content
+   */
+  Hooks.callAll(`WAUpdateJournalEntry`, entry, content);
+
+  // Update the entry
+  await entry.update({
+    name: article.title,
+    content: content.html,
+    img: content.img,
+    "flags.world-anvil": content.waFlags
+  });
+
+  // Notify and return
+  if ( notify ) ui.notifications.info(`Refreshed World Anvil article ${article.title}`);
+  return entry;
+}
+
+/* -------------------------------------------- */
+
+/**
+ * Create a new JournalEntry document using the contents of an Article
+ * @param {Article} article                 The original Article
+ * @param {ParsedArticleResult} content     The parsed article content
+ * @returns {Promise<JournalEntry>}         The created entry
+ * @param {DocumentModificationContext} options Entry creation options
+ * @returns {Promise<JournalEntry>}         The created entry
+ * @private
+ */
+async function _createNewEntry(article, content, options) {
+
+  // Get or create the appropriate folder
   const folder = await getCategoryFolder(article.category);
 
-  // Create a new Journal Entry
-  Hooks.callAll(`WACreateJournalEntry`, entry, content);
-
-  entry = await JournalEntry.create({
+  // Define the data to import
+  const entryData = {
     name: article.title,
     content: content.html,
     img: content.img,
     folder: folder.id,
     "flags.world-anvil": content.waFlags
-  }, options);
+  }
+
+  /**
+   * A hook event that fires when the user is creating a new JournalEntry from a WorldAnvil article.
+   * @function WACreateJournalEntry
+   * @memberof hookEvents
+   * @param {JournalEntryData} entryData    The JournalEntry data which will be created
+   * @param {Article} article                 The original Article
+   * @param {ParsedArticleResult} content   The parsed article content
+   */
+  Hooks.callAll(`WACreateJournalEntry`, entryData, article, content);
+
+  // Create the entry, notify, and return
+  const entry = await JournalEntry.create(entryData, options);
   if ( notify ) ui.notifications.info(`Imported World Anvil article ${article.title}`);
   return entry;
 }
@@ -187,8 +237,10 @@ export function getArticleContent(article) {
     for ( let [id, section] of filteredEntries ) {
 
       // Each section data are stored inside a separated div
-      const isSecretSection = secretSectionIds.includes(id);
-      const cssClass = ARTICLE_CSS_CLASSES.ALL_PARTS + " " + ( isSecretSection ?  ARTICLE_CSS_CLASSES.SECRET_SECTION : ARTICLE_CSS_CLASSES.PUBLIC_SECTION );
+      const cssClass = [
+        ARTICLE_CSS_CLASSES.ALL_PARTS,
+        secretSectionIds.includes(id) ?  ARTICLE_CSS_CLASSES.SECRET_SECTION : ARTICLE_CSS_CLASSES.PUBLIC_SECTION
+      ].join(" ");
       sections += `<section data-section-id="${id}" class="${cssClass}">`;
 
       // Title can be replaced by a localized name if the section id has been handled
@@ -212,22 +264,16 @@ export function getArticleContent(article) {
     }
   }
 
-  // Article relations
+  // Add all article relations into an aside section
   let aside = "";
   if ( article.relations ) {
-
     for ( let [id, section] of Object.entries(article.relations) ) {
-      
       if( !section.items ) { continue; } // Some relations, like timelines, have no .items attribute. => Skipped
-      if( fromHooks.handledRelations.includes(id) ) { continue; }
-      
       const title = section.title || id.titleCase();
       const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
       const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
-      
       aside += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
     }
-
     if( aside ) { aside = `<aside><dl>${aside}</dl></aside>`; }
   }
 
@@ -291,31 +337,30 @@ export function getArticleContent(article) {
     img: image,
     waFlags: waFlags
   }
+  /**
+   * A hook event that fires when a WorldAnvil article is parsed
+   * @function WACreateJournalEntry
+   * @memberof hookEvents
+   * @param {Article} article                 The original Article
+   * @param {ParsedArticleResult} parsedData  The parsed article content
+   */
   Hooks.callAll(`WAParseArticle`, article, parsedData);
-
   return parsedData;
 }
 
 /* -------------------------------------------- */
 
 /**
- * For some sectionId, the title will be retrieved from the module translations
+ * For some sectionId, the title will be retrieved from the module translations.
+ * Except for generalDetailsIds, which will all have 'WA.Header.GeneralDetails' for translation.
  * @param {string} sectionId The id as retrieved via Object.entries
  * @param {string} section The section content
  * @returns The actual title
  */
 function _getLocalizedTitle( sectionId, section ) {
-
-  // For each sectionId, we try to retrieve a matching translation.
-  // Except for generalDetailsIds, which will all have 'WA.Header.GeneralDetails' for translation
   const generalDetailsIds = ['sidebarcontent', 'sidepanelcontenttop', 'sidepanelcontent', 'sidebarcontentbottom'];
-  const key = generalDetailsIds.includes(sectionId) ? "WA.Header.GeneralDetails" : "WA.Header." + sectionId.titleCase();
-  
-  const localized = game.i18n.localize(key);
-  if( localized != key ) { // Meaning the translation was found
-    return localized;
-  }
-  return section.title || sectionId.titleCase();
+  const key = `WA.Header.${generalDetailsIds.includes(sectionId) ? "GeneralDetails" : sectionId.titleCase()}`;
+  return game.i18n.has(key) ? game.i18n.localize(key) : section.title || sectionId.titleCase();
 }
 
 /* -------------------------------------------- */
