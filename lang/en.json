@@ -24,6 +24,7 @@
 
   "WA.ButtonImportAll": "Import All",
   "WA.ButtonSyncAll": "Sync All",
+  "WA.ButtonSecretInfo": "This article has some secrets. You will need a complementary module if you want to toggle secrets",
   "WA.ButtonVisibilityHide": "Hide from players",
   "WA.ButtonVisibilityDisplay": "Display to players",
   "WA.ButtonToggleDraft": "Display Drafts",
@@ -34,5 +35,6 @@
   "WA.ButtonImportCategory": "Import Category",
   "WA.ButtonSyncCategory": "Sync Category",
 
-  "WA.HeaderGeneralDetails": "General Details"
+  "WA.Header.GeneralDetails": "General Details",
+  "WA.Header.Seeded": "Secrets"
 }

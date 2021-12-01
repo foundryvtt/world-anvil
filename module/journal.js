@@ -1,4 +1,4 @@
-import {importArticle, getArticleContent, getCategories, associateCategoryFolders, CATEGORY_ID} from "./framework.js";
+import {importArticle, getArticleContent, getCategories, CATEGORY_ID} from "./framework.js";
 
 /**
  * A World Anvil Directory that allows you to see and manage your World Anvil content in Foundry VTT
@@ -107,6 +107,9 @@ export default class WorldAnvilBrowser extends Application {
       article.entry = entries.find(e => e.getFlag("world-anvil", "articleId") === article.id);
       article.visibleByPlayers = article.entry?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
 
+      // For secrets
+      article.hasSecrets = article.entry?.getFlag("world-anvil", "hasSecrets") ?? false;
+      
       // Get the category to which the article belongs
       const category = categories.get(article.category?.id) || uncategorized;
       category.articles.push(article);

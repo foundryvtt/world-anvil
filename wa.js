@@ -16,6 +16,10 @@ Hooks.once("init", () => {
   const module = game.modules.get("world-anvil");
   module.anvil = new WorldAnvil();
 
+  // Register Applications
+  module.browser = new WorldAnvilBrowser();
+  module.config = new WorldAnvilConfig();
+
   // Register some helper functions
   module.api = api;
 });
@@ -45,6 +49,8 @@ Hooks.once("ready", () => {
 Hooks.on("renderJournalDirectory", (app, html, data) => {
   if ( !game.user.isGM ) return;
 
+  const module = game.modules.get("world-anvil");
+
   // Add the World Anvil Button
   const button = $(`<button type="button" id="world-anvil">
     <img src="modules/world-anvil/icons/wa-icon.svg" title="${game.i18n.localize("WA.SidebarButton")}"/>
@@ -52,18 +58,15 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
   button.on("click", ev => {
     const anvil = game.modules.get("world-anvil").anvil;
     if ( anvil.worldId ) {
-      const journal = new WorldAnvilBrowser();
-      journal.render(true);
+      module.browser.render(true);
     } else {
-      const config = new WorldAnvilConfig();
-      config.render(true);
+      module.config.render(true);
     }
   });
   html.find(".directory-header .action-buttons").append(button);
 
   // Re-render the browser, if it's active
-  const browser = Object.values(ui.windows).find(a => a.constructor === WorldAnvilBrowser);
-  if ( browser ) browser.render(false);
+  module.browser.render(false);
 });
 
 
