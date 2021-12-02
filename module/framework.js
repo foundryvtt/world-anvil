@@ -109,8 +109,8 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
 
   // Update an existing JournalEntry, or create a new one
   let entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
-  if ( entry ) return _updateExistingEntry(entry, article, content, options);
-  return _createNewEntry(article, content, options)
+  if ( entry ) return _updateExistingEntry(entry, article, content, notify, options);
+  return _createNewEntry(article, content, notify, options)
 
 }
 
@@ -121,11 +121,12 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
  * @param {JournalEntry} entry              The JournalEntry to update
  * @param {Article} article                 The original Article
  * @param {ParsedArticleResult} content     The parsed article content
+ * @param {boolean} notify                  Whether to create a UI notification when the import has completed
  * @param {DocumentModificationContext} options Entry update options
  * @returns {Promise<JournalEntry>}         The updated entry
  * @private
  */
-async function _updateExistingEntry(entry, article, content, options) {
+async function _updateExistingEntry(entry, article, content, notify, options) {
   /**
    * A hook event that fires when the user is updating an existing JournalEntry from a WorldAnvil article.
    * @function WAUpdateJournalEntry
@@ -156,11 +157,12 @@ async function _updateExistingEntry(entry, article, content, options) {
  * @param {Article} article                 The original Article
  * @param {ParsedArticleResult} content     The parsed article content
  * @returns {Promise<JournalEntry>}         The created entry
+ * @param {boolean} notify                  Whether to create a UI notification when the import has completed
  * @param {DocumentModificationContext} options Entry creation options
  * @returns {Promise<JournalEntry>}         The created entry
  * @private
  */
-async function _createNewEntry(article, content, options) {
+async function _createNewEntry(article, content, notify, options) {
 
   // Get or create the appropriate folder
   const folder = await getCategoryFolder(article.category);
