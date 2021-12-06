@@ -307,6 +307,11 @@ export function getArticleContent(article) {
 
   // Image from body
   div.querySelectorAll("img").forEach(i => {
+
+    // Default href link to hosted foundry server, and not WA. => it needs to be set
+    i.parentElement.href = `https://worldanvil.com/${i.parentElement.pathname}`;
+
+    // Set image source
     let img = new Image();
     img.src = `https://worldanvil.com${i.dataset.src}`;
     delete i.dataset.src;
