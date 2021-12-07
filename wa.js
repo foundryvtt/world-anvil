@@ -123,7 +123,7 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
     // View an existing linked article (OBSERVER+)
     const entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
     if ( entry ) {
-      if ( !entry.hasPerm(game.user, "OBSERVER") ) {
+      if ( !entry.testUserPermission(game.user, "OBSERVER") ) {
         return ui.notifications.warn(game.i18n.localize("WA.NoPermissionView"));
       }
       return entry.sheet.render(true);
