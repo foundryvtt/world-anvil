@@ -317,6 +317,7 @@ export function getArticleContent(article) {
     delete i.dataset.src;
     img.alt = i.alt;
     img.title = i.title;
+    img.style.cssText = i.style.cssText; //Retain custum img size
     i.parentElement.replaceChild(img, i);
     image = image || img.src;
   });
