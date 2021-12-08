@@ -286,6 +286,33 @@ export function getArticleContent(article) {
   content += aside;
   content += sections;
 
+  const html = formatArticleContent(content);
+  const image = chooseJournalEntyImage(article, html);
+
+  // Return content, image and flags
+  const parsedData = {
+    html: html,
+    img: image,
+    waFlags: waFlags
+  }
+  /**
+   * A hook event that fires when a WorldAnvil article is parsed
+   * @function WACreateJournalEntry
+   * @memberof hookEvents
+   * @param {Article} article                 The original Article
+   * @param {ParsedArticleResult} parsedData  The parsed article content
+   */
+  Hooks.callAll(`WAParseArticle`, article, parsedData);
+  return parsedData;
+}
+
+/**
+ * Modify content by substituting image paths, adding paragraph break and wa-link elements
+ * @param {string} content parsed article content
+ * @returns {string} formated content, ready to be added inside a journal entry
+ */
+export function formatArticleContent(content) {
+
   // Disable image source attributes so that they do not begin loading immediately
   content = content.replace(/src=/g, "data-src=");
 
@@ -296,14 +323,6 @@ export function getArticleContent(article) {
   // Paragraph Breaks
   const t = document.createTextNode("%p%");
   div.querySelectorAll("span.line-spacer").forEach(s => s.parentElement.replaceChild(t.cloneNode(), s));
-
-  // Portrait Image as Featured or Cover image if no Portrait
-  let image = null;
-  if ( article.portrait ) {
-    image = article.portrait.url.replace("http://", "https://");
-  } else if ( article.cover ) {
-    image = article.cover.url.replace("http://", "https://");
-  }
 
   // Image from body
   div.querySelectorAll("img").forEach(i => {
@@ -319,7 +338,6 @@ export function getArticleContent(article) {
     img.title = i.title;
     img.style.cssText = i.style.cssText; //Retain custum img size
     i.parentElement.replaceChild(img, i);
-    image = image || img.src;
   });
 
   // World Anvil Content Links
@@ -339,21 +357,37 @@ export function getArticleContent(article) {
   let html = div.innerHTML;
   html = html.replace(/%p%/g, "</p>\n<p>");
 
-  // Return content, image and flags
-  const parsedData = {
-    html: html,
-    img: image,
-    waFlags: waFlags
+  return html;
+}
+
+/**
+ * Retrive the image that will be displayed as the journal entry image
+ * @param {*} article Wa article
+ * @param {*} formattedContent Journal entry content
+ * @returns {string} the image src
+ */
+ function chooseJournalEntyImage( article, formattedContent ) {
+
+  // Case 1 : There is a portrait Image
+  if ( article.portrait ) {
+    return article.portrait.url.replace("http://", "https://");
+  } 
+  
+  // Case 2 : There is a cover Image
+  if ( article.cover ) {
+    image = article.cover.url.replace("http://", "https://");
   }
-  /**
-   * A hook event that fires when a WorldAnvil article is parsed
-   * @function WACreateJournalEntry
-   * @memberof hookEvents
-   * @param {Article} article                 The original Article
-   * @param {ParsedArticleResult} parsedData  The parsed article content
-   */
-  Hooks.callAll(`WAParseArticle`, article, parsedData);
-  return parsedData;
+
+  // Default behavior : Take the first image inside article content
+  const div = document.createElement("div");
+  div.innerHTML = formattedContent;
+  
+  const images=  div.querySelectorAll("img");
+  if( images.length > 0 ) {
+    return images[0].src;
+  }
+
+  return null;
 }
 
 /* -------------------------------------------- */
