@@ -375,7 +375,7 @@ export function formatArticleContent(content) {
   
   // Case 2 : There is a cover Image
   if ( article.cover ) {
-    image = article.cover.url.replace("http://", "https://");
+    return article.cover.url.replace("http://", "https://");
   }
 
   // Default behavior : Take the first image inside article content
