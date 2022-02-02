@@ -249,7 +249,7 @@ export function getArticleContent(article) {
       const title = _getLocalizedTitle(id, section);
 
       // Display long-format content as a paragraph section with a header
-      const isLongContent = section.content.length > 100;
+      const isLongContent = section.content ? section.content.length : 0 > 100;
       if( isLongContent ) {
         sections += `<h2>${title}</h2>`;
         sections += `\n<p>${section.content_parsed}</p><hr/>`;
