@@ -286,12 +286,12 @@ export function getArticleContent(article) {
   content += aside;
   content += sections;
 
-  const html = formatArticleContent(content);
-  const image = chooseJournalEntyImage(article, html);
+  const htmlContent = parsedContentToHTML(content);
+  const image = chooseJournalEntyImage(article, htmlContent);
 
   // Return content, image and flags
   const parsedData = {
-    html: html,
+    html: htmlContent.innerHTML,
     img: image,
     waFlags: waFlags
   }
@@ -309,23 +309,23 @@ export function getArticleContent(article) {
 /**
  * Modify content by substituting image paths, adding paragraph break and wa-link elements
  * @param {string} content parsed article content
- * @returns {string} formated content, ready to be added inside a journal entry
+ * @returns {HTMLElement} formated content, inside a HTML div element
  */
-export function formatArticleContent(content) {
+export function parsedContentToHTML(content) {
 
   // Disable image source attributes so that they do not begin loading immediately
   content = content.replace(/src=/g, "data-src=");
 
   // HTML formatting
-  const div = document.createElement("div");
-  div.innerHTML = content;
+  const htmlElement = document.createElement("div");
+  htmlElement.innerHTML = content;
 
   // Paragraph Breaks
   const t = document.createTextNode("%p%");
-  div.querySelectorAll("span.line-spacer").forEach(s => s.parentElement.replaceChild(t.cloneNode(), s));
+  htmlElement.querySelectorAll("span.line-spacer").forEach(s => s.parentElement.replaceChild(t.cloneNode(), s));
 
   // Image from body
-  div.querySelectorAll("img").forEach(i => {
+  htmlElement.querySelectorAll("img").forEach(i => {
 
     // Default href link to hosted foundry server, and not WA. => it needs to be set
     i.parentElement.href = `https://worldanvil.com/${i.parentElement.pathname}`;
@@ -341,10 +341,10 @@ export function formatArticleContent(content) {
   });
 
   // World Anvil Content Links
-  div.querySelectorAll('span[data-article-id]').forEach(el => {
+  htmlElement.querySelectorAll('span[data-article-id]').forEach(el => {
     el.classList.add("entity-link", "wa-link");
   });
-  div.querySelectorAll('a[data-article-id]').forEach(el => {
+  htmlElement.querySelectorAll('a[data-article-id]').forEach(el => {
     el.classList.add("entity-link", "wa-link");
     const span = document.createElement("span");
     span.classList = el.classList;
@@ -354,19 +354,17 @@ export function formatArticleContent(content) {
   });
 
   // Regex formatting
-  let html = div.innerHTML;
-  html = html.replace(/%p%/g, "</p>\n<p>");
-
-  return html;
+  htmlElement.innerHTML = htmlElement.innerHTML.replace(/%p%/g, "</p>\n<p>");
+  return htmlElement;
 }
 
 /**
  * Retrive the image that will be displayed as the journal entry image
- * @param {*} article Wa article
- * @param {*} formattedContent Journal entry content
- * @returns {string} the image src
+ * @param {Article} article Wa article
+ * @param {HTMLElement} htmlContent Journal entry content, in html format
+ * @returns {string|null} The featured image path, or null if no image was present
  */
- function chooseJournalEntyImage( article, formattedContent ) {
+ function chooseJournalEntyImage( article, htmlContent ) {
 
   // Case 1 : There is a portrait Image
   if ( article.portrait ) {
@@ -379,10 +377,7 @@ export function formatArticleContent(content) {
   }
 
   // Default behavior : Take the first image inside article content
-  const div = document.createElement("div");
-  div.innerHTML = formattedContent;
-  
-  const images=  div.querySelectorAll("img");
+  const images=  htmlContent.querySelectorAll("img");
   if( images.length > 0 ) {
     return images[0].src;
   }
