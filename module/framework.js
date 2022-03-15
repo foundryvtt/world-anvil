@@ -286,56 +286,12 @@ export function getArticleContent(article) {
   content += aside;
   content += sections;
 
-  // Disable image source attributes so that they do not begin loading immediately
-  content = content.replace(/src=/g, "data-src=");
-
-  // HTML formatting
-  const div = document.createElement("div");
-  div.innerHTML = content;
-
-  // Paragraph Breaks
-  const t = document.createTextNode("%p%");
-  div.querySelectorAll("span.line-spacer").forEach(s => s.parentElement.replaceChild(t.cloneNode(), s));
-
-  // Portrait Image as Featured or Cover image if no Portrait
-  let image = null;
-  if ( article.portrait ) {
-    image = article.portrait.url.replace("http://", "https://");
-  } else if ( article.cover ) {
-    image = article.cover.url.replace("http://", "https://");
-  }
-
-  // Image from body
-  div.querySelectorAll("img").forEach(i => {
-    let img = new Image();
-    img.src = `https://worldanvil.com${i.dataset.src}`;
-    delete i.dataset.src;
-    img.alt = i.alt;
-    img.title = i.title;
-    i.parentElement.replaceChild(img, i);
-    image = image || img.src;
-  });
-
-  // World Anvil Content Links
-  div.querySelectorAll('span[data-article-id]').forEach(el => {
-    el.classList.add("entity-link", "wa-link");
-  });
-  div.querySelectorAll('a[data-article-id]').forEach(el => {
-    el.classList.add("entity-link", "wa-link");
-    const span = document.createElement("span");
-    span.classList = el.classList;
-    Object.entries(el.dataset).forEach(e => span.dataset[e[0]] = e[1]);
-    span.textContent = el.textContent;
-    el.replaceWith(span);
-  });
-
-  // Regex formatting
-  let html = div.innerHTML;
-  html = html.replace(/%p%/g, "</p>\n<p>");
+  const htmlContent = parsedContentToHTML(content);
+  const image = chooseJournalEntyImage(article, htmlContent);
 
   // Return content, image and flags
   const parsedData = {
-    html: html,
+    html: htmlContent.innerHTML,
     img: image,
     waFlags: waFlags
   }
@@ -348,6 +304,85 @@ export function getArticleContent(article) {
    */
   Hooks.callAll(`WAParseArticle`, article, parsedData);
   return parsedData;
+}
+
+/**
+ * Modify content by substituting image paths, adding paragraph break and wa-link elements
+ * @param {string} content parsed article content
+ * @returns {HTMLElement} formated content, inside a HTML div element
+ */
+export function parsedContentToHTML(content) {
+
+  // Disable image source attributes so that they do not begin loading immediately
+  content = content.replace(/src=/g, "data-src=");
+
+  // HTML formatting
+  const htmlElement = document.createElement("div");
+  htmlElement.innerHTML = content;
+
+  // Paragraph Breaks
+  const t = document.createTextNode("%p%");
+  htmlElement.querySelectorAll("span.line-spacer").forEach(s => s.parentElement.replaceChild(t.cloneNode(), s));
+
+  // Image from body
+  htmlElement.querySelectorAll("img").forEach(i => {
+
+    // Default href link to hosted foundry server, and not WA. => it needs to be set
+    i.parentElement.href = `https://worldanvil.com/${i.parentElement.pathname}`;
+
+    // Set image source
+    let img = new Image();
+    img.src = `https://worldanvil.com${i.dataset.src}`;
+    delete i.dataset.src;
+    img.alt = i.alt;
+    img.title = i.title;
+    img.style.cssText = i.style.cssText; //Retain custum img size
+    i.parentElement.replaceChild(img, i);
+  });
+
+  // World Anvil Content Links
+  htmlElement.querySelectorAll('span[data-article-id]').forEach(el => {
+    el.classList.add("entity-link", "wa-link");
+  });
+  htmlElement.querySelectorAll('a[data-article-id]').forEach(el => {
+    el.classList.add("entity-link", "wa-link");
+    const span = document.createElement("span");
+    span.classList = el.classList;
+    Object.entries(el.dataset).forEach(e => span.dataset[e[0]] = e[1]);
+    span.textContent = el.textContent;
+    el.replaceWith(span);
+  });
+
+  // Regex formatting
+  htmlElement.innerHTML = htmlElement.innerHTML.replace(/%p%/g, "</p>\n<p>");
+  return htmlElement;
+}
+
+/**
+ * Retrive the image that will be displayed as the journal entry image
+ * @param {Article} article Wa article
+ * @param {HTMLElement} htmlContent Journal entry content, in html format
+ * @returns {string|null} The featured image path, or null if no image was present
+ */
+ function chooseJournalEntyImage( article, htmlContent ) {
+
+  // Case 1 : There is a portrait Image
+  if ( article.portrait ) {
+    return article.portrait.url.replace("http://", "https://");
+  } 
+  
+  // Case 2 : There is a cover Image
+  if ( article.cover ) {
+    return article.cover.url.replace("http://", "https://");
+  }
+
+  // Default behavior : Take the first image inside article content
+  const images=  htmlContent.querySelectorAll("img");
+  if( images.length > 0 ) {
+    return images[0].src;
+  }
+
+  return null;
 }
 
 /* -------------------------------------------- */

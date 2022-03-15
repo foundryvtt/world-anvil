@@ -183,6 +183,8 @@ export default class WorldAnvilBrowser extends Application {
     switch (action) {
 
       // Header control buttons
+      case "refresh-all":
+        return this._refreshCategory();
       case "import-all":
         return this._importCategory(this.tree);
       case "sync-all":
@@ -210,6 +212,18 @@ export default class WorldAnvilBrowser extends Application {
       case "hide-entry":
         return this._hideEntry(button.closest(".article").dataset.entryId);
     }
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Call WA to refreesh the categories.
+   * Category tree will be rebuild when render() is called
+   */
+   async _refreshCategory() {
+    await getCategories({cache: false});
+    this.articles = undefined;
+    this.render();
   }
 
   /* -------------------------------------------- */

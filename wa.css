@@ -15,6 +15,30 @@ button#world-anvil img {
     width: auto;
 }
 
+
+.wa-link {
+    padding: 1px 4px 1px 18px;
+    margin: 0;
+    white-space: nowrap;
+    word-break: break-all;
+    background: #DDD;
+    background-image: url(icons/wa-icon.svg);
+    background-repeat: no-repeat;
+    background-size: 14px 14px;
+    background-position: 2px 1px;
+    border: 1px solid #444;
+    border-radius: 2px;
+}
+.wa-link.not-found {
+    color: darkred;
+}
+.wa-link:hover {
+    text-shadow: 0 0 4px red;
+    cursor: pointer;
+}
+
+
+
 /** --------------------------------------------
     Application Styling Rules
 --------------------------------------------- */

@@ -22,6 +22,7 @@
   "WA.Sync": "WA Sync",
   "WA.OnWA": "On World Anvil",
 
+  "WA.ButtonRefreshAll": "Refresh All",
   "WA.ButtonImportAll": "Import All",
   "WA.ButtonSyncAll": "Sync All",
   "WA.ButtonVisibilityHide": "Hide from players",
