@@ -105,8 +105,8 @@ export default class WorldAnvilBrowser extends Application {
 
       // Check linked entry permissions
       article.entry = entries.find(e => e.getFlag("world-anvil", "articleId") === article.id);
-      article.visibleByPlayers = article.entry?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
-      
+      article.visibleByPlayers = article.entry?.data.permission.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+
       // Get the category to which the article belongs
       const category = categories.get(article.category?.id) || uncategorized;
       category.articles.push(article);
@@ -243,11 +243,11 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return !a.entry?.data.permission.default < CONST.ENTITY_PERMISSIONS.OBSERVER;
+      return !a.entry?.data.permission.default < CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
     }).map( a => {
       return {
         _id: a.entry.id,
-        permission: { default: CONST.ENTITY_PERMISSIONS.OBSERVER }
+        permission: { default: CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER }
       }
     });
 
@@ -267,11 +267,11 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return a.entry?.data.permission.default >= CONST.ENTITY_PERMISSIONS.OBSERVER;
+      return a.entry?.data.permission.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
     }).map( a => {
       return {
         _id: a.entry.id,
-        permission: { default: CONST.ENTITY_PERMISSIONS.NONE }
+        permission: { default: CONST.DOCUMENT_PERMISSION_LEVELS.NONE }
       }
     });
 
@@ -292,7 +292,7 @@ export default class WorldAnvilBrowser extends Application {
     if( !entry ) { throw 'Can\'t find journal entry with id : ' + entryId; }
 
     const perms = {
-      default: CONST.ENTITY_PERMISSIONS.OBSERVER
+      default: CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER
     };
 
     await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});
@@ -310,7 +310,7 @@ export default class WorldAnvilBrowser extends Application {
     if( !entry ) { throw 'Can\'t find journal entry with id : ' + entryId; }
 
     const perms = {
-      default: CONST.ENTITY_PERMISSIONS.NONE
+      default: CONST.DOCUMENT_PERMISSION_LEVELS.NONE
     };
 
     await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});

@@ -55,10 +55,18 @@ export const ARTICLE_CSS_CLASSES = {
  * @property {Category} [category]    A parent category to which this article belongs
  * @property {object[]} sections      Sections of the Article
  * @property {object[]} relations     Relations to the Article
- * @property {string} content_parsed  Parsed HTML content for the article
+ * @property {string} contentParsed   Parsed HTML content for the article
  * @property {string} portrait        A portrait image URL
  * @property {string} cover           A cover image URL
  * @property {JournalEntry} [entry]   A linked JournalEntry document for this article
+ */
+
+/**
+ * @typedef {Object} ArticleSection
+ * @property {string} title           The section title
+ * @property {string} position        A special positional assignment for the section
+ * @property {string} content         The original WorldAnvil content in bbCode format
+ * @property {string} contentParsed   The HTML parsed content of the section
  */
 
 /**
@@ -215,7 +223,7 @@ export function getArticleContent(article) {
     const includeSidebars = sectionEntries.some(s => {
       const [id, section] = s;
       if ( id !== DISPLAY_SIDEBAR_SECTION_ID ) return false;
-      return section.content_parsed === "1"
+      return section.contentParsed === "1"
     });
 
     // Determine whether there are secrets inside this article
@@ -252,13 +260,13 @@ export function getArticleContent(article) {
       const isLongContent = section.content.length > 100;
       if( isLongContent ) {
         sections += `<h2>${title}</h2>`;
-        sections += `\n<p>${section.content_parsed}</p><hr/>`;
+        sections += `\n<p>${section.contentParsed}</p><hr/>`;
       }
 
       // Display short-format content as a details list
       else {
         sections += `<dl><dt>${title}</dt>`;
-        sections += `<dd>${section.content_parsed}</dd></dl>`;
+        sections += `<dd>${section.contentParsed}</dd></dl>`;
       }
 
       // End main section div
@@ -281,7 +289,7 @@ export function getArticleContent(article) {
 
   // Combine content sections
   let content = `<section class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
-  content += `<p>${article.content_parsed}</p>`;
+  content += `<p>${article.contentParsed}</p>`;
   content += "</section><hr/>";
   content += aside;
   content += sections;
