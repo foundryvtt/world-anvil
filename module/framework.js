@@ -294,56 +294,12 @@ export function getArticleContent(article) {
   content += aside;
   content += sections;
 
-  // Disable image source attributes so that they do not begin loading immediately
-  content = content.replace(/src=/g, "data-src=");
-
-  // HTML formatting
-  const div = document.createElement("div");
-  div.innerHTML = content;
-
-  // Paragraph Breaks
-  const t = document.createTextNode("%p%");
-  div.querySelectorAll("span.line-spacer").forEach(s => s.parentElement.replaceChild(t.cloneNode(), s));
-
-  // Portrait Image as Featured or Cover image if no Portrait
-  let image = null;
-  if ( article.portrait ) {
-    image = article.portrait.url.replace("http://", "https://");
-  } else if ( article.cover ) {
-    image = article.cover.url.replace("http://", "https://");
-  }
-
-  // Image from body
-  div.querySelectorAll("img").forEach(i => {
-    let img = new Image();
-    img.src = `https://worldanvil.com${i.dataset.src}`;
-    delete i.dataset.src;
-    img.alt = i.alt;
-    img.title = i.title;
-    i.parentElement.replaceChild(img, i);
-    image = image || img.src;
-  });
-
-  // World Anvil Content Links
-  div.querySelectorAll('span[data-article-id]').forEach(el => {
-    el.classList.add("entity-link", "wa-link");
-  });
-  div.querySelectorAll('a[data-article-id]').forEach(el => {
-    el.classList.add("entity-link", "wa-link");
-    const span = document.createElement("span");
-    span.classList = el.classList;
-    Object.entries(el.dataset).forEach(e => span.dataset[e[0]] = e[1]);
-    span.textContent = el.textContent;
-    el.replaceWith(span);
-  });
-
-  // Regex formatting
-  let html = div.innerHTML;
-  html = html.replace(/%p%/g, "</p>\n<p>");
+  const htmlContent = parsedContentToHTML(content);
+  const image = chooseJournalEntyImage(article, htmlContent);
 
   // Return content, image and flags
   const parsedData = {
-    html: html,
+    html: htmlContent.innerHTML,
     img: image,
     waFlags: waFlags
   }
@@ -356,6 +312,85 @@ export function getArticleContent(article) {
    */
   Hooks.callAll(`WAParseArticle`, article, parsedData);
   return parsedData;
+}
+
+/**
+ * Modify content by substituting image paths, adding paragraph break and wa-link elements
+ * @param {string} content parsed article content
+ * @returns {HTMLElement} formated content, inside a HTML div element
+ */
+export function parsedContentToHTML(content) {
+
+  // Disable image source attributes so that they do not begin loading immediately
+  content = content.replace(/src=/g, "data-src=");
+
+  // HTML formatting
+  const htmlElement = document.createElement("div");
+  htmlElement.innerHTML = content;
+
+  // Paragraph Breaks
+  const t = document.createTextNode("%p%");
+  htmlElement.querySelectorAll("span.line-spacer").forEach(s => s.parentElement.replaceChild(t.cloneNode(), s));
+
+  // Image from body
+  htmlElement.querySelectorAll("img").forEach(i => {
+
+    // Default href link to hosted foundry server, and not WA. => it needs to be set
+    i.parentElement.href = `https://worldanvil.com/${i.parentElement.pathname}`;
+
+    // Set image source
+    let img = new Image();
+    img.src = `https://worldanvil.com${i.dataset.src}`;
+    delete i.dataset.src;
+    img.alt = i.alt;
+    img.title = i.title;
+    img.style.cssText = i.style.cssText; //Retain custum img size
+    i.parentElement.replaceChild(img, i);
+  });
+
+  // World Anvil Content Links
+  htmlElement.querySelectorAll('span[data-article-id]').forEach(el => {
+    el.classList.add("entity-link", "wa-link");
+  });
+  htmlElement.querySelectorAll('a[data-article-id]').forEach(el => {
+    el.classList.add("entity-link", "wa-link");
+    const span = document.createElement("span");
+    span.classList = el.classList;
+    Object.entries(el.dataset).forEach(e => span.dataset[e[0]] = e[1]);
+    span.textContent = el.textContent;
+    el.replaceWith(span);
+  });
+
+  // Regex formatting
+  htmlElement.innerHTML = htmlElement.innerHTML.replace(/%p%/g, "</p>\n<p>");
+  return htmlElement;
+}
+
+/**
+ * Retrive the image that will be displayed as the journal entry image
+ * @param {Article} article Wa article
+ * @param {HTMLElement} htmlContent Journal entry content, in html format
+ * @returns {string|null} The featured image path, or null if no image was present
+ */
+ function chooseJournalEntyImage( article, htmlContent ) {
+
+  // Case 1 : There is a portrait Image
+  if ( article.portrait ) {
+    return article.portrait.url.replace("http://", "https://");
+  } 
+  
+  // Case 2 : There is a cover Image
+  if ( article.cover ) {
+    return article.cover.url.replace("http://", "https://");
+  }
+
+  // Default behavior : Take the first image inside article content
+  const images=  htmlContent.querySelectorAll("img");
+  if( images.length > 0 ) {
+    return images[0].src;
+  }
+
+  return null;
 }
 
 /* -------------------------------------------- */
@@ -387,24 +422,12 @@ export async function getCategories({cache=true}={}) {
   // Get the category mapping
   const categories = await _getCategories({cache});
 
-  // Build the tree structure
-  let _depth = 0;
-  const tree = categories.get(CATEGORY_ID.root);
-  const pending = Array.from(categories.values()).filter(c => c.id !== CATEGORY_ID.root);
-  const unmapped = _buildCategoryBranch(tree, pending, _depth);
-
-  // Add un-mapped categories as children of the root
-  if ( unmapped.length ) {
-    unmapped.sort(_sortCategories);
-    for ( let c of unmapped ) {
-      console.warn(`World-Anvil | Category ${c.title} failed to map to a parent category`);
-      c.parent = undefined;
-      tree.children.push(c);
-    }
-  }
-
   // Associate categories with Folder documents
   associateCategoryFolders(categories);
+
+  // Tree starts with root
+  const tree = categories.get(CATEGORY_ID.root);
+
   return {categories, tree};
 }
 
@@ -439,6 +462,7 @@ async function _getCategories({cache=true}={}) {
     id: CATEGORY_ID.root,
     title:  `[WA] ${anvil.world.name}`,
     position: 0,
+    copyForSort: [],
     children: [],
     folder: null
   };
@@ -449,19 +473,41 @@ async function _getCategories({cache=true}={}) {
     id: CATEGORY_ID.uncategorized,
     title: game.i18n.localize('WA.CategoryUncategorized'),
     position: 9e9,
+    copyForSort: [],
     children : [],
     parent: root,
     isUncategorized: true
   };
   categories.set(uncategorized.id, uncategorized);
 
-  // Retrieve categories from the World Anvil API
+  // Retrieve categories from the World Anvil API (build map)
   const request = await anvil.getCategories();
   for ( let c of (request?.categories || []) ) {
+    categories.set(c.id, c);
+    c.copyForSort = c.children?.categories ?? [];
     c.children = [];
     c.folder = undefined;
-    categories.set(c.id, c);
   }
+  // Append children 
+  for( let c of (request?.categories || []) ) {
+    const parentId = c.parentCategory?.id ?? CATEGORY_ID.root;
+    const parent = categories.get(parentId);
+    c.parent = parent;
+    parent.children.push(c);
+  }
+  // Sort children
+  for( let c of categories.values() ) {
+
+    c.children.sort( (a,b) => {
+      const indexA = c.copyForSort.findIndex( cc => cc.id === a.id );
+      const indexB = c.copyForSort.findIndex( cc => cc.id === b.id );
+      const substr = indexA - indexB;
+      if( substr != 0 ) { return substr; }
+      return a.title.localeCompare(b.title);
+    });
+    c.copyForSort = undefined;
+  }
+
   return categories;
 }
 
@@ -503,50 +549,4 @@ export async function getCategoryFolder(category) {
     "flags.world-anvil.categoryId": category.id
   });
 }
-
-/* -------------------------------------------- */
-
-/**
- * Recursively build a branch of the category tree.
- * @param {Category} parent             A parent category
- * @param {Category[]} categories       Categories which have not yet been allocated to a parent
- * @param {number} _depth               Recursive overflow protection
- * @returns {Category[]}                Categories which still have not been allocated to a parent
- * @private
- */
-function _buildCategoryBranch(parent, categories, _depth=0) {
-  if ( _depth > 1000 ) throw new Error("Recursive category depth exceeded. Something went wrong!");
-  _depth++;
-
-  // Allocate pending categories which have this parent category
-  let [pending, children] = categories.partition(c => {
-    let parentId = c.parent_category?.id;
-    if ( !parentId && (c.id !== CATEGORY_ID.root) ) parentId = CATEGORY_ID.root;
-    return parentId === parent.id;
-  });
-  children.forEach(c => c.parent = parent);
-  children.sort(_sortCategories);
-  parent["children"] = children;
-
-  // Recursively build child branches
-  for ( let c of children ) {
-    pending = _buildCategoryBranch(c, pending, _depth);
-  }
-  return pending;
-}
-
-/* -------------------------------------------- */
-
-/**
- * A comparison function for sorting categories
- * @param {Category} a              The first category
- * @param {Category} b              The second category
- * @returns {number}                The comparison between the two
- * @private
- */
-function _sortCategories(a, b) {
-  if ( Number.isNumeric(a.position) && Number.isNumeric(b.position) ) return a.position - b.position;
-  return a.title.localeCompare(b.title);
-}
-
 /* -------------------------------------------- */
