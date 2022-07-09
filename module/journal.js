@@ -184,7 +184,7 @@ export default class WorldAnvilBrowser extends Application {
 
       // Header control buttons
       case "refresh-all":
-        return this._refreshCategory();
+        return this._refreshAll();
       case "import-all":
         return this._importCategory(this.tree);
       case "sync-all":
@@ -217,10 +217,10 @@ export default class WorldAnvilBrowser extends Application {
   /* -------------------------------------------- */
 
   /**
-   * Call WA to refreesh the categories.
+   * Call WA to refreesh the categoriesand the articles.
    * Category tree will be rebuild when render() is called
    */
-   async _refreshCategory() {
+   async _refreshAll() {
     await getCategories({cache: false});
     this.articles = undefined;
     this.render();

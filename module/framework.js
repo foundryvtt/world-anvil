@@ -234,7 +234,7 @@ export function getArticleContent(article) {
     });
 
     // Filter sections, removing ignored ones.
-    const ignoredSectionIds = [DISPLAY_SIDEBAR_SECTION_ID, "issystem"];
+    const ignoredSectionIds = [DISPLAY_SIDEBAR_SECTION_ID, "issystem", "folderId"];
     const filteredEntries = sectionEntries.filter( ([id, section]) => {
       if( ignoredSectionIds.includes(id) ) { return false; }
       if( !includeSidebars ) {
@@ -336,7 +336,9 @@ export function parsedContentToHTML(content) {
   htmlElement.querySelectorAll("img").forEach(i => {
 
     // Default href link to hosted foundry server, and not WA. => it needs to be set
-    i.parentElement.href = `https://worldanvil.com/${i.parentElement.pathname}`;
+    if( i.parentElement.tagName === "A" ) {
+      i.parentElement.href = `https://worldanvil.com/${i.parentElement.pathname}`;
+    }
 
     // Set image source
     let img = new Image();
@@ -344,7 +346,7 @@ export function parsedContentToHTML(content) {
     delete i.dataset.src;
     img.alt = i.alt;
     img.title = i.title;
-    img.style.cssText = i.style.cssText; //Retain custum img size
+    img.style.cssText = i.style.cssText; // Retain custum sizing
     i.parentElement.replaceChild(img, i);
   });
 
@@ -386,11 +388,7 @@ export function parsedContentToHTML(content) {
 
   // Default behavior : Take the first image inside article content
   const images=  htmlContent.querySelectorAll("img");
-  if( images.length > 0 ) {
-    return images[0].src;
-  }
-
-  return null;
+  return images[0]?.src || null;
 }
 
 /* -------------------------------------------- */
