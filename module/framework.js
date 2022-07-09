@@ -387,7 +387,7 @@ export function parsedContentToHTML(content) {
   }
 
   // Default behavior : Take the first image inside article content
-  const images=  htmlContent.querySelectorAll("img");
+  const images = htmlContent.querySelectorAll("img");
   return images[0]?.src || null;
 }
 
