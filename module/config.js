@@ -86,7 +86,7 @@ export default class WorldAnvilConfig extends FormApplication {
     game.settings.register("world-anvil", "configuration", {
       scope: "world",
       config: false,
-      default: null,
+      default: {},
       type: Object,
       onChange: async c => {
         const anvil = game.modules.get("world-anvil").anvil;
