@@ -460,7 +460,8 @@ export function parsedContentToHTML(content) {
   
     const images = htmlElement.querySelectorAll("img");
     if( images[0]?.src ) {
-      pages.images[pageNames.image] = images[0]?.src.replace("http://", "https://");
+      const pageName = article.template === 'person' ? pageNames.portrait : pageNames.image;
+      pages.images[pageName] = images[0]?.src.replace("http://", "https://");
     }
   }
 }
