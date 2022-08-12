@@ -73,7 +73,7 @@ export const ARTICLE_CSS_CLASSES = {
  * @typedef {Object} ParsedArticleResult    Used by the hook WAParseArticle. It contains primary data which could be altered by additional modules
  * @property {object} html                  Each child is a string containing HTML data (HtmlElement.innerHTML). It will appear as a page inside the Journal entry
  * @property {object} images                Each child is an image url. It will also appear as a page inside the Journal entry
- * @property {object} waFlags               Journal entry flags which will be store inside entry.data.flags["world-anvil"]
+ * @property {object} waFlags               Journal entry flags which will be store inside entry.flags["world-anvil"]
  */
 
 
@@ -591,7 +591,7 @@ async function _getCategories({cache=true}={}) {
  * @param {CategoryMap} categories      The categories being mapped
  */
 export function associateCategoryFolders(categories) {
-  const folders = game.folders.filter(f => (f.data.type === "JournalEntry") && f.data.flags["world-anvil"]);
+  const folders = game.folders.filter(f => (f.type === "JournalEntry") && f.flags["world-anvil"]);
   for ( let [id, category] of categories ) {
     if ( id === CATEGORY_ID.root ) category.folder = null;
     else category.folder = folders.find(f => f.getFlag("world-anvil", "categoryId") === id);
@@ -610,7 +610,7 @@ export async function getCategoryFolder(category) {
   if ( category.parent && !category.parent.folder ) await getCategoryFolder(category.parent);
 
   // Check whether a Folder already exists for this Category
-  const folder = game.folders.find(f => ( f.data.type === "JournalEntry" ) && ( f.getFlag("world-anvil", "categoryId") === category.id) );
+  const folder = game.folders.find(f => ( f.type === "JournalEntry" ) && ( f.getFlag("world-anvil", "categoryId") === category.id) );
   if ( folder ) return category.folder = folder;
 
   // Create a new Folder
