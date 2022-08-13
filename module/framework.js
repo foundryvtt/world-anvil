@@ -559,12 +559,14 @@ async function _getCategories({cache=true}={}) {
     categories.set(c.id, c);
     c.copyForSort = c.children?.categories ?? [];
     c.children = [];
+    c.parentCategoryId = c.parent?.id;
+    c.parent = undefined;
     c.folder = undefined;
   }
   // Append children 
   for( let c of (request?.categories || []) ) {
-    const parentId = c.parentCategory?.id ?? CATEGORY_ID.root;
-    const parent = categories.get(parentId);
+    const parentId = c.parentCategoryId ?? CATEGORY_ID.root;
+    const parent = categories.get(parentId) ?? root;
     c.parent = parent;
     parent.children.push(c);
   }
@@ -580,6 +582,7 @@ async function _getCategories({cache=true}={}) {
     });
     c.copyForSort = undefined;
   }
+  root.children.push(uncategorized);
 
   return categories;
 }

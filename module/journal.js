@@ -32,6 +32,13 @@ export default class WorldAnvilBrowser extends Application {
    */
   _displayWIP = true;
 
+  /**
+   * Storing which categories were shrinked
+   * @type {string[]}
+   * @private
+   */
+  _shrinkedCategories = [];
+
   /* -------------------------------------------- */
 
   /** @override */
@@ -96,7 +103,7 @@ export default class WorldAnvilBrowser extends Application {
     const uncategorized = categories.get( CATEGORY_ID.uncategorized );
 
     // Organize articles into their parent category
-    const entries = game.journal.filter(j => j.data.flags["world-anvil"]);
+    const entries = game.journal.filter(j => j.flags["world-anvil"]);
     for ( let article of articles ) {
 
       // Skip articles which should not be displayed
@@ -105,7 +112,7 @@ export default class WorldAnvilBrowser extends Application {
 
       // Check linked entry permissions
       article.entry = entries.find(e => e.getFlag("world-anvil", "articleId") === article.id);
-      article.visibleByPlayers = article.entry?.data.permission.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+      article.visibleByPlayers = article.entry?.ownership.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
 
       // Get the category to which the article belongs
       const category = categories.get(article.category?.id) || uncategorized;
@@ -197,6 +204,8 @@ export default class WorldAnvilBrowser extends Application {
         return this.render();
 
       // Category control buttons
+      case "shrink-folder":
+        return this._shrinkFolder(button.closest(".category").dataset.categoryId);
       case "sync-folder":
         return this._syncFolder(button.closest(".category").dataset.categoryId);
       case "display-folder":
@@ -223,6 +232,22 @@ export default class WorldAnvilBrowser extends Application {
    async _refreshAll() {
     await getCategories({cache: false});
     this.articles = undefined;
+    this.render();
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Shrink inside the category inside journal display. (Or unshrink it)
+   * @param {string} categoryId     World Anvil category ID
+   */
+   async _shrinkFolder(categoryId) {
+    const alreadyShrinked = this._shrinkedCategories.includes( categoryId );
+    if( alreadyShrinked ) {
+      this._shrinkedCategories = this._shrinkedCategories.filter( id => id != categoryId );
+    } else {
+      this._shrinkedCategories.push( categoryId );
+    }
     this.render();
   }
 
@@ -257,7 +282,7 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return !a.entry?.data.permission.default < CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+      return !a.entry?.ownership.default < CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
     }).map( a => {
       return {
         _id: a.entry.id,
@@ -281,7 +306,7 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return a.entry?.data.permission.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+      return a.entry?.ownership.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
     }).map( a => {
       return {
         _id: a.entry.id,
@@ -385,6 +410,8 @@ export default class WorldAnvilBrowser extends Application {
 
     node.hasChildrenWithContent = node.children.filter( child => child.hasContent).length > 0;
     node.hasContent = node.hasChildrenWithContent || node.articles.length > 0;
+
+    node.hasBeenShrinked = this._shrinkedCategories.includes( node.id );
   }
 }
 
