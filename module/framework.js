@@ -203,7 +203,7 @@ async function _createNewEntry(article, content, notify, options) {
 /**
  * Transform a ParsedArticleResult to a pages array which can be used for creating/updating journal entries
  * @param {ParsedArticleResult} content Article content previously parsed
- * @returns 
+ * @returns
  */
  function _parsedArticleContentToJournalPages(content) {
 
@@ -217,8 +217,8 @@ async function _createNewEntry(article, content, notify, options) {
   }).forEach( header => {
     const imageUrl = content.images[header];
     pages.push({
-      name: header, 
-      type: "image", 
+      name: header,
+      type: "image",
       src: imageUrl,
       sort: pages.length
     });
@@ -309,7 +309,7 @@ export function getArticleContent(article) {
         ARTICLE_CSS_CLASSES.ALL_PARTS,
         secretSectionIds.includes(id) ?  ARTICLE_CSS_CLASSES.SECRET_SECTION : ARTICLE_CSS_CLASSES.PUBLIC_SECTION
       ].join(" ");
-      
+
       let sectionInPages = `<section data-section-id="${id}" class="${cssClass}">`;
 
       // Title can be replaced by a localized name if the section id has been handled
@@ -360,7 +360,7 @@ export function getArticleContent(article) {
   Object.entries(pages.html).forEach( ([key, value]) => pages.html[key] = parsedContentToHTML(value) );
 
   // Add image pages
-  addJournalEntyImages(article, pages);
+  addJournalImagePages(article, pages);
 
   /**
    * A hook event that fires when a WorldAnvil article is parsed
@@ -430,12 +430,12 @@ export function parsedContentToHTML(content) {
 }
 
 /**
- * Add pages for images to pages if necessary. 
+ * Add pages for images to pages if necessary.
  * See waFlags.pageNames.image/cover/portrait
  * @param {Article} article Wa article
  * @param {object} pages Each child contains an HTMLElement with will be displayed as a page.
  */
- function addJournalEntyImages( article, pages ) {
+ function addJournalImagePages( article, pages ) {
 
   const pageNames = pages.waFlags.pageNames;
 
@@ -444,8 +444,8 @@ export function parsedContentToHTML(content) {
   if ( article.portrait ) {
     pages.images[pageNames.portrait] = article.portrait.url.replace("http://", "https://");
     imageFound = true;
-  } 
-  
+  }
+
   // Case 2 : There is a cover Image
   if ( article.cover ) {
     pages.images[pageNames.cover] = article.cover.url.replace("http://", "https://");
@@ -457,7 +457,7 @@ export function parsedContentToHTML(content) {
 
     const htmlElement = document.createElement("div");
     htmlElement.innerHTML = pages.html[pageNames.mainArticle];
-  
+
     const images = htmlElement.querySelectorAll("img");
     if( images[0]?.src ) {
       const pageName = article.template === 'person' ? pageNames.portrait : pageNames.image;
@@ -563,7 +563,7 @@ async function _getCategories({cache=true}={}) {
     c.parent = undefined;
     c.folder = undefined;
   }
-  // Append children 
+  // Append children
   for( let c of (request?.categories || []) ) {
     const parentId = c.parentCategoryId ?? CATEGORY_ID.root;
     const parent = categories.get(parentId) ?? root;

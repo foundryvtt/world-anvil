@@ -226,7 +226,7 @@ export default class WorldAnvilBrowser extends Application {
   /* -------------------------------------------- */
 
   /**
-   * Call WA to refreesh the categoriesand the articles.
+   * Call WA to refresh the categories and the articles.
    * Category tree will be rebuild when render() is called
    */
    async _refreshAll() {
