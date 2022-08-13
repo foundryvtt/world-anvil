@@ -6,11 +6,11 @@
         <div class="controls">
 
             {{#if this.hasBeenShrinked }}
-                <button type="button" class="world-anvil-control" data-action="shrink-folder" data-category-id="{{ this.id }}" title="{{ localize 'WA.ButtonShrinkFolder' }}">
+                <button type="button" class="world-anvil-control" data-action="shrink-folder" data-category-id="{{ this.id }}" title="{{ localize 'WA.ButtonUnshrinkCategory' }}">
                     <i class="fas fa-caret-up"></i>
                 </button>
             {{else}}
-                <button type="button" class="world-anvil-control" data-action="shrink-folder" data-category-id="{{ this.id }}" title="{{ localize 'WA.ButtonShrinkFolder' }}">
+                <button type="button" class="world-anvil-control" data-action="shrink-folder" data-category-id="{{ this.id }}" title="{{ localize 'WA.ButtonShrinkCategory' }}">
                     <i class="fas fa-caret-down"></i>
                 </button>
             {{/if}}
