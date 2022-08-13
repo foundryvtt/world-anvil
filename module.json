@@ -6,8 +6,8 @@
   "authors": [],
   "url": "https://github.com/foundryvtt/world-anvil",
   "version": "1.3.3",
-  "minimumCoreVersion": "0.7.6",
-  "compatibleCoreVersion": "9",
+  "minimumCoreVersion": "10",
+  "compatibleCoreVersion": "10",
   "scripts": [],
   "esmodules": [
     "wa.js"
