@@ -210,21 +210,7 @@ async function _createNewEntry(article, content, notify, options) {
   const pages = [];
   const pageNames = content.waFlags.pageNames;
 
-  // Add image pages (Order is important)
-  [pageNames.cover, pageNames.portrait, pageNames.image]
-    .filter( header => {
-      return !!content.images[header];
-  }).forEach( header => {
-    const imageUrl = content.images[header];
-    pages.push({
-      name: header,
-      type: "image",
-      src: imageUrl,
-      sort: pages.length
-    });
-  });
-
-  // Add Html Pages (Order is also important)
+  // Add Html Pages (Order is important)
   [pageNames.mainArticle, pageNames.sideContent, pageNames.relations, pageNames.secrets]
     .filter( header => {
       return !!content.html[header];
@@ -237,6 +223,20 @@ async function _createNewEntry(article, content, notify, options) {
         format: CONST.JOURNAL_ENTRY_PAGE_FORMATS.HTML,
         content: pageContent
       },
+      sort: pages.length
+    });
+  });
+
+  // Add image pages (Order is also important)
+  [pageNames.cover, pageNames.portrait, pageNames.image]
+    .filter( header => {
+      return !!content.images[header];
+  }).forEach( header => {
+    const imageUrl = content.images[header];
+    pages.push({
+      name: header,
+      type: "image",
+      src: imageUrl,
       sort: pages.length
     });
   });
@@ -396,11 +396,6 @@ export function parsedContentToHTML(content) {
   // Image from body
   htmlElement.querySelectorAll("img").forEach(i => {
 
-    // Default href link to hosted foundry server, and not WA. => it needs to be set
-    if( i.parentElement.tagName === "A" ) {
-      i.parentElement.href = `https://worldanvil.com/${i.parentElement.pathname}`;
-    }
-
     // Set image source
     let img = new Image();
     img.src = `https://worldanvil.com${i.dataset.src}`;
@@ -408,7 +403,13 @@ export function parsedContentToHTML(content) {
     img.alt = i.alt;
     img.title = i.title;
     img.style.cssText = i.style.cssText; // Retain custum sizing
-    i.parentElement.replaceChild(img, i);
+
+    // We remove <a .../> element surrounding the image, since now Foundry is able to see a fine version of the image by itself
+    let replacedElement = i;
+    if( i.parentElement.tagName === "A" ) {
+      replacedElement = i.parentElement;
+    }
+    replacedElement.parentElement.replaceChild(img, replacedElement);
   });
 
   // World Anvil Content Links
@@ -437,32 +438,28 @@ export function parsedContentToHTML(content) {
  */
  function addJournalImagePages( article, pages ) {
 
+  const createImagePage = ( pageName, imageSrc ) => {
+    pages.images[pageName] = imageSrc.replace("http://", "https://");
+  }
+  
   const pageNames = pages.waFlags.pageNames;
 
-  // Case 1 : There is a portrait Image
-  let imageFound = false;
+  // Retrieve images from main page
+  const htmlElement = document.createElement("div");
+  htmlElement.innerHTML = pages.html[pageNames.mainArticle];
+  const images = htmlElement.querySelectorAll("img");
+
+  // Portrait Image
   if ( article.portrait ) {
-    pages.images[pageNames.portrait] = article.portrait.url.replace("http://", "https://");
-    imageFound = true;
+    createImagePage(pageNames.portrait, article.portrait.url );
+
+  } else if ( article.template === 'person' && images.length == 1 ) {
+    createImagePage(pageNames.portrait, images[0].src );
   }
 
-  // Case 2 : There is a cover Image
+  // Cover Image
   if ( article.cover ) {
-    pages.images[pageNames.cover] = article.cover.url.replace("http://", "https://");
-    imageFound = true;
-  }
-
-  // Default behavior : Take the first image inside article content
-  if( !imageFound ) {
-
-    const htmlElement = document.createElement("div");
-    htmlElement.innerHTML = pages.html[pageNames.mainArticle];
-
-    const images = htmlElement.querySelectorAll("img");
-    if( images[0]?.src ) {
-      const pageName = article.template === 'person' ? pageNames.portrait : pageNames.image;
-      pages.images[pageName] = images[0]?.src.replace("http://", "https://");
-    }
+    createImagePage(pageNames.cover, article.cover.url );
   }
 }
 
