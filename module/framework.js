@@ -268,7 +268,7 @@ export function getArticleContent(article) {
     image: "Image",
     portrait: "Portrait",
     cover: "Cover",
-    relations: "Relations"
+    relations: "Relationships"
   };
   waFlags.pageNames = pageNames;
 
@@ -336,17 +336,25 @@ export function getArticleContent(article) {
     }
   }
 
-  // Add all article relations into an aside section
-  if ( article.relations ) {
-    for ( let [id, section] of Object.entries(article.relations) ) {
+  // Add all article relationships into an aside section
+  let template = document.createElement('div');
+  template.innerHTML = article.fullRender;
+  const relationElements = template.querySelectorAll(".character-relationship-panel");
+  if( relationElements.length > 0 ) {
+    pages.html[pageNames.relations] = "";
+    for ( let relationElement of relationElements ) {
 
-      if( !section.items ) { continue; } // Some relations, like timelines, have no .items attribute. => Skipped
-      const title = section.title || id.titleCase();
-      const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
-      const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
+      const protagonists = {
+        left: parseRelationProtagonist( relationElement, true ),
+        right: parseRelationProtagonist( relationElement, false )
+      };
 
-      pages.html[pageNames.relations] = pages[pageNames.relations] ?? "";
-      pages.html[pageNames.relations] += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
+      const leftIsThisArticle = ( protagonists.left.articleId === article.id );
+      // const current = leftIsThisArticle ? protagonists.left : protagonists.right; Would only need it if we want to add some addtionnal data like affection level
+      const relationshipWith = leftIsThisArticle ? protagonists.right : protagonists.left;
+
+      pages.html[pageNames.relations] += `<h2>${relationshipWith.role}</h2>`;
+      pages.html[pageNames.relations] += `<p class="wa-link" data-article-id="${relationshipWith.articleId}">${relationshipWith.personName}</p>`;
     }
   }
 
@@ -371,6 +379,22 @@ export function getArticleContent(article) {
    */
   Hooks.callAll(`WAParseArticle`, article, pages);
   return pages;
+}
+
+/**
+ * Article API from WA doesn't described relationships in depth. We can only retrieve them from the fullRender
+ * @param {HTMLElement} htmlRelation The div from article fullRender which describe this relationship
+ * @param {boolean} leftOne Each relation described in WA has two protagonists. One on the left, one on the right
+ * @returns {personName: string, articleId: string, role: string} data for the given protagonist
+ */
+function parseRelationProtagonist(htmlRelation, leftOne=true) {
+  const base = htmlRelation.querySelector(".character-relationships-" + (leftOne ? "left" : "right") );
+
+  return {
+    personName: base.children[0].children[0].text,
+    articleId: base.children[0].children[1].getAttribute("data-id"),
+    role: base.querySelector(".character-relationship-importance")?.textContent ?? ""
+  };
 }
 
 /**
