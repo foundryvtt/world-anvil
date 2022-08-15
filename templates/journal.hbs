@@ -2,18 +2,11 @@
 {{#if this.hasContent}}
 <section class="category" data-category-id="{{ this.id }}" data-folder-id="{{ this.folder.id }}">
     <header class="category-header flexrow">
+        <i title="{{ localize 'WA.ButtonUnshrinkCategory' }}"
+            class="shrink-icon fas fa-caret-{{#if this.hasBeenShrinked }}right{{else}}down{{/if}}" >
+        </i>
         <h2 class="category-title">{{ this.title }}</h2>
         <div class="controls">
-
-            {{#if this.hasBeenShrinked }}
-                <button type="button" class="world-anvil-control" data-action="shrink-folder" data-category-id="{{ this.id }}" title="{{ localize 'WA.ButtonUnshrinkCategory' }}">
-                    <i class="fas fa-caret-up"></i>
-                </button>
-            {{else}}
-                <button type="button" class="world-anvil-control" data-action="shrink-folder" data-category-id="{{ this.id }}" title="{{ localize 'WA.ButtonShrinkCategory' }}">
-                    <i class="fas fa-caret-down"></i>
-                </button>
-            {{/if}}
 
             {{#if this.displayVisibilityButtons }}
                 {{#if this.visibleByPlayers }}
@@ -68,7 +61,7 @@
 
 {{#*inline "articlePartial"}}
 <article class="article flexrow" data-article-id="{{ this.id }}" data-entry-id="{{ this.entry.id }}">
-    <h3 class="article-title">{{ this.title }}</h3>
+    <h3 class="article-title {{#if this.entry }}clickable{{/if}} ">{{ this.title }}</h3>
     <div class="controls">
         {{#if this.entry }}
             {{#if this.visibleByPlayers }}

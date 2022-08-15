@@ -151,6 +151,7 @@ export default class WorldAnvilBrowser extends Application {
     super.activateListeners(html);
     html.find(".article-title").click(this._onClickArticleTitle.bind(this));
     html.find("button.world-anvil-control").click(this._onClickControlButton.bind(this));
+    html.find(".shrink-icon").click(this._onClickShrinkFolder.bind(this));
   }
 
 	/* -------------------------------------------- */
@@ -204,8 +205,6 @@ export default class WorldAnvilBrowser extends Application {
         return this.render();
 
       // Category control buttons
-      case "shrink-folder":
-        return this._shrinkFolder(button.closest(".category").dataset.categoryId);
       case "sync-folder":
         return this._syncFolder(button.closest(".category").dataset.categoryId);
       case "display-folder":
@@ -226,28 +225,30 @@ export default class WorldAnvilBrowser extends Application {
   /* -------------------------------------------- */
 
   /**
-   * Call WA to refresh the categories and the articles.
-   * Category tree will be rebuild when render() is called
-   */
-   async _refreshAll() {
-    await getCategories({cache: false});
-    this.articles = undefined;
-    this.render();
-  }
-
-  /* -------------------------------------------- */
-
-  /**
    * Shrink inside the category inside journal display. (Or unshrink it)
-   * @param {string} categoryId     World Anvil category ID
+   * @private
    */
-   async _shrinkFolder(categoryId) {
+   async _onClickShrinkFolder(event) {
+    const icon = event.currentTarget;
+    const categoryId = icon.closest(".category").dataset.categoryId;
     const alreadyShrinked = this._shrinkedCategories.includes( categoryId );
     if( alreadyShrinked ) {
       this._shrinkedCategories = this._shrinkedCategories.filter( id => id != categoryId );
     } else {
       this._shrinkedCategories.push( categoryId );
     }
+    this.render();
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Call WA to refresh the categories and the articles.
+   * Category tree will be rebuild when render() is called
+   */
+   async _refreshAll() {
+    await getCategories({cache: false});
+    this.articles = undefined;
     this.render();
   }
 
