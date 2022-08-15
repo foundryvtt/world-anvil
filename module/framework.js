@@ -211,7 +211,7 @@ async function _createNewEntry(article, content, notify, options) {
   const pageNames = content.waFlags.pageNames;
 
   // Add Html Pages (Order is important)
-  [pageNames.mainArticle, pageNames.sideContent, pageNames.relations, pageNames.secrets]
+  [pageNames.mainArticle, pageNames.sideContent, pageNames.relationships, pageNames.secrets]
     .filter( header => {
       return !!content.html[header];
   }).forEach( header => {
@@ -228,7 +228,7 @@ async function _createNewEntry(article, content, notify, options) {
   });
 
   // Add image pages (Order is also important)
-  [pageNames.cover, pageNames.portrait, pageNames.image]
+  [pageNames.cover, pageNames.portrait]
     .filter( header => {
       return !!content.images[header];
   }).forEach( header => {
@@ -257,20 +257,17 @@ async function _createNewEntry(article, content, notify, options) {
 export function getArticleContent(article) {
 
   // Build article flags which will be put inside journal entry
-  const waFlags = { articleId: article.id,  articleURL: article.url };
+  const waFlags = { articleId: article.id,  articleURL: article.url, pageNames: {} };
+  const pageNames = waFlags.pageNames;
+  addPageNameToPool(pageNames, "mainArticle", game.i18n.localize("WA.JournalPages.ArticleDefault"));
+  addPageNameToPool(pageNames, "secrets", game.i18n.localize("WA.JournalPages.SecretsDefault"));
+  addPageNameToPool(pageNames, "sideContent", game.i18n.localize("WA.JournalPages.SideContentDefault"));
+  addPageNameToPool(pageNames, "portrait", game.i18n.localize("WA.JournalPages.PortraitDefault"));
+  addPageNameToPool(pageNames, "cover", game.i18n.localize("WA.JournalPages.CoverDefault"));
+  addPageNameToPool(pageNames, "relationships", game.i18n.localize("WA.JournalPages.RelationshipsDefault"));
 
   // Initialise pages and the potential names of each pages
   const pages = { html: {}, images: {}, waFlags: waFlags };
-  const pageNames = { // FIXME : Need to add some configuration for this
-    mainArticle: "Article",
-    secrets: "Secrets",
-    sideContent: "Side content",
-    image: "Image",
-    portrait: "Portrait",
-    cover: "Cover",
-    relations: "Relationships"
-  };
-  waFlags.pageNames = pageNames;
 
   // Article sections
   if ( article.sections ) {
@@ -341,7 +338,7 @@ export function getArticleContent(article) {
   template.innerHTML = article.fullRender;
   const relationElements = template.querySelectorAll(".character-relationship-panel");
   if( relationElements.length > 0 ) {
-    pages.html[pageNames.relations] = "";
+    pages.html[pageNames.relationships] = "";
     for ( let relationElement of relationElements ) {
 
       const protagonists = {
@@ -353,8 +350,8 @@ export function getArticleContent(article) {
       // const current = leftIsThisArticle ? protagonists.left : protagonists.right; Would only need it if we want to add some addtionnal data like affection level
       const relationshipWith = leftIsThisArticle ? protagonists.right : protagonists.left;
 
-      pages.html[pageNames.relations] += `<h2>${relationshipWith.role}</h2>`;
-      pages.html[pageNames.relations] += `<p class="wa-link" data-article-id="${relationshipWith.articleId}">${relationshipWith.personName}</p>`;
+      pages.html[pageNames.relationships] += `<h2>${relationshipWith.role}</h2>`;
+      pages.html[pageNames.relationships] += `<p class="wa-link" data-article-id="${relationshipWith.articleId}">${relationshipWith.personName}</p>`;
     }
   }
 
@@ -379,6 +376,14 @@ export function getArticleContent(article) {
    */
   Hooks.callAll(`WAParseArticle`, article, pages);
   return pages;
+}
+
+function addPageNameToPool( pool, pageType, defaultName ) {
+  let pageName = game.settings.get("world-anvil", pageType + "Page") ?? "";
+  if( pageName == "" ) {
+    pageName = defaultName;
+  }
+  pool[pageType] = pageName;
 }
 
 /**
@@ -456,7 +461,7 @@ export function parsedContentToHTML(content) {
 
 /**
  * Add pages for images to pages if necessary.
- * See waFlags.pageNames.image/cover/portrait
+ * See waFlags.pageNames.cover/portrait
  * @param {Article} article Wa article
  * @param {object} pages Each child contains an HTMLElement with will be displayed as a page.
  */

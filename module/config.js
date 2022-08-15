@@ -106,5 +106,61 @@ export default class WorldAnvilConfig extends FormApplication {
       config: true
     });
 
+    // Add the customizable labels for each importable page
+    //-------------------
+    game.settings.register("world-anvil", "mainArticlePage", {
+      name: "WA.JournalPages.ArticleLabel",
+      hint: "WA.JournalPages.ArticleHint",
+      scope: "world",
+      type: String,
+      default: "",
+      config: true
+    });
+
+    game.settings.register("world-anvil", "secretsPage", {
+      name: "WA.JournalPages.SecretsLabel",
+      hint: "WA.JournalPages.SecretsHint",
+      scope: "world",
+      type: String,
+      default: "",
+      config: true
+    });
+
+    game.settings.register("world-anvil", "sideContentPage", {
+      name: "WA.JournalPages.SideContentLabel",
+      hint: "WA.JournalPages.SideContentHint",
+      scope: "world",
+      type: String,
+      default: "",
+      config: true
+    });
+
+    game.settings.register("world-anvil", "portraitPage", {
+      name: "WA.JournalPages.PortraitLabel",
+      hint: "WA.JournalPages.PortraitHint",
+      scope: "world",
+      type: String,
+      default: "",
+      config: true
+    });
+
+    game.settings.register("world-anvil", "coverPage", {
+      name: "WA.JournalPages.CoverLabel",
+      hint: "WA.JournalPages.CoverHint",
+      scope: "world",
+      type: String,
+      default: "",
+      config: true
+    });
+
+    game.settings.register("world-anvil", "relationshipsPage", {
+      name: "WA.JournalPages.RelationshipsLabel",
+      hint: "WA.JournalPages.RelationshipsHint",
+      scope: "world",
+      type: String,
+      default: "",
+      config: true
+    });
+
   }
 }
