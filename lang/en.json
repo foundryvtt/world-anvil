@@ -20,7 +20,7 @@
   "WA.JournalPages.SecretsHint": "Will store all secrets. Default: Secrets",
   "WA.JournalPages.SecretsDefault": "Secrets",
   "WA.JournalPages.SideContentLabel": "Page for detais",
-  "WA.JournalPages.SideContentHint": "Store addtional informations. Character example : eyes color, weight... Default: Secrets",
+  "WA.JournalPages.SideContentHint": "Store addtional informations. Character example : eyes color, weight... Default: Side contents",
   "WA.JournalPages.SideContentDefault": "Side contents",
   "WA.JournalPages.PortraitLabel": "Page for portrait",
   "WA.JournalPages.PortraitHint": "Portrait are used by character articles. Default: Portrait",
