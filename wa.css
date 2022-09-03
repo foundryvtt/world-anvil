@@ -121,12 +121,12 @@ button#world-anvil img {
     border-bottom: 1px solid rgba(0, 0, 0, 0.25);
 }
 
-#world-anvil-browser .category .shrink-icon {
+#world-anvil-browser .category .collapsed-icon {
     line-height: 24px;
     flex: unset;
     padding: 0 0.4em;
 }
-#world-anvil-browser .category .shrink-icon:hover {
+#world-anvil-browser .category .collapsed-icon:hover {
     cursor: pointer;
     text-shadow: 0 0 4px red;
 }

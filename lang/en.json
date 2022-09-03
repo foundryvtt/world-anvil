@@ -43,8 +43,7 @@
 
   "WA.ButtonRefreshAll": "Refresh All",
   "WA.ButtonImportAll": "Import All",
-  "WA.ButtonShrinkCategory": "Shrink category",
-  "WA.ButtonUnshrinkCategory": "Unshrink category",
+  "WA.ButtonExpandCategory": "Expand category",
   "WA.ButtonSyncAll": "Sync All",
   "WA.ButtonVisibilityHide": "Hide from players",
   "WA.ButtonVisibilityDisplay": "Display to players",

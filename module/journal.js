@@ -33,11 +33,11 @@ export default class WorldAnvilBrowser extends Application {
   _displayWIP = true;
 
   /**
-   * Storing which categories were shrinked
+   * Storing which categories were collapsed
    * @type {string[]}
    * @private
    */
-  _shrinkedCategories = [];
+  _collapsedCategories = [];
 
   /* -------------------------------------------- */
 
@@ -151,7 +151,7 @@ export default class WorldAnvilBrowser extends Application {
     super.activateListeners(html);
     html.find(".article-title").click(this._onClickArticleTitle.bind(this));
     html.find("button.world-anvil-control").click(this._onClickControlButton.bind(this));
-    html.find(".shrink-icon").click(this._onClickShrinkFolder.bind(this));
+    html.find(".collapsed-icon").click(this._onClickCollapseFolder.bind(this));
   }
 
 	/* -------------------------------------------- */
@@ -225,17 +225,17 @@ export default class WorldAnvilBrowser extends Application {
   /* -------------------------------------------- */
 
   /**
-   * Shrink inside the category inside journal display. (Or unshrink it)
+   * Collapse inside the category inside journal display. (Or expand it)
    * @private
    */
-   async _onClickShrinkFolder(event) {
+   async _onClickCollapseFolder(event) {
     const icon = event.currentTarget;
     const categoryId = icon.closest(".category").dataset.categoryId;
-    const alreadyShrinked = this._shrinkedCategories.includes( categoryId );
-    if( alreadyShrinked ) {
-      this._shrinkedCategories = this._shrinkedCategories.filter( id => id != categoryId );
+    const alreadyCollapsed = this._collapsedCategories.includes( categoryId );
+    if( alreadyCollapsed ) {
+      this._collapsedCategories = this._collapsedCategories.filter( id => id != categoryId );
     } else {
-      this._shrinkedCategories.push( categoryId );
+      this._collapsedCategories.push( categoryId );
     }
     this.render();
   }
@@ -412,7 +412,7 @@ export default class WorldAnvilBrowser extends Application {
     node.hasChildrenWithContent = node.children.filter( child => child.hasContent).length > 0;
     node.hasContent = node.hasChildrenWithContent || node.articles.length > 0;
 
-    node.hasBeenShrinked = this._shrinkedCategories.includes( node.id );
+    node.hasBeenCollapsed = this._collapsedCategories.includes( node.id );
   }
 }
 

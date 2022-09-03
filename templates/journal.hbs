@@ -2,8 +2,8 @@
 {{#if this.hasContent}}
 <section class="category" data-category-id="{{ this.id }}" data-folder-id="{{ this.folder.id }}">
     <header class="category-header flexrow">
-        <i title="{{ localize 'WA.ButtonUnshrinkCategory' }}"
-            class="shrink-icon fas fa-caret-{{#if this.hasBeenShrinked }}right{{else}}down{{/if}}" >
+        <i title="{{ localize 'WA.ButtonExpandCategory' }}"
+            class="collapsed-icon fas fa-caret-{{#if this.hasBeenCollapsed }}right{{else}}down{{/if}}" >
         </i>
         <h2 class="category-title">{{ this.title }}</h2>
         <div class="controls">
@@ -38,7 +38,7 @@
         </div>
     </header>
 
-    {{#unless this.hasBeenShrinked }}
+    {{#unless this.hasBeenCollapsed }}
         {{#if this.hasChildrenWithContent}}
             <section class="subcategories">
             {{#each this.children}}
