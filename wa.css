@@ -44,6 +44,11 @@ button#world-anvil img {
 --------------------------------------------- */
 
 /* World Overview */
+#world-anvil-browser .window-content {
+    max-height: 80vh;
+}
+
+/* World Overview */
 #world-anvil-browser .world-description {
     max-height: 200px;
     overflow-y: auto;
@@ -90,41 +95,59 @@ button#world-anvil img {
 }
 
 /* Categories */
+#world-anvil-browser .category {
+    border-top: 1px solid #782e22;
+}
+#world-anvil-browser .subcategories .category:first-child {
+    border-top: none;
+}
+
 #world-anvil-browser .category-header {
     align-items: center;
-    padding: 0.5em 0;
+    padding: 0.2em 0;
     margin: 0;
-    border-top: 1px solid #782e22;
     border-bottom: 1px solid #782e22;
+    border-left: 1px solid #782e22;
 }
 #world-anvil-browser .category-title {
     margin: 0;
     border: none;
+    font-size: 1.2em;
+    padding-left: 0.25em;
 }
 #world-anvil-browser .subcategories {
-    margin-left: 0.5em;
-    padding-left: 0.5em;
-    border-left: 2px solid rgba(0, 0, 0, 0.25);
+    padding-left: 1em;
+    border-left: 1px solid rgba(0, 0, 0, 0.25);
     border-bottom: 1px solid rgba(0, 0, 0, 0.25);
 }
-#world-anvil-browser .subcategories .category-header:first-child {
-    border-top: none;
+
+#world-anvil-browser .category .collapsed-icon {
+    line-height: 24px;
+    flex: unset;
+    padding: 0 0.4em;
+}
+#world-anvil-browser .category .collapsed-icon:hover {
+    cursor: pointer;
+    text-shadow: 0 0 4px red;
 }
 
 /* Articles */
 #world-anvil-browser .article {
     align-items: center;
-    padding: 0.25em 0;
+    padding: 0.25em 0em 0.25em 0.25em;
+    border-left: 1px solid rgba(0, 0, 0, 0.25);
     border-bottom: 1px solid rgba(0, 0, 0, 0.25);
 }
 #world-anvil-browser .article:last-child {
-    border-bottom: none;
+    margin-bottom: 1em;
 }
 #world-anvil-browser .article-title {
     margin: 0;
-    cursor: pointer;
+    border-bottom: none;
+    font-size: 1em;
 }
-#world-anvil-browser .article-title:hover {
+#world-anvil-browser .article-title.clickable:hover {
+    cursor: pointer;
     text-shadow: 0 0 4px red;
 }
 

@@ -114,6 +114,9 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
       }
     }
   }
+});
+
+Hooks.on("renderJournalPageSheet", (app, html, data) => {
 
   // Activate cross-link listeners
   html.find(".wa-link").click(event => {

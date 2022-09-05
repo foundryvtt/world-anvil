@@ -71,9 +71,9 @@ export const ARTICLE_CSS_CLASSES = {
 
 /**
  * @typedef {Object} ParsedArticleResult    Used by the hook WAParseArticle. It contains primary data which could be altered by additional modules
- * @property {string} html                  What will become the journal entry content. Is in html format
- * @property {Image} img                    What will become the journal entry image.
- * @property {object} waFlags               Journal entry flags which will be store inside entry.data.flags["world-anvil"]
+ * @property {object} html                  Each child is a string containing HTML data (HtmlElement.innerHTML). It will appear as a page inside the Journal entry
+ * @property {object} images                Each child is an image url. It will also appear as a page inside the Journal entry
+ * @property {object} waFlags               Journal entry flags which will be store inside entry.flags["world-anvil"]
  */
 
 
@@ -113,12 +113,12 @@ export async function importArticle(articleId, {notify=true, options={}}={}) {
   }
 
   // Format Article content
-  const content = getArticleContent(article);
+  const pages = getArticleContent(article);
 
   // Update an existing JournalEntry, or create a new one
   let entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
-  if ( entry ) return _updateExistingEntry(entry, article, content, notify, options);
-  return _createNewEntry(article, content, notify, options)
+  if ( entry ) return _updateExistingEntry(entry, article, pages, notify, options);
+  return _createNewEntry(article, pages, notify, options)
 
 }
 
@@ -148,10 +148,9 @@ async function _updateExistingEntry(entry, article, content, notify, options) {
   // Update the entry
   await entry.update({
     name: article.title,
-    content: content.html,
-    img: content.img,
+    pages: _parsedArticleContentToJournalPages(content),
     "flags.world-anvil": content.waFlags
-  });
+  }, {recursive: false, diff: false});
 
   // Notify and return
   if ( notify ) ui.notifications.info(`Refreshed World Anvil article ${article.title}`);
@@ -178,8 +177,7 @@ async function _createNewEntry(article, content, notify, options) {
   // Define the data to import
   const entryData = {
     name: article.title,
-    content: content.html,
-    img: content.img,
+    pages: _parsedArticleContentToJournalPages(content),
     folder: folder.id,
     "flags.world-anvil": content.waFlags
   }
@@ -203,6 +201,54 @@ async function _createNewEntry(article, content, notify, options) {
 /* -------------------------------------------- */
 
 /**
+ * Transform a ParsedArticleResult to a pages array which can be used for creating/updating journal entries
+ * @param {ParsedArticleResult} content Article content previously parsed
+ * @returns
+ */
+ function _parsedArticleContentToJournalPages(content) {
+
+  const pages = [];
+  const pageNames = content.waFlags.pageNames;
+
+  // Add Html Pages (Order is important)
+  [pageNames.mainArticle, pageNames.sideContent, pageNames.relationships, pageNames.secrets]
+    .filter( header => {
+      return !!content.html[header];
+  }).forEach( header => {
+    const pageContent = content.html[header];
+    pages.push({
+      name: header,
+      type: "text",
+      text: {
+        format: CONST.JOURNAL_ENTRY_PAGE_FORMATS.HTML,
+        content: pageContent
+      },
+      sort: pages.length
+    });
+  });
+
+  // Add image pages (Order is also important)
+  [pageNames.cover, pageNames.portrait]
+    .filter( header => {
+      return !!content.images[header];
+  }).forEach( header => {
+    const imageUrl = content.images[header];
+    pages.push({
+      name: header,
+      type: "image",
+      src: imageUrl,
+      sort: pages.length
+    });
+  });
+
+
+
+  return pages;
+}
+
+/* -------------------------------------------- */
+
+/**
  * Transform a World Anvil article HTML into a Journal Entry content and featured image.
  * @param {object} article
  * @return {ParsedArticleResult}
@@ -211,10 +257,19 @@ async function _createNewEntry(article, content, notify, options) {
 export function getArticleContent(article) {
 
   // Build article flags which will be put inside journal entry
-  const waFlags = { articleId: article.id,  articleURL: article.url };
+  const waFlags = { articleId: article.id,  articleURL: article.url, pageNames: {} };
+  const pageNames = waFlags.pageNames;
+  addPageNameToPool(pageNames, "mainArticle", game.i18n.localize("WA.JournalPages.ArticleDefault"));
+  addPageNameToPool(pageNames, "secrets", game.i18n.localize("WA.JournalPages.SecretsDefault"));
+  addPageNameToPool(pageNames, "sideContent", game.i18n.localize("WA.JournalPages.SideContentDefault"));
+  addPageNameToPool(pageNames, "portrait", game.i18n.localize("WA.JournalPages.PortraitDefault"));
+  addPageNameToPool(pageNames, "cover", game.i18n.localize("WA.JournalPages.CoverDefault"));
+  addPageNameToPool(pageNames, "relationships", game.i18n.localize("WA.JournalPages.RelationshipsDefault"));
+
+  // Initialise pages and the potential names of each pages
+  const pages = { html: {}, images: {}, waFlags: waFlags };
 
   // Article sections
-  let sections = "";
   if ( article.sections ) {
 
     const sectionEntries = Array.from(Object.entries(article.sections));
@@ -251,58 +306,67 @@ export function getArticleContent(article) {
         ARTICLE_CSS_CLASSES.ALL_PARTS,
         secretSectionIds.includes(id) ?  ARTICLE_CSS_CLASSES.SECRET_SECTION : ARTICLE_CSS_CLASSES.PUBLIC_SECTION
       ].join(" ");
-      sections += `<section data-section-id="${id}" class="${cssClass}">`;
+
+      let sectionInPages = `<section data-section-id="${id}" class="${cssClass}">`;
 
       // Title can be replaced by a localized name if the section id has been handled
-      const title = _getLocalizedTitle(id, section);
-
       // Display long-format content as a paragraph section with a header
+      const title = _getLocalizedTitle(id, section);
       const isLongContent = section.content.length > 100;
       if( isLongContent ) {
-        sections += `<h2>${title}</h2>`;
-        sections += `\n<p>${section.contentParsed}</p><hr/>`;
+        sectionInPages += `<h2>${title}</h2>`;
+        sectionInPages += `\n<p>${section.contentParsed}</p><hr/>`;
       }
 
       // Display short-format content as a details list
       else {
-        sections += `<dl><dt>${title}</dt>`;
-        sections += `<dd>${section.contentParsed}</dd></dl>`;
+        sectionInPages += `<dl><dt>${title}</dt>`;
+        sectionInPages += `<dd>${section.contentParsed}</dd></dl>`;
       }
 
       // End main section div
-      sections += "</section>";
+      sectionInPages += "</section>";
+
+      const pageName = secretSectionIds.includes(id) ? pageNames.secrets : pageNames.sideContent;
+      pages.html[pageName] = pages[pageName] ?? "";
+      pages.html[pageName] += sectionInPages;
     }
   }
 
-  // Add all article relations into an aside section
-  let aside = "";
-  if ( article.relations ) {
-    for ( let [id, section] of Object.entries(article.relations) ) {
-      if( !section.items ) { continue; } // Some relations, like timelines, have no .items attribute. => Skipped
-      const title = section.title || id.titleCase();
-      const items = section.items instanceof Array ? section.items: [section.items];  // Items can be one or many
-      const relations = items.map(i => `<span data-article-id="${i.id}" data-template="${i.type}">${i.title}</span>`);
-      aside += `<dt>${title}:</dt><dd>${relations.join(", ")}</dd>`
+  // Add all article relationships into an aside section
+  let template = document.createElement('div');
+  template.innerHTML = article.fullRender;
+  const relationElements = template.querySelectorAll(".character-relationship-panel");
+  if( relationElements.length > 0 ) {
+    pages.html[pageNames.relationships] = "";
+    for ( let relationElement of relationElements ) {
+
+      const protagonists = {
+        left: parseRelationProtagonist( relationElement, true ),
+        right: parseRelationProtagonist( relationElement, false )
+      };
+
+      const leftIsThisArticle = ( protagonists.left.articleId === article.id );
+      // const current = leftIsThisArticle ? protagonists.left : protagonists.right; Would only need it if we want to add some addtionnal data like affection level
+      const relationshipWith = leftIsThisArticle ? protagonists.right : protagonists.left;
+
+      pages.html[pageNames.relationships] += `<h2>${relationshipWith.role}</h2>`;
+      pages.html[pageNames.relationships] += `<p class="wa-link" data-article-id="${relationshipWith.articleId}">${relationshipWith.personName}</p>`;
     }
-    if( aside ) { aside = `<aside><dl>${aside}</dl></aside>`; }
   }
 
   // Combine content sections
   let content = `<section class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
   content += `<p>${article.contentParsed}</p>`;
-  content += "</section><hr/>";
-  content += aside;
-  content += sections;
+  content += "</section>";
+  pages.html[pageNames.mainArticle] = content;
 
-  const htmlContent = parsedContentToHTML(content);
-  const image = chooseJournalEntyImage(article, htmlContent);
+  // Modify each page so that they really becomes HTML content
+  Object.entries(pages.html).forEach( ([key, value]) => pages.html[key] = parsedContentToHTML(value) );
 
-  // Return content, image and flags
-  const parsedData = {
-    html: htmlContent.innerHTML,
-    img: image,
-    waFlags: waFlags
-  }
+  // Add image pages
+  addJournalImagePages(article, pages);
+
   /**
    * A hook event that fires when a WorldAnvil article is parsed
    * @function WACreateJournalEntry
@@ -310,16 +374,42 @@ export function getArticleContent(article) {
    * @param {Article} article                 The original Article
    * @param {ParsedArticleResult} parsedData  The parsed article content
    */
-  Hooks.callAll(`WAParseArticle`, article, parsedData);
-  return parsedData;
+  Hooks.callAll(`WAParseArticle`, article, pages);
+  return pages;
+}
+
+function addPageNameToPool( pool, pageType, defaultName ) {
+  let pageName = game.settings.get("world-anvil", pageType + "Page") ?? "";
+  if( pageName == "" ) {
+    pageName = defaultName;
+  }
+  pool[pageType] = pageName;
+}
+
+/**
+ * Article API from WA doesn't described relationships in depth. We can only retrieve them from the fullRender
+ * @param {HTMLElement} htmlRelation The div from article fullRender which describe this relationship
+ * @param {boolean} leftOne Each relation described in WA has two protagonists. One on the left, one on the right
+ * @returns {personName: string, articleId: string, role: string} data for the given protagonist
+ */
+function parseRelationProtagonist(htmlRelation, leftOne=true) {
+  const base = htmlRelation.querySelector(".character-relationships-" + (leftOne ? "left" : "right") );
+
+  return {
+    personName: base.children[0].children[0].text,
+    articleId: base.children[0].children[1].getAttribute("data-id"),
+    role: base.querySelector(".character-relationship-importance")?.textContent ?? ""
+  };
 }
 
 /**
  * Modify content by substituting image paths, adding paragraph break and wa-link elements
  * @param {string} content parsed article content
- * @returns {HTMLElement} formated content, inside a HTML div element
+ * @returns {string} Content in HTML format (HtmlElement.innerHTML)
  */
 export function parsedContentToHTML(content) {
+
+  if( content === "" ) { return ""; }
 
   // Disable image source attributes so that they do not begin loading immediately
   content = content.replace(/src=/g, "data-src=");
@@ -335,11 +425,6 @@ export function parsedContentToHTML(content) {
   // Image from body
   htmlElement.querySelectorAll("img").forEach(i => {
 
-    // Default href link to hosted foundry server, and not WA. => it needs to be set
-    if( i.parentElement.tagName === "A" ) {
-      i.parentElement.href = `https://worldanvil.com/${i.parentElement.pathname}`;
-    }
-
     // Set image source
     let img = new Image();
     img.src = `https://worldanvil.com${i.dataset.src}`;
@@ -347,7 +432,13 @@ export function parsedContentToHTML(content) {
     img.alt = i.alt;
     img.title = i.title;
     img.style.cssText = i.style.cssText; // Retain custum sizing
-    i.parentElement.replaceChild(img, i);
+
+    // We remove <a .../> element surrounding the image, since now Foundry is able to see a fine version of the image by itself
+    let replacedElement = i;
+    if( i.parentElement.tagName === "A" ) {
+      replacedElement = i.parentElement;
+    }
+    replacedElement.parentElement.replaceChild(img, replacedElement);
   });
 
   // World Anvil Content Links
@@ -365,30 +456,40 @@ export function parsedContentToHTML(content) {
 
   // Regex formatting
   htmlElement.innerHTML = htmlElement.innerHTML.replace(/%p%/g, "</p>\n<p>");
-  return htmlElement;
+  return htmlElement.innerHTML;
 }
 
 /**
- * Retrive the image that will be displayed as the journal entry image
+ * Add pages for images to pages if necessary.
+ * See waFlags.pageNames.cover/portrait
  * @param {Article} article Wa article
- * @param {HTMLElement} htmlContent Journal entry content, in html format
- * @returns {string|null} The featured image path, or null if no image was present
+ * @param {object} pages Each child contains an HTMLElement with will be displayed as a page.
  */
- function chooseJournalEntyImage( article, htmlContent ) {
+ function addJournalImagePages( article, pages ) {
 
-  // Case 1 : There is a portrait Image
-  if ( article.portrait ) {
-    return article.portrait.url.replace("http://", "https://");
-  } 
+  const createImagePage = ( pageName, imageSrc ) => {
+    pages.images[pageName] = imageSrc.replace("http://", "https://");
+  }
   
-  // Case 2 : There is a cover Image
-  if ( article.cover ) {
-    return article.cover.url.replace("http://", "https://");
+  const pageNames = pages.waFlags.pageNames;
+
+  // Retrieve images from main page
+  const htmlElement = document.createElement("div");
+  htmlElement.innerHTML = pages.html[pageNames.mainArticle];
+  const images = htmlElement.querySelectorAll("img");
+
+  // Portrait Image
+  if ( article.portrait ) {
+    createImagePage(pageNames.portrait, article.portrait.url );
+
+  } else if ( article.template === 'person' && images.length == 1 ) {
+    createImagePage(pageNames.portrait, images[0].src );
   }
 
-  // Default behavior : Take the first image inside article content
-  const images = htmlContent.querySelectorAll("img");
-  return images[0]?.src || null;
+  // Cover Image
+  if ( article.cover ) {
+    createImagePage(pageNames.cover, article.cover.url );
+  }
 }
 
 /* -------------------------------------------- */
@@ -484,12 +585,14 @@ async function _getCategories({cache=true}={}) {
     categories.set(c.id, c);
     c.copyForSort = c.children?.categories ?? [];
     c.children = [];
+    c.parentCategoryId = c.parent?.id;
+    c.parent = undefined;
     c.folder = undefined;
   }
-  // Append children 
+  // Append children
   for( let c of (request?.categories || []) ) {
-    const parentId = c.parentCategory?.id ?? CATEGORY_ID.root;
-    const parent = categories.get(parentId);
+    const parentId = c.parentCategoryId ?? CATEGORY_ID.root;
+    const parent = categories.get(parentId) ?? root;
     c.parent = parent;
     parent.children.push(c);
   }
@@ -505,6 +608,7 @@ async function _getCategories({cache=true}={}) {
     });
     c.copyForSort = undefined;
   }
+  root.children.push(uncategorized);
 
   return categories;
 }
@@ -516,7 +620,7 @@ async function _getCategories({cache=true}={}) {
  * @param {CategoryMap} categories      The categories being mapped
  */
 export function associateCategoryFolders(categories) {
-  const folders = game.folders.filter(f => (f.data.type === "JournalEntry") && f.data.flags["world-anvil"]);
+  const folders = game.folders.filter(f => (f.type === "JournalEntry") && f.flags["world-anvil"]);
   for ( let [id, category] of categories ) {
     if ( id === CATEGORY_ID.root ) category.folder = null;
     else category.folder = folders.find(f => f.getFlag("world-anvil", "categoryId") === id);
@@ -535,7 +639,7 @@ export async function getCategoryFolder(category) {
   if ( category.parent && !category.parent.folder ) await getCategoryFolder(category.parent);
 
   // Check whether a Folder already exists for this Category
-  const folder = game.folders.find(f => ( f.data.type === "JournalEntry" ) && ( f.getFlag("world-anvil", "categoryId") === category.id) );
+  const folder = game.folders.find(f => ( f.type === "JournalEntry" ) && ( f.getFlag("world-anvil", "categoryId") === category.id) );
   if ( folder ) return category.folder = folder;
 
   // Create a new Folder
