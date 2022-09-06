@@ -487,7 +487,7 @@ export function parsedContentToHTML(content) {
   }
 
   // Cover Image
-  if ( article.cover ) {
+  if ( article.cover?.url ) { // FIXME : Waiting for answers from WA developers
     createImagePage(pageNames.cover, article.cover.url );
   }
 }
