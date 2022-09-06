@@ -1,30 +1,33 @@
 {
-  "name": "world-anvil",
+  "id": "world-anvil",
   "title": "World Anvil Integration",
+  "version": "1.4.0",
   "description": "<p>A module to integrate <a href=\"https://worldanvil.com\" title=\"World Anvil\" target=\"_blank\">World Anvil</a> with Foundry Virtual Tabletop.</p>",
-  "author": "Atropos",
-  "authors": [],
+  "authors": [
+    {
+      "name": "Atropos",
+      "discord": "Atropos#3814"
+    },
+    {
+      "name": "Adrien Schiehle",
+      "discord": "Didialchichi#2607"
+    }
+  ],
+	"compatibility": {
+		"minimum": "10",
+		"verified": "10",
+		"maximum": "10"
+	},
   "url": "https://github.com/foundryvtt/world-anvil",
-  "version": "1.3.3",
-  "minimumCoreVersion": "0.7.6",
-  "compatibleCoreVersion": "9",
-  "scripts": [],
-  "esmodules": [
-    "wa.js"
-  ],
-  "styles": [
-    "wa.css"
-  ],
+  "manifest": "https://raw.githubusercontent.com/foundryvtt/world-anvil/master/module.json",
+  "download": "https://github.com/foundryvtt/world-anvil/archive/refs/tags/release-1.4.0.zip",
+  "esmodules": ["wa.js"],
+  "styles": ["wa.css"],
   "languages": [
     {
       "lang": "en",
       "name": "English",
       "path": "lang/en.json"
     }
-  ],
-  "packs": [],
-  "system": [],
-  "dependencies": [],
-  "manifest": "https://raw.githubusercontent.com/foundryvtt/world-anvil/master/module.json",
-  "download": "https://github.com/foundryvtt/world-anvil/archive/refs/tags/release-1.3.3.zip"
+  ]
 }

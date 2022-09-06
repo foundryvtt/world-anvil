@@ -32,6 +32,13 @@ export default class WorldAnvilBrowser extends Application {
    */
   _displayWIP = true;
 
+  /**
+   * Storing which categories were collapsed
+   * @type {string[]}
+   * @private
+   */
+  _collapsedCategories = [];
+
   /* -------------------------------------------- */
 
   /** @override */
@@ -96,7 +103,7 @@ export default class WorldAnvilBrowser extends Application {
     const uncategorized = categories.get( CATEGORY_ID.uncategorized );
 
     // Organize articles into their parent category
-    const entries = game.journal.filter(j => j.data.flags["world-anvil"]);
+    const entries = game.journal.filter(j => j.flags["world-anvil"]);
     for ( let article of articles ) {
 
       // Skip articles which should not be displayed
@@ -105,7 +112,7 @@ export default class WorldAnvilBrowser extends Application {
 
       // Check linked entry permissions
       article.entry = entries.find(e => e.getFlag("world-anvil", "articleId") === article.id);
-      article.visibleByPlayers = article.entry?.data.permission.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+      article.visibleByPlayers = article.entry?.ownership.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
 
       // Get the category to which the article belongs
       const category = categories.get(article.category?.id) || uncategorized;
@@ -144,6 +151,7 @@ export default class WorldAnvilBrowser extends Application {
     super.activateListeners(html);
     html.find(".article-title").click(this._onClickArticleTitle.bind(this));
     html.find("button.world-anvil-control").click(this._onClickControlButton.bind(this));
+    html.find(".collapsed-icon").click(this._onClickCollapseFolder.bind(this));
   }
 
 	/* -------------------------------------------- */
@@ -217,7 +225,25 @@ export default class WorldAnvilBrowser extends Application {
   /* -------------------------------------------- */
 
   /**
-   * Call WA to refreesh the categoriesand the articles.
+   * Collapse inside the category inside journal display. (Or expand it)
+   * @private
+   */
+   async _onClickCollapseFolder(event) {
+    const icon = event.currentTarget;
+    const categoryId = icon.closest(".category").dataset.categoryId;
+    const alreadyCollapsed = this._collapsedCategories.includes( categoryId );
+    if( alreadyCollapsed ) {
+      this._collapsedCategories = this._collapsedCategories.filter( id => id != categoryId );
+    } else {
+      this._collapsedCategories.push( categoryId );
+    }
+    this.render();
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Call WA to refresh the categories and the articles.
    * Category tree will be rebuild when render() is called
    */
    async _refreshAll() {
@@ -257,7 +283,7 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return !a.entry?.data.permission.default < CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+      return !a.entry?.ownership.default < CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
     }).map( a => {
       return {
         _id: a.entry.id,
@@ -281,7 +307,7 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return a.entry?.data.permission.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+      return a.entry?.ownership.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
     }).map( a => {
       return {
         _id: a.entry.id,
@@ -385,6 +411,8 @@ export default class WorldAnvilBrowser extends Application {
 
     node.hasChildrenWithContent = node.children.filter( child => child.hasContent).length > 0;
     node.hasContent = node.hasChildrenWithContent || node.articles.length > 0;
+
+    node.hasBeenCollapsed = this._collapsedCategories.includes( node.id );
   }
 }
 
