@@ -1,7 +1,7 @@
 {
   "id": "world-anvil",
   "title": "World Anvil Integration",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "<p>A module to integrate <a href=\"https://worldanvil.com\" title=\"World Anvil\" target=\"_blank\">World Anvil</a> with Foundry Virtual Tabletop.</p>",
   "authors": [
     {

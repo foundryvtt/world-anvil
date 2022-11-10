@@ -328,7 +328,7 @@ export function getArticleContent(article) {
       sectionInPages += "</section>";
 
       const pageName = secretSectionIds.includes(id) ? pageNames.secrets : pageNames.sideContent;
-      pages.html[pageName] = pages[pageName] ?? "";
+      pages.html[pageName] = pages.html[pageName] ?? "";
       pages.html[pageName] += sectionInPages;
     }
   }
