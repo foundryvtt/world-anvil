@@ -328,7 +328,7 @@ export function getArticleContent(article) {
       sectionInPages += "</section>";
 
       const pageName = secretSectionIds.includes(id) ? pageNames.secrets : pageNames.sideContent;
-      pages.html[pageName] = pages[pageName] ?? "";
+      pages.html[pageName] = pages.html[pageName] ?? "";
       pages.html[pageName] += sectionInPages;
     }
   }
@@ -487,7 +487,7 @@ export function parsedContentToHTML(content) {
   }
 
   // Cover Image
-  if ( article.cover ) {
+  if ( article.cover?.url ) { // FIXME : Waiting for answers from WA developers
     createImagePage(pageNames.cover, article.cover.url );
   }
 }
