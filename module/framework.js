@@ -282,10 +282,14 @@ export function getArticleContent(article) {
     });
 
     // Determine whether there are secrets inside this article
-    const secretSectionIds = ["seeded"];
+    
+    const isSectionSecret = (section) => {
+      const secretSectionIds = ["seeded"];
+      return secretSectionIds.includes(section) || section.startsWith("ggm"); 
+    }
     waFlags.hasSecrets = sectionEntries.some(s => {
       const [id, section] = s;
-      return secretSectionIds.includes(id);
+      return isSectionSecret(id);
     });
 
     // Filter sections, removing ignored ones.
@@ -304,7 +308,7 @@ export function getArticleContent(article) {
       // Each section data are stored inside a separated div
       const cssClass = [
         ARTICLE_CSS_CLASSES.ALL_PARTS,
-        secretSectionIds.includes(id) ?  ARTICLE_CSS_CLASSES.SECRET_SECTION : ARTICLE_CSS_CLASSES.PUBLIC_SECTION
+        isSectionSecret(id) ?  ARTICLE_CSS_CLASSES.SECRET_SECTION : ARTICLE_CSS_CLASSES.PUBLIC_SECTION
       ].join(" ");
 
       let sectionInPages = `<section data-section-id="${id}" class="${cssClass}">`;
@@ -327,7 +331,7 @@ export function getArticleContent(article) {
       // End main section div
       sectionInPages += "</section>";
 
-      const pageName = secretSectionIds.includes(id) ? pageNames.secrets : pageNames.sideContent;
+      const pageName = isSectionSecret(id) ? pageNames.secrets : pageNames.sideContent;
       pages.html[pageName] = pages.html[pageName] ?? "";
       pages.html[pageName] += sectionInPages;
     }
