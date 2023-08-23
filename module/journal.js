@@ -22,7 +22,7 @@ export default class WorldAnvilBrowser extends Application {
    * On first init, close subcategories
    * @type {boolean}
    */
-  _firstInit = true;
+  #firstInit = true;
 
   /**
    * Flag whether to display draft articles
@@ -129,9 +129,10 @@ export default class WorldAnvilBrowser extends Application {
 
     // Sort articles within each category
     for ( let category of categories.values() ) {
-      category.articles = category.articleIds
-        .map( id => category.unsortedArticles.find( a => a.id === id )  )
-        .filter( a => !!a );
+      category.articles = category.articleIds.reduce( (_articles, id) => {
+        const unsorted = category.unsortedArticles.find( a => a.id === id );
+        return unsorted ? [..._articles, unsorted] : _articles;
+      }, []);
       
       // Some may not be referenced (created after)
       const unreferencedArticles = category.unsortedArticles.filter(a => !category.articles.find( a2 => a == a2) );
@@ -417,16 +418,17 @@ export default class WorldAnvilBrowser extends Application {
    * On first call will init ._collapsedCategories before calling it.
    */
   _refreshCategoryVisibility() {
-    if(this._firstInit) {
+    if(this.#firstInit) {
       const firstLevelsIds = this.tree.children.map( c => c.id );
       firstLevelsIds.push(CATEGORY_ID.root);
 
-      this._collapsedCategories = [...this.categories.values()]
-        .map( cat => cat.id )
-        .filter(catId => !firstLevelsIds.includes(catId));
+      this._collapsedCategories = [];
+      for ( const category of this.categories.values() ) {
+        if ( !firstLevelsIds.includes(category.id ) ) this._collapsedCategories.push(category.id);
+      }
     }
     this._calculateCategoryVisibility(this.tree);
-    this._firstInit = false;
+    this.#firstInit = false;
   }
 
   /**

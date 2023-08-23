@@ -589,35 +589,41 @@ async function _getCategories({cache=true}={}) {
   // Retrieve categories from the World Anvil API (build map)
   const request = await anvil.getCategories();
   
-  // First loop : add id listings and store in map
+  // First loop : Store in map
   const reqCategories = (request?.categories || []);
   for ( let c of reqCategories ) {
     categories.set(c.id, c);
+  }
+
+  // Second loop : Add id listings and set category.children
+  for ( let c of reqCategories ) {
     c.articleIds = (c.articles ?? []).map( a => a.id );
     c.childrenIds = (c.children ?? []).map( ch => ch.id );
     c.articles = [];
-    c.children = [];
-  }
-
-  // Second loop : Set category.children
-  for ( let c of reqCategories ) {
-    c.children = c.childrenIds.map( id => categories.get(id) );
-    c.children.forEach( child => {
+    c.children = c.childrenIds.map( id => {
+      const child = categories.get(id);
       child.parent = c;
+      return child;
     });
   }
 
   // Third loop : Put the ones without parent as root children
-  root.children = reqCategories.filter( c => !c.parent );
+  root.children = reqCategories.filter( c => {
+    if ( c.parent ) return false;
+    c.parent = root;
+    return true;
+  });
+
   root.children.sort( (a,b) => {
     const titleA = a.title ?? "";
     const titleB = b.title ?? "";
     return titleA.localeCompare(titleB);
   });
+
+  // Add uncategorized on last place
+  uncategorized.parent = root;
   root.children.push(uncategorized);
-  root.children.forEach( child => {
-    child.parent = root;
-  });
+
   return categories;
 }
 
