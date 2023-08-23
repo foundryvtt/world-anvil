@@ -1,0 +1,68 @@
+# System Release Workflow
+
+# Useful References:
+#   - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+#   - https://docs.github.com/en/actions/learn-github-actions/contexts
+#   - https://docs.github.com/en/actions/learn-github-actions/environment-variables
+#   - https://docs.github.com/en/actions/using-workflows/triggering-a-workflow
+#   - https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
+#   - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
+
+name: System Release Build
+
+env:
+  node_version: 18
+  project_url: "https://github.com/${{github.repository}}"
+  latest_manifest_url: "https://github.com/${{github.repository}}/releases/latest/download/module.json"
+  release_module_url: "https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip"
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Modify "module.json" with values specific to the release.
+      - name: Modify Module Manifest With Release-Specific Values
+        id: sub_manifest_link_version
+        uses: cschleiden/replace-tokens@v1
+        with:
+          files: 'module.json'
+        env:
+          VERSION: ${{ github.event.release.tag_name }}
+          URL: ${{ env.project_url }}
+          MANIFEST: ${{ env.latest_manifest_url }}
+          DOWNLOAD: ${{ env.release_module_url }}
+
+      # Create a "module.zip" archive containing all the system's required files.
+      - name: Create Module Archive
+        run: |
+          zip --recurse-paths ./module.zip  \
+            module.json                     \
+            README.md                       \
+            LICENSE                         \
+            icons/                          \
+            lang/                           \
+            module/                         \
+            templates/                      \
+            wa.css                          \
+            wa.js
+
+      # Update the GitHub release with the manifest and system archive files.
+      - name: Update Release With Files
+        id: create_version_release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          name: ${{ github.event.release.name }}
+          draft: ${{ github.event.release.unpublished }}
+          prerelease: ${{ github.event.release.prerelease }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: './module.json, ./module.zip'
+          tag: ${{ github.event.release.tag_name }}
+          body: ${{ github.event.release.body }}

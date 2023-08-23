@@ -1,7 +1,7 @@
 {
   "id": "world-anvil",
   "title": "World Anvil Integration",
-  "version": "1.4.3",
+  "version": "#{VERSION}#",
   "description": "<p>A module to integrate <a href=\"https://worldanvil.com\" title=\"World Anvil\" target=\"_blank\">World Anvil</a> with Foundry Virtual Tabletop.</p>",
   "authors": [
     {
@@ -17,9 +17,11 @@
 		"minimum": "10",
 		"verified": "11"
 	},
-  "url": "https://github.com/foundryvtt/world-anvil",
-  "manifest": "https://raw.githubusercontent.com/foundryvtt/world-anvil/master/module.json",
-  "download": "https://github.com/foundryvtt/world-anvil/archive/refs/tags/release-1.4.3.zip",
+  "url": "#{URL}#",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",
+  "license": "LICENSE",
+  "readme": "README.md",
   "esmodules": ["wa.js"],
   "styles": ["wa.css"],
   "languages": [
