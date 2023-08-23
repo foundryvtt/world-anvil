@@ -609,7 +609,11 @@ async function _getCategories({cache=true}={}) {
 
   // Third loop : Put the ones without parent as root children
   root.children = reqCategories.filter( c => !c.parent );
-  root.children.sort( (a,b) => a.title.localeCompare(b.title));
+  root.children.sort( (a,b) => {
+    const titleA = a.title ?? "";
+    const titleB = b.title ?? "";
+    return titleA.localeCompare(titleB);
+  });
   root.children.push(uncategorized);
   root.children.forEach( child => {
     child.parent = root;
