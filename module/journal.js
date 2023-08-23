@@ -135,7 +135,11 @@ export default class WorldAnvilBrowser extends Application {
       
       // Some may not be referenced (created after)
       const unreferencedArticles = category.unsortedArticles.filter(a => !category.articles.find( a2 => a == a2) );
-      unreferencedArticles.sort( (a,b) => a.title.localeCompare(b.title) );
+      unreferencedArticles.sort( (a,b) => {
+        const titleA = a.title ?? "";
+        const titleB = b.title ?? "";
+        return titleA.localeCompare(titleB);
+      });
       category.articles.push(...unreferencedArticles);
     }
     return contentTree;

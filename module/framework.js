@@ -589,14 +589,14 @@ async function _getCategories({cache=true}={}) {
   // Retrieve categories from the World Anvil API (build map)
   const request = await anvil.getCategories();
   
-  // First loop : subrequests
+  // First loop : add id listings and store in map
   const reqCategories = (request?.categories || []);
   for ( let c of reqCategories ) {
     categories.set(c.id, c);
-    const subrequest = await anvil._fetch(`category/${c.id}`);
+    c.articleIds = (c.articles ?? []).map( a => a.id );
+    c.childrenIds = (c.children ?? []).map( ch => ch.id );
     c.articles = [];
-    c.articleIds = (subrequest.articles ?? []).map( c => c.id );
-    c.childrenIds = (subrequest.children ?? []).map( c => c.id );
+    c.children = [];
   }
 
   // Second loop : Set category.children
