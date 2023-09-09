@@ -19,6 +19,12 @@ export default class WorldAnvilBrowser extends Application {
   categories;
 
   /**
+   * On first init, close subcategories
+   * @type {boolean}
+   */
+  #firstInit = true;
+
+  /**
    * Flag whether to display draft articles
    * @type {boolean}
    * @private
@@ -73,6 +79,7 @@ export default class WorldAnvilBrowser extends Application {
   async getData() {
     const world = this.anvil.world || await this.anvil.getWorld(this.anvil.worldId);
     const tree = await this.getContentTree();
+    this._refreshCategoryVisibility();
     return {
       world: world,
       tree: tree,
@@ -99,6 +106,7 @@ export default class WorldAnvilBrowser extends Application {
     // Reset status of each category
     for ( let category of categories.values() ) {
       category.articles = [];
+      category.unsortedArticles = [];
     }
     const uncategorized = categories.get( CATEGORY_ID.uncategorized );
 
@@ -116,16 +124,25 @@ export default class WorldAnvilBrowser extends Application {
 
       // Get the category to which the article belongs
       const category = categories.get(article.category?.id) || uncategorized;
-      category.articles.push(article);
+      category.unsortedArticles.push(article);
     }
 
     // Sort articles within each category
     for ( let category of categories.values() ) {
-      category.articles.sort( (a,b) => a.title.localeCompare(b.title) );
+      category.articles = category.articleIds.reduce( (_articles, id) => {
+        const unsorted = category.unsortedArticles.find( a => a.id === id );
+        return unsorted ? [..._articles, unsorted] : _articles;
+      }, []);
+      
+      // Some may not be referenced (created after)
+      const unreferencedArticles = category.unsortedArticles.filter(a => !category.articles.find( a2 => a == a2) );
+      unreferencedArticles.sort( (a,b) => {
+        const titleA = a.title ?? "";
+        const titleB = b.title ?? "";
+        return titleA.localeCompare(titleB);
+      });
+      category.articles.push(...unreferencedArticles);
     }
-
-    // Add empty attribute on categories.
-    this._calculateCategoryVisibility(tree);
     return contentTree;
   }
 
@@ -395,6 +412,24 @@ export default class WorldAnvilBrowser extends Application {
   }
 
   /* -------------------------------------------- */
+
+  /**
+   * Calls ._calculateCategoryVisibility
+   * On first call will init ._collapsedCategories before calling it.
+   */
+  _refreshCategoryVisibility() {
+    if(this.#firstInit) {
+      const firstLevelsIds = this.tree.children.map( c => c.id );
+      firstLevelsIds.push(CATEGORY_ID.root);
+
+      this._collapsedCategories = [];
+      for ( const category of this.categories.values() ) {
+        if ( !firstLevelsIds.includes(category.id ) ) this._collapsedCategories.push(category.id);
+      }
+    }
+    this._calculateCategoryVisibility(this.tree);
+    this.#firstInit = false;
+  }
 
   /**
    * Recursive

@@ -565,8 +565,10 @@ async function _getCategories({cache=true}={}) {
     id: CATEGORY_ID.root,
     title:  `[WA] ${anvil.world.name}`,
     position: 0,
-    copyForSort: [],
+    articles: [],
+    articleIds: [],
     children: [],
+    childrenIds: [],
     folder: null
   };
   categories.set(root.id, root);
@@ -576,42 +578,50 @@ async function _getCategories({cache=true}={}) {
     id: CATEGORY_ID.uncategorized,
     title: game.i18n.localize('WA.CategoryUncategorized'),
     position: 9e9,
-    copyForSort: [],
-    children : [],
-    parent: root,
+    articles: [],
+    articleIds: [],
+    children: [],
+    childrenIds: [],
     isUncategorized: true
   };
   categories.set(uncategorized.id, uncategorized);
 
   // Retrieve categories from the World Anvil API (build map)
   const request = await anvil.getCategories();
-  for ( let c of (request?.categories || []) ) {
+  
+  // First loop : Store in map
+  const reqCategories = (request?.categories || []);
+  for ( let c of reqCategories ) {
     categories.set(c.id, c);
-    c.copyForSort = c.children?.categories ?? [];
-    c.children = [];
-    c.parentCategoryId = c.parent?.id;
-    c.parent = undefined;
-    c.folder = undefined;
   }
-  // Append children
-  for( let c of (request?.categories || []) ) {
-    const parentId = c.parentCategoryId ?? CATEGORY_ID.root;
-    const parent = categories.get(parentId) ?? root;
-    c.parent = parent;
-    parent.children.push(c);
-  }
-  // Sort children
-  for( let c of categories.values() ) {
 
-    c.children.sort( (a,b) => {
-      const indexA = c.copyForSort.findIndex( cc => cc.id === a.id );
-      const indexB = c.copyForSort.findIndex( cc => cc.id === b.id );
-      const substr = indexA - indexB;
-      if( substr != 0 ) { return substr; }
-      return a.title.localeCompare(b.title);
+  // Second loop : Add id listings and set category.children
+  for ( let c of reqCategories ) {
+    c.articleIds = (c.articles ?? []).map( a => a.id );
+    c.childrenIds = (c.children ?? []).map( ch => ch.id );
+    c.articles = [];
+    c.children = c.childrenIds.map( id => {
+      const child = categories.get(id);
+      child.parent = c;
+      return child;
     });
-    c.copyForSort = undefined;
   }
+
+  // Third loop : Put the ones without parent as root children
+  root.children = reqCategories.filter( c => {
+    if ( c.parent ) return false;
+    c.parent = root;
+    return true;
+  });
+
+  root.children.sort( (a,b) => {
+    const titleA = a.title ?? "";
+    const titleB = b.title ?? "";
+    return titleA.localeCompare(titleB);
+  });
+
+  // Add uncategorized on last place
+  uncategorized.parent = root;
   root.children.push(uncategorized);
 
   return categories;
