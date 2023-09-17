@@ -162,5 +162,14 @@ export default class WorldAnvilConfig extends FormApplication {
       config: true
     });
 
+    game.settings.register("world-anvil", "timelinePage", {
+      name: "WA.JournalPages.TimelineLabel",
+      hint: "WA.JournalPages.TimelineHint",
+      scope: "world",
+      type: String,
+      default: "",
+      config: true
+    });
+
   }
 }
