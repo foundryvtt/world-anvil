@@ -1,5 +1,7 @@
 
 
+@import "./css/rpg-awesome.css";
+
 /** --------------------------------------------
     Global Styling Rules
 --------------------------------------------- */
@@ -188,3 +190,136 @@ dd {
     margin: 3px 0;
 }
 
+/** --------------------------------------------
+    Timelines
+--------------------------------------------- */
+
+.wa-section.timeline-content .timeline {
+    justify-content: left;
+    align-items: stretch;
+    margin-bottom: 25px;
+}
+
+.wa-section.timeline-content .timeline-entry {
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+    flex: none;
+}
+.wa-section.timeline-content h3 {
+    color: inherit;
+    border: none;
+    font-size: 100%;
+    font-family: var(--font-primary);
+    font-weight: normal;
+    padding: 0;
+    margin: 0;
+    margin-block-start: 0em;
+    margin-block-end: 0em;
+}
+.wa-section.timeline-content h3:hover {
+    cursor: pointer;
+}
+
+
+.wa-section.timeline-content .timeline-entry.space-between {
+    align-items: stretch;
+}
+
+.wa-section.timeline-content .timeline-entry.no-importance {
+    color: #2d2d2d;
+}
+
+.wa-section.timeline-content .timeline-entry.trivial {
+    color: black;
+}
+
+.wa-section.timeline-content .timeline-entry.minor {
+    font-size: 1.2em;
+    color: #3e1812;
+}
+
+.wa-section.timeline-content .timeline-entry.important {
+    font-size: 1.2em;
+    color: #782e22;
+}
+
+.wa-section.timeline-content .timeline-entry.major {
+    font-size: 1.2em;
+    color: darkred;
+}
+.wa-section.timeline-content .timeline-entry.era-change {
+    font-size: 1.4em;
+    color: darkred;
+}
+
+.wa-section.timeline-content .timeline-entry .col-1 {
+    flex: 2;
+}
+.wa-section.timeline-content .timeline-entry .col-2 {
+    flex: none;
+    min-width: 100px;
+    max-width: 100px;
+    align-items: center;
+    background-position-x: center;
+    background-repeat: repeat-y;
+    background-image: url("icons/timeline-middle.webp");
+}
+
+.wa-section.timeline-content .timeline-entry .col-3 {
+    flex: 5;
+}
+
+.wa-section.timeline-content .timeline-entry .entry-date {
+    text-align: right;
+    font-size: 80%;
+}
+
+.wa-section.timeline-content .timeline-entry .first-entry-icon {
+    min-height: 40px;
+    max-height: 40px;
+    background-image: url("icons/timeline-start.webp");
+}
+.wa-section.timeline-content .timeline-entry .last-entry-icon {
+    min-height: 40px;
+    max-height: 40px;
+    background-image: url("icons/timeline-end.webp");
+}
+
+.wa-section.timeline-content .timeline-entry.maximized {
+    border: slategrey;
+    border-style: solid;
+    margin-left: 40px;
+    margin-right: 40px;
+    padding: 10px;
+    align-items: start;
+}
+
+.wa-section.timeline-content .timeline-entry .first-line:hover {
+    cursor: pointer;
+}
+
+.wa-section.timeline-content .timeline-entry.maximized .maximized-icon {
+    flex: none;
+    margin-right: 10px;
+}
+.wa-section.timeline-content .timeline-entry.maximized .maximized-title {
+    flex: none;
+    align-self: end;
+    margin-bottom: 0.3em;
+}
+.wa-section.timeline-content .timeline-entry.maximized .maximized-subtitle {
+    flex: none;
+    color: black;
+    font-size: 80%;
+    font-style: italic;
+}
+.wa-section.timeline-content .timeline-entry.maximized .maximized-h3 {
+    color: inherit;
+}
+.wa-section.timeline-content .timeline-entry.maximized .maximized-description {
+    flex: none;
+    padding-top: 10px;
+    color: black;
+    font-size: 0.8em;
+}

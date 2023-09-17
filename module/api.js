@@ -56,7 +56,7 @@ export default class WorldAnvil {
   /* -------------------------------------------- */
 
   /**
-   * Submit an API request to a World Anvil API endpoint
+   * Submit an API request to a World Anvil API endpoint (v1: Aragorn)
    * @param {string} endpoint     The endpoint name
    * @param {object} params       Additional request parameters
    * @return {Promise<object>}    The World Anvil API response
@@ -83,10 +83,48 @@ export default class WorldAnvil {
     return response.json();
   }
 
+
+  /**
+   * Submit an API request to a World Anvil API endpoint (v2: Boromir)
+   * @param {string} endpoint     The endpoint name
+   * @param {object} params       Additional request parameters
+   * @return {Promise<object>}    The World Anvil API response
+   * @private
+   */
+  async _fetchV2(endpoint, params = {}) {
+    if (!this.authToken) throw new Error("An authentication token has not been set for the World Anvil API.");
+
+    // Structure the endpoint
+    endpoint = `https://www.worldanvil.com/api/external/boromir/${endpoint}`;
+
+    // Construct querystring
+    const query = Object.entries(params).filter(e => e[0] != "post").map(e => `${e[0]}=${e[1]}`).join('&');
+    endpoint += "?" + query;
+
+    // Submit the request
+    console.log(`World Anvil | Submitting API request to ${endpoint}`);
+    const requestInit = {
+      method: "GET",
+      headers: {
+        "x-application-key": this.applicationKey,
+        "x-auth-token": this.authToken
+      }
+    };
+    if( params.post ) {
+      requestInit.method = "POST";
+      requestInit.body = JSON.stringify(params.post);
+    }
+    const response = await fetch(endpoint, requestInit);
+    if (response.status !== 200) {
+      throw new Error(`World Anvil API request failed for endpoint ${endpoint}`);
+    }
+    return response.json();
+  }
+
   /* -------------------------------------------- */
 
   /**
-   * Retrieve a batch of content from the World Anvil API.
+   * Retrieve a batch of content from the World Anvil API. (v1: Aragorn)
    * Continue querying paginated content until we have retrieved all results.
    * @param {string} endpoint         The API endpoint being queried
    * @param {string} collectionName   The name of the collection in the returned object
@@ -112,6 +150,34 @@ export default class WorldAnvil {
       // Store the query results
       if (!result) result = batch;  // Store the 1st result
       else result[collectionName] = result[collectionName].concat(batch[collectionName]); // Append additional results
+    }
+    return result;
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Retrieve a batch of content from the World Anvil API. (v2: Boromir)
+   * Continue querying paginated content until we have retrieved all results.
+   * @param {string} endpoint         The API endpoint being queried
+   * @param {object} [params]         Additional optional query parameters
+   * @return {Promise<object[]>}      An array of returned objects
+   */
+  async _fetchManyV2(endpoint, {...params} = {}) {
+    const limit = 50;
+    const result = [];
+    let hasMore = true;
+    let offset = 0;
+
+    while (hasMore) {
+      const post = {limit, offset};
+      const batch = await this._fetchV2(`world/${endpoint}`, {post, id: this.worldId, granularity:2, ...params});
+      if( !batch.success ) {
+        throw new Error(`World Anvil API request failed for ${endpoint} : ${batch.error}`);
+      }
+      offset += limit;
+      hasMore = batch.entities?.length == limit;
+      result.push(...batch.entities);
     }
     return result;
   }
@@ -153,7 +219,6 @@ export default class WorldAnvil {
 
   /* -------------------------------------------- */
 
-
   /**
    * Fetch all categories from within a World, optionally filtering with a specific search query
    * @param {object} [params={}]      Optional query parameters, see _fetchMany
@@ -161,6 +226,17 @@ export default class WorldAnvil {
    */
   async getCategories(params = {}) {
     return this._fetchMany("categories", "categories", params);
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Fetch all timelines and historical entries from within a World, optionally filtering with a specific search query
+   * @param {object} [params={}]      Optional query parameters, see _fetchMany
+   * @return {Promise<object[]>}      An array of category objects
+   */
+  async getTimelines(params = {}) {
+    return this._fetchManyV2("histories", params);
   }
 
   /* -------------------------------------------- */
