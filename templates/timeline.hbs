@@ -8,6 +8,7 @@
         </div>
         {{#each allLines as | line | }}
             {{#if line.isEntry}}
+                <h3 class="hidden-title">{{line.def.title}}</h3>
                 <div class="flexrow timeline-entry minimized {{line.gui.css}}{{#if line.gui.shrinked}} hidden{{/if}}" data-entry="{{line.def.id}}">
                     <div class="col-1 entry-date">
                         {{line.def.startDate.label}}
@@ -15,8 +16,8 @@
                     <div class="flexcol col-2 entry-icon" >
                         <i class="{{line.def.icon}}"></i>
                     </div>
-                    <div class="flexcol col-3 entry-title" >
-                        <h3>{{line.def.title}}</h3>
+                    <div class="flexcol col-3 minimized-h3" >
+                        {{line.def.title}}
                     </div>
                 </div>
                 <div class="flexcol timeline-entry maximized {{line.gui.css}}{{#unless line.gui.shrinked}} hidden{{/unless}}" data-entry="{{line.def.id}}">
