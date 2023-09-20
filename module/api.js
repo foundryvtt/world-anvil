@@ -99,7 +99,9 @@ export default class WorldAnvil {
 
     // Construct querystring
     const query = Object.entries(params).filter(e => e[0] != "post").map(e => `${e[0]}=${e[1]}`).join('&');
-    endpoint += "?" + query;
+    if( query != "" ) {
+      endpoint += "?" + query;
+    }
 
     // Submit the request
     console.log(`World Anvil | Submitting API request to ${endpoint}`);
@@ -237,6 +239,32 @@ export default class WorldAnvil {
    */
   async getTimelines(params = {}) {
     return this._fetchManyV2("histories", params);
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Fetch all timelines and historical entries from within a World, optionally filtering with a specific search query
+   * @param {object} [params={}]      Optional query parameters, see _fetchMany
+   * @return {Promise<object[]>}      An array of category objects
+   */
+  async parseContent(content, params = {}) {
+    const realParams = {
+      post: {
+        world: {
+          id: this.worldId
+        },
+        renderer: "html",
+        string: content
+      },
+      ...params
+    };
+
+    const result = await this._fetchV2("bbcode", realParams);
+    if(!result.success) {
+      throw `Can't retrieved parseContent from WA for text ${content} : ${result.reason}`;
+    }
+    return result.parsedString;
   }
 
   /* -------------------------------------------- */
