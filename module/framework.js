@@ -783,7 +783,7 @@ export async function getTimelines({cache=true}={}) {
       id: rawEntry.id,
       title: rawEntry.title,
       content: rawEntry.content,
-      contentParsed: rawEntry.content, // FIXME : Should be filled in a later date with a specify call
+      contentParsed: null, // Will be retrieved later, only if needed
       icon: rawEntry.category?.icon ?? "",
       category: rawEntry.category?.title ?? "",
       significance: {
@@ -927,7 +927,18 @@ async function extractTimelinefromArticle(article) {
 
   const entryId = (await getHistoriesRelatedToArticles()).get(article.id)?.id;
   const significanceTab = ["era-change", "major", "important", "minor", "trivial", "no-importance"];
-  const entries = timeline.entries.map( e => {
+
+  // Retrieve parsedContent if needed
+  const anvil = game.modules.get("world-anvil").anvil;
+  for( let entry of timeline.entries ) {
+    if( entry.contentParsed == null && !!entry.content) {
+      const baseHtml = await anvil.parseContent(entry.content);
+      entry.contentParsed = parsedContentToHTML(baseHtml);
+    }
+  }
+
+  // Create guiEntries
+  const guiEntries = timeline.entries.map( e => {
     return {
       isEntry: true,
       def: e,
@@ -940,17 +951,17 @@ async function extractTimelinefromArticle(article) {
 
   // Lines will be an alternance of entries and empty spaces
   const allLines = [];
-  const nbEntries = entries.length;
+  const nbEntries = guiEntries.length;
   if( nbEntries > 0 ) {
-    allLines.push(entries[0]);
+    allLines.push(guiEntries[0]);
 
     const spaceToAllocate = 20 * nbEntries;
     const wholeDuration = nbEntries == 1 ? 0 
-      : ( entries[nbEntries-1].def.startDate.numericValue - entries[0].def.startDate.numericValue ) * 1.0
+      : ( guiEntries[nbEntries-1].def.startDate.numericValue - guiEntries[0].def.startDate.numericValue ) * 1.0
 
     for(let i = 1; i < nbEntries && !!wholeDuration; i++) {
       // Add some space between elements
-      const duration = entries[i].def.startDate.numericValue - entries[i-1].def.startDate.numericValue;
+      const duration = guiEntries[i].def.startDate.numericValue - guiEntries[i-1].def.startDate.numericValue;
       const spaceBetween = Math.floor( ( duration / wholeDuration ) * spaceToAllocate );
       if( spaceBetween > 0 ) {
         allLines.push({
@@ -959,7 +970,7 @@ async function extractTimelinefromArticle(article) {
         });
       }
 
-      allLines.push(entries[i]);
+      allLines.push(guiEntries[i]);
     }
   }
 
