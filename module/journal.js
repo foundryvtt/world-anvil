@@ -187,7 +187,7 @@ export default class WorldAnvilBrowser extends Application {
 
     // New temporary entry
     const article = await this.anvil.getArticle(el.dataset.articleId);
-    const content = getArticleContent(article);
+    const content = await getArticleContent(article);
     entry = new JournalEntry({
       name: article.title,
       content: content.html,

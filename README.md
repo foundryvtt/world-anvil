@@ -36,6 +36,14 @@ When importing a single article, it will become a new Journal Entry in your Jour
 
 ![World Anvil Browser](docs/README_main_capture.png?raw=true)
 
+### Importing a Timeline
+
+Timelines in World Anvil can be imported inside Foundry. For this, you need to link the timeline to an article you want import.
+
+![Timeline import](docs/README_timelines.png?raw=true)
+
+Articles related to a timeline event will also include the timeline page. (They will have the related timeline event opened by default)
+
 ### Permission Controls
 
 All functionality of this module is restricted to Gamemaster users only.

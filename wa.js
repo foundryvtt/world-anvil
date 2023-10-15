@@ -1,5 +1,6 @@
 import WorldAnvil from "./module/api.js";
 import WorldAnvilConfig from "./module/config.js";
+import WorldAnvilPageNames from "./module/pagenames.js";
 import WorldAnvilBrowser from "./module/journal.js";
 import * as api from "./module/framework.js";
 
@@ -32,6 +33,12 @@ Hooks.once("init", () => {
    */
   module.config = new WorldAnvilConfig();
 
+  /**
+   * A singleton instance of the WAPageNames for accessing to user page names
+   * @type {WorldAnvilPageNames}
+   */
+  module.pageNames = new WorldAnvilPageNames();
+
   // Register some helper functions
   module.api = api;
 });
@@ -43,8 +50,9 @@ Hooks.once("init", () => {
 /**
  * Initialization actions taken once data sources are ready
  */
-Hooks.once("ready", () => {
+Hooks.once("ready", async () => {
   if ( !game.user.isGM ) return;
+  await api.loadTimelineTemplateInMemory();
   return module.anvil.connect();
 });
 
@@ -119,9 +127,18 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
 Hooks.on("renderJournalPageSheet", (app, html, data) => {
 
   // Activate cross-link listeners
-  html.find(".wa-link").click(event => {
-    event.preventDefault();
+  activeTimelineToggles(app, html);
+  activateWALinks(html);
+});
+
+function activateWALinks(html) {
+
+  const activateClick = (event) => {
     const articleId = event.currentTarget.dataset.articleId;
+    if( !articleId ) {
+      return;
+    }
+    event.stopPropagation();
 
     // View an existing linked article (OBSERVER+)
     const entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
@@ -137,5 +154,32 @@ Hooks.on("renderJournalPageSheet", (app, html, data) => {
       return ui.notifications.warn(game.i18n.localize("WA.NoPermissionView"));
     }
     return api.importArticle(articleId, {renderSheet: true});
+  };
+
+  html.find(".wa-link").click(activateClick);
+  html.find(".wa-tooltip").click(activateClick);
+}
+
+function activeTimelineToggles(app, html) {
+
+  // Only for WA articles
+  const journalEntry = app.object.parent;
+  if( ! journalEntry.getFlag("world-anvil", "articleId") ) return;
+
+  const minimizedEntries = html.find('.wa-section.timeline-content .timeline-entry.minimized');
+  minimizedEntries.click(event => {
+    const entryId = event.currentTarget.dataset.entry;
+    const _maximized = event.currentTarget.parentElement.querySelector(`.maximized[data-entry="${entryId}"`);
+    event.currentTarget.classList.add("hidden");
+    _maximized.classList.remove("hidden");
   });
-});
+
+  const maximizedEntries = html.find('.wa-section.timeline-content .timeline-entry.maximized .first-line');
+  maximizedEntries.click(event => {
+    const _maximized = event.currentTarget.parentElement;
+    const entryId = _maximized.dataset.entry;
+    const _minimized = _maximized.parentElement.querySelector(`.minimized[data-entry="${entryId}"`);
+    _maximized.classList.add("hidden");
+    _minimized.classList.remove("hidden");
+  });
+}
