@@ -245,24 +245,31 @@ export default class WorldAnvil {
 
   /**
    * Fetch all timelines and historical entries from within a World, optionally filtering with a specific search query
-   * @param {object} [params={}]      Optional query parameters, see _fetchMany
+   * @param {string} [articleId]      If an articleId is available
+   * @param {string} [specificString]      If you want to parse a specific string
    * @return {Promise<object[]>}      An array of category objects
    */
-  async parseContent(content, params = {}) {
+  async parseContent({articleId=null, specificString=null}={}) {
     const realParams = {
       post: {
         world: {
           id: this.worldId
         },
-        renderer: "html",
-        string: content
-      },
-      ...params
+        renderer: "html"
+      }
     };
+    if( articleId ) {
+      realParams.post.article = {
+        id: articleId
+      };
+    }
+    if( specificString ) {
+      realParams.post.string = specificString;
+    }
 
     const result = await this._fetchV2("bbcode", realParams);
     if(!result.success) {
-      throw `Can't retrieved parseContent from WA for text ${content} : ${result.reason}`;
+      throw `Can't retrieved parseContent from WA for text '${specificString}' (article: ${articleId}) : ${result.reason}`;
     }
     return result.parsedString;
   }

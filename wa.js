@@ -1,5 +1,6 @@
 import WorldAnvil from "./module/api.js";
 import WorldAnvilConfig from "./module/config.js";
+import WorldAnvilPageNames from "./module/pagenames.js";
 import WorldAnvilBrowser from "./module/journal.js";
 import * as api from "./module/framework.js";
 
@@ -31,6 +32,12 @@ Hooks.once("init", () => {
    * @type {WorldAnvilConfig}
    */
   module.config = new WorldAnvilConfig();
+
+  /**
+   * A singleton instance of the WAPageNames for accessing to user page names
+   * @type {WorldAnvilPageNames}
+   */
+  module.pageNames = new WorldAnvilPageNames();
 
   // Register some helper functions
   module.api = api;
@@ -120,14 +127,18 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
 Hooks.on("renderJournalPageSheet", (app, html, data) => {
 
   // Activate cross-link listeners
-  activateWALinks(html);
   activeTimelineToggles(app, html);
+  activateWALinks(html);
 });
 
 function activateWALinks(html) {
-  html.find(".wa-link").click(event => {
-    event.preventDefault();
+
+  const activateClick = (event) => {
     const articleId = event.currentTarget.dataset.articleId;
+    if( !articleId ) {
+      return;
+    }
+    event.stopPropagation();
 
     // View an existing linked article (OBSERVER+)
     const entry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
@@ -143,7 +154,10 @@ function activateWALinks(html) {
       return ui.notifications.warn(game.i18n.localize("WA.NoPermissionView"));
     }
     return api.importArticle(articleId, {renderSheet: true});
-  });
+  };
+
+  html.find(".wa-link").click(activateClick);
+  html.find(".wa-tooltip").click(activateClick);
 }
 
 function activeTimelineToggles(app, html) {
