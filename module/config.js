@@ -106,11 +106,22 @@ export default class WorldAnvilConfig extends FormApplication {
       config: true
     });
 
+    // Add the customizable labels for allowing article blocks
+    //-------------------
+    game.settings.register("world-anvil", "includeArticleBlocks", {
+      name: "WA.IncludeArticleBlocksLabel",
+      hint: "WA.IncludeArticleBlocksHint",
+      scope: "world",
+      type: Boolean,
+      default: false,
+      config: true
+    });
+
     // Add the customizable labels for each importable page
     //-------------------
     game.settings.register("world-anvil", "mainArticlePage", {
-      name: "WA.JournalPages.ArticleLabel",
-      hint: "WA.JournalPages.ArticleHint",
+      name: "WA.JournalPages.MainArticleLabel",
+      hint: "WA.JournalPages.MainArticleHint",
       scope: "world",
       type: String,
       default: "",
@@ -138,6 +149,14 @@ export default class WorldAnvilConfig extends FormApplication {
     game.settings.register("world-anvil", "portraitPage", {
       name: "WA.JournalPages.PortraitLabel",
       hint: "WA.JournalPages.PortraitHint",
+      scope: "world",
+      type: String,
+      default: "",
+      config: true
+    });
+    game.settings.register("world-anvil", "organizationFlagPage", {
+      name: "WA.JournalPages.OrganizationFlagLabel",
+      hint: "WA.JournalPages.OrganizationFlagHint",
       scope: "world",
       type: String,
       default: "",

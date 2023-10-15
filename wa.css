@@ -193,6 +193,9 @@ dd {
 /** --------------------------------------------
     Timelines
 --------------------------------------------- */
+.wa-section .world-editor-link {
+	display: none;
+}
 
 .wa-section.timeline-content .timeline {
     justify-content: left;
@@ -214,9 +217,6 @@ dd {
     align-items: center;
     font-size: 1em;
     flex: none;
-}
-.wa-section.timeline-content .timeline-entry.minimized:hover {
-    cursor: pointer;
 }
 
 .wa-section.timeline-content .timeline-entry.space-between {
@@ -283,13 +283,17 @@ dd {
     background-image: url("icons/timeline-end.webp");
 }
 
+.wa-section.timeline-content .timeline-entry.minimized:hover {
+    cursor: pointer;
+}
+
 .wa-section.timeline-content .timeline-entry.maximized {
     border: slategrey;
     border-style: solid;
     margin-left: 40px;
     margin-right: 40px;
     padding: 10px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .wa-section.timeline-content .timeline-entry .first-line:hover {
@@ -316,4 +320,14 @@ dd {
     padding-top: 10px;
     color: black;
     font-size: 0.8em;
+    justify-content: space-between;
+}
+.wa-section.timeline-content .timeline-entry .relation-div {
+    flex: none;
+    max-height: 75px;
+    margin-left: 10px;
+}
+.wa-section.timeline-content .timeline-entry .related-img {
+    max-height: inherit;
+    border: groove;
 }

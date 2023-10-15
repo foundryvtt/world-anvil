@@ -16,7 +16,7 @@
                     <div class="flexcol col-2 entry-icon" >
                         <i class="{{line.def.icon}}"></i>
                     </div>
-                    <div class="flexcol col-3 minimized-h3" >
+                    <div class="flexrow col-3 minimized-h3" >
                         {{line.def.title}}
                     </div>
                 </div>
@@ -32,8 +32,16 @@
                             </div>
                         </div>
                     </div>
-                    <div class="maximized-description">
-                        {{{line.def.contentParsed}}}
+                    <div class="flexrow maximized-description">
+                        <div>{{{line.def.contentParsed}}}</div>
+                        <div class="relation-div">
+                            {{#each line.gui.related as | relation | }}
+                                <img class="wa-tooltip related-img" 
+                                    data-article-id="{{relation.id}}" 
+                                    data-tooltip="{{relation.title}}" 
+                                    src="{{relation.img}}">
+                            {{/each}}
+                        </div>
                     </div>
                 </div>
             {{else}}

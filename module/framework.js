@@ -78,6 +78,8 @@ export const ARTICLE_CSS_CLASSES = {
  * @property {HistoryDate} startDate      When it starts
  * @property {HistoryDate} [endDate]      When it ends. Optional
  * @property {string} [relatedArticleId]  Only if an article is related to this entry
+ * @property {string[]} relatedCharacters Related characters for this timeline
+ * @property {string[]} relatedOrganizations Related organization for this timeline
  * @property {Timeline[]} parents         A sorted array of related entries
  */
 
@@ -280,7 +282,7 @@ async function _createNewEntry(article, content, notify, options) {
  function _parsedArticleContentToJournalPages(content) {
 
   const pages = [];
-  const pageNames = content.waFlags.pageNames;
+  const pageNames = game.modules.get("world-anvil").pageNames;
 
   // Add Html Pages (Order is important)
   [pageNames.mainArticle, pageNames.sideContent, pageNames.relationships, pageNames.secrets, pageNames.timeline]
@@ -300,7 +302,7 @@ async function _createNewEntry(article, content, notify, options) {
   });
 
   // Add image pages (Order is also important)
-  [pageNames.cover, pageNames.portrait]
+  [pageNames.cover, pageNames.portrait, pageNames.organizationFlag]
     .filter( header => {
       return !!content.images[header];
   }).forEach( header => {
@@ -329,15 +331,8 @@ async function _createNewEntry(article, content, notify, options) {
 export async function getArticleContent(article) {
 
   // Build article flags which will be put inside journal entry
-  const waFlags = { articleId: article.id,  articleURL: article.url, pageNames: {} };
-  const pageNames = waFlags.pageNames;
-  addPageNameToPool(pageNames, "mainArticle", game.i18n.localize("WA.JournalPages.ArticleDefault"));
-  addPageNameToPool(pageNames, "secrets", game.i18n.localize("WA.JournalPages.SecretsDefault"));
-  addPageNameToPool(pageNames, "sideContent", game.i18n.localize("WA.JournalPages.SideContentDefault"));
-  addPageNameToPool(pageNames, "portrait", game.i18n.localize("WA.JournalPages.PortraitDefault"));
-  addPageNameToPool(pageNames, "cover", game.i18n.localize("WA.JournalPages.CoverDefault"));
-  addPageNameToPool(pageNames, "relationships", game.i18n.localize("WA.JournalPages.RelationshipsDefault"));
-  addPageNameToPool(pageNames, "timeline", game.i18n.localize("WA.JournalPages.TimelineDefault"));
+  const waFlags = { articleId: article.id,  articleURL: article.url };
+  const pageNames = game.modules.get("world-anvil").pageNames;
 
   // Initialise pages and the potential names of each pages
   const pages = { html: {}, images: {}, waFlags: waFlags };
@@ -389,16 +384,17 @@ export async function getArticleContent(article) {
       // Title can be replaced by a localized name if the section id has been handled
       // Display long-format content as a paragraph section with a header
       const title = _getLocalizedTitle(id, section);
+      const parsed = await contentParsedWoArticleBlocks(section);
       const isLongContent = section.content.length > 100;
       if( isLongContent ) {
         sectionInPages += `<h2>${title}</h2>`;
-        sectionInPages += `\n<p>${section.contentParsed}</p><hr/>`;
+        sectionInPages += `\n<p>${parsed}</p><hr/>`;
       }
 
       // Display short-format content as a details list
       else {
         sectionInPages += `<dl><dt>${title}</dt>`;
-        sectionInPages += `<dd>${section.contentParsed}</dd></dl>`;
+        sectionInPages += `<dd>${parsed}</dd></dl>`;
       }
 
       // End main section div
@@ -431,21 +427,22 @@ export async function getArticleContent(article) {
       pages.html[pageNames.relationships] += `<p class="wa-link" data-article-id="${relationshipWith.articleId}">${relationshipWith.personName}</p>`;
     }
   }
-
+  
   // Combine content sections
+  const contentParsed = await contentParsedWoArticleBlocks(article);
   let content = `<section class="${ARTICLE_CSS_CLASSES.ALL_PARTS} ${ARTICLE_CSS_CLASSES.MAIN_CONTENT}">`;
-  content += `<p>${article.contentParsed}</p>`;
+  content += `<p>${contentParsed}</p>`;
   content += "</section>";
   pages.html[pageNames.mainArticle] = content;
   
+  // Modify each page so that they really becomes HTML content
+  Object.entries(pages.html).forEach( ([key, value]) => pages.html[key] = parsedContentToHTML(value) );
+
   // Related timeline
-  const timelineContent = await extractTimelinefromArticle(article);
+  const timelineContent = await extractTimelineFromArticle(article);
   if( !!timelineContent ) {
     pages.html[pageNames.timeline] = timelineContent;
   }
-
-  // Modify each page so that they really becomes HTML content
-  Object.entries(pages.html).forEach( ([key, value]) => pages.html[key] = parsedContentToHTML(value) );
 
   // Add image pages
   addJournalImagePages(article, pages);
@@ -459,14 +456,6 @@ export async function getArticleContent(article) {
    */
   Hooks.callAll(`WAParseArticle`, article, pages);
   return pages;
-}
-
-function addPageNameToPool( pool, pageType, defaultName ) {
-  let pageName = game.settings.get("world-anvil", pageType + "Page") ?? "";
-  if( pageName == "" ) {
-    pageName = defaultName;
-  }
-  pool[pageType] = pageName;
 }
 
 /**
@@ -539,6 +528,11 @@ export function parsedContentToHTML(content) {
 
   // Regex formatting
   htmlElement.innerHTML = htmlElement.innerHTML.replace(/%p%/g, "</p>\n<p>");
+
+  // Replace article blocks
+  substitueArticleBlocksInHtml(htmlElement);
+
+
   return htmlElement.innerHTML;
 }
 
@@ -550,29 +544,28 @@ export function parsedContentToHTML(content) {
  */
  function addJournalImagePages( article, pages ) {
 
-  const createImagePage = ( pageName, imageSrc ) => {
-    pages.images[pageName] = imageSrc.replace("http://", "https://");
-  }
-  
-  const pageNames = pages.waFlags.pageNames;
+  const pageNames = game.modules.get("world-anvil").pageNames;
 
   // Retrieve images from main page
   const htmlElement = document.createElement("div");
   htmlElement.innerHTML = pages.html[pageNames.mainArticle];
   const images = htmlElement.querySelectorAll("img");
 
+  const createImagePage = ( pageName, childName, fallbackOnTemplate ) => {
+    const child = article[childName];
+    let imageBase = child?.url;
+    if( !imageBase && article.template === fallbackOnTemplate && images.length > 0) {
+      imageBase = images[0].src;
+    }
+    if( imageBase ) {
+      pages.images[pageName] = imageBase.replace("http://", "https://");
+    }
+  }
+
   // Portrait Image
-  if ( article.portrait ) {
-    createImagePage(pageNames.portrait, article.portrait.url );
-
-  } else if ( article.template === 'person' && images.length == 1 ) {
-    createImagePage(pageNames.portrait, images[0].src );
-  }
-
-  // Cover Image
-  if ( article.cover?.url ) { // FIXME : Waiting for answers from WA developers
-    createImagePage(pageNames.cover, article.cover.url );
-  }
+  createImagePage(pageNames.portrait, "portrait", "person");
+  createImagePage(pageNames.organizationFlag, "flag", "organization");
+  createImagePage(pageNames.cover, "cover", undefined);
 }
 
 /* -------------------------------------------- */
@@ -744,8 +737,9 @@ export async function getCategoryFolder(category) {
     "flags.world-anvil.categoryId": category.id
   });
 }
+
 /* -------------------------------------------- */
-/*  Timelines Management                         */
+/*  Timelines Management                        */
 /* -------------------------------------------- */
 
 /**
@@ -792,6 +786,8 @@ export async function getTimelines({cache=true}={}) {
       },
       startDate : computeHistoryDate(rawEntry.year, rawEntry.month, rawEntry.day, rawEntry.hour, rawEntry.minute, rawEntry.alternativeDisplayRange),
       relatedArticleId: rawEntry.article?.id,
+      relatedCharacters: (rawEntry.characters ?? []).map( a => a.id ),
+      relatedOrganizations: (rawEntry.organizations ?? []).map( o => o.id ),
       parents: []
     };
 
@@ -921,7 +917,7 @@ async function findRelatedTimeline(article) {
  * @param {Article} article article retrieved from WA PI
  * @returns {string | undefined} Timeline content, if one exists
  */
-async function extractTimelinefromArticle(article) {
+async function extractTimelineFromArticle(article) {
   const timeline = await findRelatedTimeline(article);
   if(!timeline) { return undefined; } 
 
@@ -932,22 +928,40 @@ async function extractTimelinefromArticle(article) {
   const anvil = game.modules.get("world-anvil").anvil;
   for( let entry of timeline.entries ) {
     if( entry.contentParsed == null && !!entry.content) {
-      const baseHtml = await anvil.parseContent(entry.content);
+      const baseHtml = await anvil.parseContent({specificString: entry.content});
       entry.contentParsed = parsedContentToHTML(baseHtml);
     }
   }
 
   // Create guiEntries
   const guiEntries = timeline.entries.map( e => {
+
+    const relatedIds = [...e.relatedCharacters];
+    relatedIds.push(...e.relatedOrganizations);
+    const related = relatedIds.reduce( (_result, relatedId) => {
+      const journalEntry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === relatedId);
+      const img = journalEntry?.pages.find( p => p.type === "image");
+      if( img ) {
+        _result.push({
+          id: relatedId,
+          title: journalEntry.name,
+          img: img.src
+        })
+      }
+      return _result;
+    }, []);
+
     return {
       isEntry: true,
       def: e,
       gui: {
         css: significanceTab[e.significance.level],
-        shrinked: entryId === e.id
+        shrinked: entryId === e.id,
+        related
       }
     }
   });
+
 
   // Lines will be an alternance of entries and empty spaces
   const allLines = [];
@@ -983,3 +997,67 @@ async function extractTimelinefromArticle(article) {
     allowProtoPropertiesByDefault: true
   });
 }
+
+/* -------------------------------------------- */
+/*      Article blocks management               */
+/* -------------------------------------------- */
+const BLOCK_DELIMITER = "WA-BLOCK-DELIMITER";
+
+/**
+ * Check if an article or section has a .content containing some [articleblock:xxx]
+ * If it has, it will subsitute it with BLOCK_DELIMITERxxxBLOCK_DELIMITER. (This part will later be replaced by the other journal entry main page)
+ * In case substitution has been done, contentParsed will be request from WA api. Otherwise, it will directly be retrieved from article
+ * @param {object} articleOrSection Article or Section
+ * @returns {string} contentParsed
+ */
+async function contentParsedWoArticleBlocks(articleOrSection) {
+
+  const allowed = game.settings.get("world-anvil", "includeArticleBlocks");
+  if(!allowed) {
+    return articleOrSection.contentParsed;
+  }
+  const data = typeof(articleOrSection.content) === "string" ? articleOrSection.content : articleOrSection.contentParsed;
+  const splitted = data?.split("[articleblock:") ?? [""];
+  const ids = [];
+  let baseContent = "";
+  for( let i = 0; i < splitted.length; i+=2) {
+    baseContent += splitted[i];
+    if( i+1 < splitted.length ) {
+      const base = splitted[i+1];
+      const secondSplit = base.split("]");
+      const articleId = secondSplit[0];
+      const remaining = base.substring(articleId.length + 1);
+      ids.push(articleId);
+      baseContent += BLOCK_DELIMITER + articleId + BLOCK_DELIMITER + remaining;
+    }
+  }
+  if( ids.length == 0 ) {
+    return articleOrSection.contentParsed;
+  }
+
+  const anvil = game.modules.get("world-anvil").anvil;
+  const contentParsed = await anvil.parseContent({articleId: articleOrSection.id, specificString: baseContent});
+  return contentParsed;
+}
+
+function substitueArticleBlocksInHtml(htmlElement) {
+  const pageNames = game.modules.get("world-anvil").pageNames;
+  const splitted = htmlElement.innerHTML.split(BLOCK_DELIMITER);
+
+  let substituted = "";
+  for( let i = 0; i < splitted.length; i+=2) {
+    substituted += splitted[i];
+    if( i+1 < splitted.length ) {
+      const articleId = splitted[i+1];
+      const journalEntry = game.journal.find(e => e.getFlag("world-anvil", "articleId") === articleId);
+      const articleMainPageContent = journalEntry?.pages.find( p => p.name === pageNames.mainArticle)?.text?.content;
+      if( articleMainPageContent ) {
+        substituted += articleMainPageContent;
+      } else {
+        substituted += `<span class="wa-link" data-article-id=${articleId}>Sync this article again after the targeted journal entry as been imported</span>`;
+      }
+    }
+  }
+  htmlElement.innerHTML = substituted;
+}
+
