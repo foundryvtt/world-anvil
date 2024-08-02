@@ -120,7 +120,7 @@ export default class WorldAnvilBrowser extends Application {
 
       // Check linked entry permissions
       article.entry = entries.find(e => e.getFlag("world-anvil", "articleId") === article.id);
-      article.visibleByPlayers = article.entry?.ownership.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+      article.visibleByPlayers = article.entry?.ownership.default >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
 
       // Get the category to which the article belongs
       const category = categories.get(article.category?.id) || uncategorized;
@@ -300,11 +300,11 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return !a.entry?.ownership.default < CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+      return !a.entry?.ownership.default < CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
     }).map( a => {
       return {
         _id: a.entry.id,
-        permission: { default: CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER }
+        permission: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER }
       }
     });
 
@@ -324,7 +324,7 @@ export default class WorldAnvilBrowser extends Application {
     const category = this.categories.get(categoryId);
     const articles = category?.articles ?? [];
     const updates = articles.filter( a => {
-      return a.entry?.ownership.default >= CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER;
+      return a.entry?.ownership.default >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
     }).map( a => {
       return {
         _id: a.entry.id,
@@ -349,7 +349,7 @@ export default class WorldAnvilBrowser extends Application {
     if( !entry ) { throw 'Can\'t find journal entry with id : ' + entryId; }
 
     const perms = {
-      default: CONST.DOCUMENT_PERMISSION_LEVELS.OBSERVER
+      default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER
     };
 
     await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});
