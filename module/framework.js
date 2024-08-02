@@ -431,7 +431,11 @@ export function parsedContentToHTML(content) {
 
     // Set image source
     let img = new Image();
-    img.src = `https://worldanvil.com${i.dataset.src}`;
+    if (i.dataset.src.startsWith("/")) {
+      img.src = `https://worldanvil.com${i.dataset.src}`;
+    } else {
+      img.src = i.dataset.src;
+    }
     delete i.dataset.src;
     img.alt = i.alt;
     img.title = i.title;
