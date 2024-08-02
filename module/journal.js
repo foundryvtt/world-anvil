@@ -328,7 +328,7 @@ export default class WorldAnvilBrowser extends Application {
     }).map( a => {
       return {
         _id: a.entry.id,
-        permission: { default: CONST.DOCUMENT_PERMISSION_LEVELS.NONE }
+        permission: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE }
       }
     });
 
@@ -367,7 +367,7 @@ export default class WorldAnvilBrowser extends Application {
     if( !entry ) { throw 'Can\'t find journal entry with id : ' + entryId; }
 
     const perms = {
-      default: CONST.DOCUMENT_PERMISSION_LEVELS.NONE
+      default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE
     };
 
     await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});
