@@ -304,7 +304,7 @@ export default class WorldAnvilBrowser extends Application {
     }).map( a => {
       return {
         _id: a.entry.id,
-        permission: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER }
+        ownership: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER }
       }
     });
 
@@ -328,7 +328,7 @@ export default class WorldAnvilBrowser extends Application {
     }).map( a => {
       return {
         _id: a.entry.id,
-        permission: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE }
+        ownership: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE }
       }
     });
 
@@ -352,7 +352,7 @@ export default class WorldAnvilBrowser extends Application {
       default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER
     };
 
-    await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});
+    await entry.update({ownership: perms}, {diff: false, recursive: false, noHook: true});
     this.render();
   }
 
@@ -370,7 +370,7 @@ export default class WorldAnvilBrowser extends Application {
       default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE
     };
 
-    await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});
+    await entry.update({ownership: perms}, {diff: false, recursive: false, noHook: true});
     this.render();
   }
 
