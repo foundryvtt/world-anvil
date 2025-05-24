@@ -364,7 +364,7 @@ export async function getArticleContent(article) {
     });
 
     // Filter sections, removing ignored ones.
-    const ignoredSectionIds = [DISPLAY_SIDEBAR_SECTION_ID, "issystem", "folderId", "editor"];
+    const ignoredSectionIds = [DISPLAY_SIDEBAR_SECTION_ID, "issystem", "folderId", "editor", "icon"];
     const filteredEntries = sectionEntries.filter( ([id, section]) => {
       if( ignoredSectionIds.includes(id) ) { return false; }
       if( !includeSidebars ) {
