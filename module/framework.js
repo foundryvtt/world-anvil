@@ -331,7 +331,11 @@ async function _createNewEntry(article, content, notify, options) {
 export async function getArticleContent(article) {
 
   // Build article flags which will be put inside journal entry
-  const waFlags = { articleId: article.id,  articleURL: article.url };
+  const waFlags = {
+    articleId: article.id,
+    articleURL: article.url,
+    tags: article.tags?.split(",") ?? [],
+  };
   const pageNames = game.modules.get("world-anvil").pageNames;
 
   // Initialise pages and the potential names of each pages
@@ -350,7 +354,6 @@ export async function getArticleContent(article) {
     });
 
     // Determine whether there are secrets inside this article
-    
     const isSectionSecret = (section) => {
       const secretSectionIds = ["seeded"];
       return secretSectionIds.includes(section) || section.startsWith("ggm"); 
@@ -361,7 +364,7 @@ export async function getArticleContent(article) {
     });
 
     // Filter sections, removing ignored ones.
-    const ignoredSectionIds = [DISPLAY_SIDEBAR_SECTION_ID, "issystem", "folderId"];
+    const ignoredSectionIds = [DISPLAY_SIDEBAR_SECTION_ID, "issystem", "folderId", "editor"];
     const filteredEntries = sectionEntries.filter( ([id, section]) => {
       if( ignoredSectionIds.includes(id) ) { return false; }
       if( !includeSidebars ) {
