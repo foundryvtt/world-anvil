@@ -33,15 +33,17 @@
                         </div>
                     </div>
                     <div class="flexrow maximized-description">
-                        <div>{{{line.def.contentParsed}}}</div>
-                        <div class="relation-div">
-                            {{#each line.gui.related as | relation | }}
-                                <img class="wa-tooltip related-img" 
-                                    data-article-id="{{relation.id}}" 
-                                    data-tooltip="{{relation.title}}" 
-                                    src="{{relation.img}}">
-                            {{/each}}
-                        </div>
+                        <div class="description-div">{{{line.def.contentParsed}}}</div>
+                        {{#if line.gui.related.length}}
+                            <div class="flexcol relation-div">
+                                {{#each line.gui.related as | relation | }}
+                                    <img class="wa-tooltip related-img"
+                                         data-article-id="{{relation.id}}"
+                                         data-tooltip="{{relation.title}}"
+                                         src="{{relation.img}}">
+                                {{/each}}
+                            </div>
+                        {{/if}}
                     </div>
                 </div>
             {{else}}
