@@ -91,19 +91,20 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
 /**
  * Augment rendered Journal sheets to add WorldAnvil content
  */
-Hooks.on("renderJournalSheet", (app, html, data) => {
+Hooks.on("renderJournalEntrySheet", (app, html, data) => {
 
   // Get the rendered Journal entry
-  const entry = app.object;
+  const entry = app.document;
   const articleId = entry.getFlag("world-anvil", "articleId");
   if ( !articleId ) return;
 
-  const title = html.find(".window-title");
-  if (title) {
+  const htmlJQ = $(html);
+  const title = htmlJQ.find(".window-title");
+  if (title && !htmlJQ.hasClass("world-anvil")) {
 
     // Add header button to re-sync (GM Only)
     if ( game.user.isGM ) {
-      $(html).addClass("world-anvil");
+      htmlJQ.addClass("world-anvil");
       const sync = $(`<a class="wa-sync"><i class="fas fa-sync"></i>${game.i18n.localize("WA.Sync")}</a>`);
       sync.on("click", event => {
         event.preventDefault();
@@ -124,7 +125,7 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
   }
 });
 
-Hooks.on("renderJournalPageSheet", (app, html, data) => {
+Hooks.on("renderJournalEntryPageSheet", (app, html, data) => {
 
   // Activate cross-link listeners
   const htmlJQ = $(html);
@@ -164,7 +165,7 @@ function activateWALinks(html) {
 function activeTimelineToggles(app, html) {
 
   // Only for WA articles
-  const journalEntry = app.object.parent;
+  const journalEntry = app.document.parent;
   if( ! journalEntry.getFlag("world-anvil", "articleId") ) return;
 
   const minimizedEntries = html.find('.wa-section.timeline-content .timeline-entry.minimized');
