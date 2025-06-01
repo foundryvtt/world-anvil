@@ -39,6 +39,9 @@ button#world-anvil img {
     cursor: pointer;
 }
 
+.wa-icon-in-directory {
+    filter: invert(99%) sepia(95%) saturate(636%) hue-rotate(309deg) brightness(96%) contrast(88%);
+}
 
 
 /** --------------------------------------------

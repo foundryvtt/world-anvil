@@ -13,10 +13,10 @@
       "discord": "Didialchichi#2607"
     }
   ],
-	"compatibility": {
-		"minimum": "10",
-		"verified": "12"
-	},
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13.344"
+  },
   "url": "#{URL}#",
   "manifest": "#{MANIFEST}#",
   "download": "#{DOWNLOAD}#",

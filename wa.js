@@ -68,7 +68,7 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
 
   // Add the World Anvil Button
   const button = $(`<button type="button" id="world-anvil">
-    <img src="modules/world-anvil/icons/wa-icon.svg" title="${game.i18n.localize("WA.SidebarButton")}"/>
+    <img class="wa-icon-in-directory" src="modules/world-anvil/icons/wa-icon.svg" title="${game.i18n.localize("WA.SidebarButton")}" />
   </button>`);
   button.on("click", ev => {
     const anvil = game.modules.get("world-anvil").anvil;
@@ -78,7 +78,7 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
       module.config.render(true);
     }
   });
-  html.find(".directory-header .action-buttons").append(button);
+  $(html).find(".directory-header .action-buttons").append(button);
 
   // Re-render the browser, if it's active
   module.browser.render(false);
@@ -103,7 +103,7 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
 
     // Add header button to re-sync (GM Only)
     if ( game.user.isGM ) {
-      html.addClass("world-anvil");
+      $(html).addClass("world-anvil");
       const sync = $(`<a class="wa-sync"><i class="fas fa-sync"></i>${game.i18n.localize("WA.Sync")}</a>`);
       sync.on("click", event => {
         event.preventDefault();
@@ -127,8 +127,9 @@ Hooks.on("renderJournalSheet", (app, html, data) => {
 Hooks.on("renderJournalPageSheet", (app, html, data) => {
 
   // Activate cross-link listeners
-  activeTimelineToggles(app, html);
-  activateWALinks(html);
+  const htmlJQ = $(html);
+  activeTimelineToggles(app, htmlJQ);
+  activateWALinks(htmlJQ);
 });
 
 function activateWALinks(html) {
