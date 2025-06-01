@@ -227,30 +227,30 @@ dd {
 }
 
 .wa-section.timeline-content .timeline-entry.no-importance {
-    color: #2d2d2d;
+    color: rgb(150,150,150);
 }
 
 .wa-section.timeline-content .timeline-entry.trivial {
-    color: black;
+    color: rgb(100,100,100);
 }
 
 .wa-section.timeline-content .timeline-entry.minor {
     font-size: 1.2em;
-    color: #3e1812;
+    color: rgb(100,100,100);
 }
 
 .wa-section.timeline-content .timeline-entry.important {
     font-size: 1.2em;
-    color: #782e22;
+    color: rgb(50,50,50);
 }
 
 .wa-section.timeline-content .timeline-entry.major {
     font-size: 1.2em;
-    color: darkred;
+    color: rgb(O,O,O);
 }
 .wa-section.timeline-content .timeline-entry.era-change {
     font-size: 1.4em;
-    color: darkred;
+    color: rgb(O,0,0);
 }
 
 .wa-section.timeline-content .timeline-entry .col-1 {
