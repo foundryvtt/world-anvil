@@ -14,8 +14,9 @@
     }
   ],
   "compatibility": {
-    "minimum": "13",
-    "verified": "13.344"
+    "minimum": 13,
+    "verified": "13.344",
+    "maximum": 13
   },
   "url": "#{URL}#",
   "manifest": "#{MANIFEST}#",

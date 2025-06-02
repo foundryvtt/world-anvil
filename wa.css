@@ -324,13 +324,13 @@ dd {
     color: black;
     font-size: 0.8em;
     justify-content: space-between;
+    align-items: start;
 }
 .wa-section.timeline-content .timeline-entry .description-div {
     font-size: 12px;
 }
 .wa-section.timeline-content .timeline-entry .relation-div {
     flex: none;
-    max-height: 75px;
     min-width: 80px;
     max-width: 80px;
     margin-left: 10px;

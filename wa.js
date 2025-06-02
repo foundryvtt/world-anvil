@@ -98,13 +98,13 @@ Hooks.on("renderJournalEntrySheet", (app, html, data) => {
   const articleId = entry.getFlag("world-anvil", "articleId");
   if ( !articleId ) return;
 
-  const htmlJQ = $(html);
-  const title = htmlJQ.find(".window-title");
-  if (title && !htmlJQ.hasClass("world-anvil")) {
+  const html$ = $(html);
+  const title = html$.find(".window-title");
+  if (title && !html$.hasClass("world-anvil")) {
+    html$.addClass("world-anvil");
 
     // Add header button to re-sync (GM Only)
     if ( game.user.isGM ) {
-      htmlJQ.addClass("world-anvil");
       const sync = $(`<a class="wa-sync"><i class="fas fa-sync"></i>${game.i18n.localize("WA.Sync")}</a>`);
       sync.on("click", event => {
         event.preventDefault();
@@ -128,12 +128,12 @@ Hooks.on("renderJournalEntrySheet", (app, html, data) => {
 Hooks.on("renderJournalEntryPageSheet", (app, html, data) => {
 
   // Activate cross-link listeners
-  const htmlJQ = $(html);
-  activeTimelineToggles(app, htmlJQ);
-  activateWALinks(htmlJQ);
+  const html$ = $(html);
+  activeTimelineToggles(app, html$);
+  activateWALinks(html$);
 });
 
-function activateWALinks(html) {
+function activateWALinks(html$) {
 
   const activateClick = (event) => {
     const articleId = event.currentTarget.dataset.articleId;
@@ -158,17 +158,17 @@ function activateWALinks(html) {
     return api.importArticle(articleId, {renderSheet: true});
   };
 
-  html.find(".wa-link").click(activateClick);
-  html.find(".wa-tooltip").click(activateClick);
+  html$.find(".wa-link").click(activateClick);
+  html$.find(".wa-tooltip").click(activateClick);
 }
 
-function activeTimelineToggles(app, html) {
+function activeTimelineToggles(app, html$) {
 
   // Only for WA articles
   const journalEntry = app.document.parent;
   if( ! journalEntry.getFlag("world-anvil", "articleId") ) return;
 
-  const minimizedEntries = html.find('.wa-section.timeline-content .timeline-entry.minimized');
+  const minimizedEntries = html$.find('.wa-section.timeline-content .timeline-entry.minimized');
   minimizedEntries.click(event => {
     const entryId = event.currentTarget.dataset.entry;
     const _maximized = event.currentTarget.parentElement.querySelector(`.maximized[data-entry="${entryId}"`);
@@ -176,7 +176,7 @@ function activeTimelineToggles(app, html) {
     _maximized.classList.remove("hidden");
   });
 
-  const maximizedEntries = html.find('.wa-section.timeline-content .timeline-entry.maximized .first-line');
+  const maximizedEntries = html$.find('.wa-section.timeline-content .timeline-entry.maximized .first-line');
   maximizedEntries.click(event => {
     const _maximized = event.currentTarget.parentElement;
     const entryId = _maximized.dataset.entry;
