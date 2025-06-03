@@ -9,7 +9,7 @@ let module = undefined;
 /**
  * Initialization actions taken on Foundry Virtual Tabletop client init.
  */
-Hooks.once("init", () => {
+Hooks.once("init", async () => {
   module = game.modules.get("world-anvil");
 
   // Register settings menu
@@ -68,11 +68,11 @@ Hooks.on("renderJournalDirectory", (app, html, data) => {
 
   // Add the World Anvil Button
   const button = $(`<button type="button" id="world-anvil">
-    <img class="wa-icon-in-directory" src="modules/world-anvil/icons/wa-icon.svg" title="${game.i18n.localize("WA.SidebarButton")}" />
+    <img class="wa-theme-dependant" src="modules/world-anvil/icons/wa-icon.svg" title="${game.i18n.localize("WA.SidebarButton")}" />
   </button>`);
-  button.on("click", ev => {
-    const anvil = game.modules.get("world-anvil").anvil;
-    if ( anvil.worldId ) {
+  button.on("click", async ev => {
+    if ( module.anvil.worldId ) {
+      await module.anvil.getWorld(module.anvil.worldId);
       module.browser.render(true);
     } else {
       module.config.render(true);

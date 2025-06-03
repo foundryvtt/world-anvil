@@ -6,7 +6,7 @@
             class="collapsed-icon fas fa-caret-{{#if this.hasBeenCollapsed }}right{{else}}down{{/if}}" >
         </i>
         <h2 class="category-title">{{ this.title }}</h2>
-        <div class="controls">
+        <div class="controls flexrow">
 
             {{#if this.displayVisibilityButtons }}
                 {{#if this.visibleByPlayers }}
@@ -31,8 +31,8 @@
             {{/if}}
 
             {{#unless this.isUncategorized}}
-                <button type="button" class="world-anvil-control">
-                    <a class="world-anvil-link" href="{{this.url}}" data-tooltip="{{ localize 'WA.ButtonOnWA' }}" target="_blank"></a>
+                <button type="button" class="world-anvil-control" data-action="wa-link" data-url="{{this.url}}" data-tooltip="{{ localize 'WA.ButtonOnWA' }}" >
+                    <img class="wa-link-svg wa-theme-dependant" src="modules/world-anvil/icons/wa-icon.svg" alt="World Anvil link">
                 </button>
             {{/unless}}
         </div>
@@ -62,7 +62,7 @@
 {{#*inline "articlePartial"}}
 <article class="article flexrow" data-article-id="{{ this.id }}" data-entry-id="{{ this.entry.id }}">
     <h3 class="article-title {{#if this.entry }}clickable{{/if}} ">{{ this.title }}</h3>
-    <div class="controls">
+    <div class="controls flexrow">
         {{#if this.entry }}
             {{#if this.visibleByPlayers }}
                 <button type="button" class="world-anvil-control" data-action="hide-entry" data-entry-id="{{ this.entry.id }}" data-tooltip="{{ localize 'WA.ButtonVisibilityHide' }}">
@@ -82,23 +82,12 @@
                 <i class="fas fa-file-import fa-fw"></i>
             </button>
         {{/if}}
-        <button type="button" class="world-anvil-control">
-            <a class="world-anvil-link" href="{{this.url}}" data-tooltip="{{ localize 'WA.ButtonOnWA' }}" target="_blank"></a>
+        <button type="button" class="world-anvil-control" data-action="wa-link" data-url="{{this.url}}" data-tooltip="{{ localize 'WA.ButtonOnWA' }}">
+            <img class="wa-link-svg wa-theme-dependant" src="modules/world-anvil/icons/wa-icon.svg" alt="World Anvil link">
         </button>
     </div>
 </article>
 {{/inline}}
-
-<section class="world-details">
-    <header>
-        <h2>
-            <a class="world-anvil-link" href="{{ world.url }}" data-tooltip="{{ localize 'WA.ButtonOnWA' }}" target="_blank">{{ world.name }}</a>
-        </h2>
-    </header>
-    <article class="world-description">
-        {{{ world.description_parsed }}}
-    </article>
-</section>
 
 <section class="world-articles">
     <nav class="article-filters flexrow">
