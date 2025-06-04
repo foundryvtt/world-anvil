@@ -1,5 +1,7 @@
 
 
+@import "./css/rpg-awesome.css";
+
 /** --------------------------------------------
     Global Styling Rules
 --------------------------------------------- */
@@ -11,7 +13,7 @@ button#world-anvil {
 button#world-anvil img {
     position: relative;
     border: none;
-    height: 24px;
+    height: 17px;
     width: auto;
 }
 
@@ -28,6 +30,7 @@ button#world-anvil img {
     background-position: 2px 1px;
     border: 1px solid #444;
     border-radius: 2px;
+    color: black;
 }
 .wa-link.not-found {
     color: darkred;
@@ -37,8 +40,6 @@ button#world-anvil img {
     cursor: pointer;
 }
 
-
-
 /** --------------------------------------------
     Application Styling Rules
 --------------------------------------------- */
@@ -46,6 +47,7 @@ button#world-anvil img {
 /* World Overview */
 #world-anvil-browser .window-content {
     max-height: 80vh;
+    overflow-y: auto;
 }
 
 /* World Overview */
@@ -59,13 +61,14 @@ button#world-anvil img {
 #world-anvil-browser .world-anvil-link {
     flex: 1;
     margin: 0;
-    padding-left: 20px;
     background-image: url(icons/wa-icon.svg);
     background-repeat: no-repeat;
-    background-size: 16px 16px;
-    background-position: 0 50%;
-    color: #191813;
+    background-size: 28px;
+    background-position-x: left;
+    background-position-y: 30%;
     text-decoration: none;
+    padding-left: 35px;
+    color: black;
 }
 
 #world-anvil-browser a.article-link {
@@ -93,8 +96,14 @@ button#world-anvil img {
 #world-anvil-browser .world-anvil-control > i {
     margin: 0;
 }
+#world-anvil-browser .world-anvil-control > img.wa-link-svg {
+    position: relative;
+    border: none;
+    height: 17px;
+    width: auto;
+}
 
-/* Categories */
+    /* Categories */
 #world-anvil-browser .category {
     border-top: 1px solid #782e22;
 }
@@ -145,6 +154,7 @@ button#world-anvil img {
     margin: 0;
     border-bottom: none;
     font-size: 1em;
+    font-weight: 400;
 }
 #world-anvil-browser .article-title.clickable:hover {
     cursor: pointer;
@@ -187,4 +197,158 @@ dd {
     padding-left: 5px;
     margin: 3px 0;
 }
+
+/** --------------------------------------------
+    Timelines
+--------------------------------------------- */
+.wa-section .world-editor-link {
+	display: none;
+}
+
+.wa-section.timeline-content .timeline {
+    justify-content: left;
+    align-items: stretch;
+    margin-bottom: 25px;
+}
+.wa-section.timeline-content .hidden-title {
+    flex: none;
+    border: none;
+    max-height: 0px !important;
+    font-size: 0px !important;
+    padding: 0px !important;
+    margin: 0px !important;
+    margin-block: 0px !important;
+}
+
+.wa-section.timeline-content .timeline-entry {
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+    flex: none;
+}
+
+.wa-section.timeline-content .timeline-entry.space-between {
+    align-items: stretch;
+}
+
+.wa-section.timeline-content .timeline-entry.minor, .wa-section.timeline-content .timeline-entry.important, .wa-section.timeline-content .timeline-entry.major {
+    font-size: 1.2em;
+}
+.wa-section.timeline-content .timeline-entry.era-change {
+    font-size: 1.4em;
+}
+
+.wa-section.timeline-content .timeline-entry .col-1 {
+    flex: 2;
+}
+.wa-section.timeline-content .timeline-entry .col-2 {
+    flex: none;
+    min-width: 100px;
+    max-width: 100px;
+    align-items: center;
+    background-position-x: center;
+    background-repeat: repeat-y;
+    background-image: url("icons/timeline-middle.webp");
+}
+
+.wa-section.timeline-content .timeline-entry .col-3 {
+    flex: 5;
+}
+
+.wa-section.timeline-content .timeline-entry .entry-date {
+    text-align: right;
+    font-size: 80%;
+}
+
+.wa-section.timeline-content .timeline-entry .first-entry-icon {
+    min-height: 40px;
+    max-height: 40px;
+    background-image: url("icons/timeline-start.webp");
+}
+.wa-section.timeline-content .timeline-entry .last-entry-icon {
+    min-height: 40px;
+    max-height: 40px;
+    background-image: url("icons/timeline-end.webp");
+}
+
+.wa-section.timeline-content .timeline-entry.minimized:hover {
+    cursor: pointer;
+}
+
+.wa-section.timeline-content .timeline-entry.maximized {
+    border: slategrey;
+    border-style: solid;
+    margin-left: 40px;
+    margin-right: 40px;
+    padding: 10px;
+    align-items: stretch;
+}
+
+.wa-section.timeline-content .timeline-entry .first-line:hover {
+    cursor: pointer;
+}
+
+.wa-section.timeline-content .timeline-entry.maximized .maximized-icon {
+    flex: none;
+    margin-right: 10px;
+}
+.wa-section.timeline-content .timeline-entry.maximized .maximized-title {
+    flex: none;
+    align-self: end;
+    margin-bottom: 0.3em;
+}
+.wa-section.timeline-content .timeline-entry.maximized .maximized-subtitle {
+    flex: none;
+    color: var(--color-text-primary);
+    font-size: 80%;
+    font-style: italic;
+}
+.wa-section.timeline-content .timeline-entry.maximized .maximized-description {
+    flex: none;
+    padding-top: 10px;
+    color: var(--color-text-primary);
+    font-size: 0.8em;
+    justify-content: space-between;
+    align-items: start;
+}
+.wa-section.timeline-content .timeline-entry .description-div {
+    font-size: 12px;
+}
+.wa-section.timeline-content .timeline-entry .relation-div {
+    flex: none;
+    min-width: 80px;
+    max-width: 80px;
+    margin-left: 10px;
+}
+.wa-section.timeline-content .timeline-entry .related-img {
+    border: groove;
+}
+
+
+/** --------------------------------------------
+    Theme dependant
+--------------------------------------------- */
+
+.theme-light button:hover .wa-theme-dependant {
+    filter: invert(94%) sepia(7%) saturate(429%) hue-rotate(337deg) brightness(104%) contrast(94%);
+}
+
+.theme-dark .wa-theme-dependant, .theme-dark .wa-link {
+    filter: invert(99%) sepia(95%) saturate(636%) hue-rotate(309deg) brightness(96%) contrast(88%);
+}
+
+.theme-light .wa-section.timeline-content .timeline-entry.no-importance { color: var(--color-dark-6); }
+.theme-light .wa-section.timeline-content .timeline-entry.trivial { color: var(--color-dark-5); }
+.theme-light .wa-section.timeline-content .timeline-entry.minor { color: var(--color-dark-4); }
+.theme-light .wa-section.timeline-content .timeline-entry.important { color: var(--color-dark-3); }
+.theme-light .wa-section.timeline-content .timeline-entry.major { color: var(--color-dark-2); }
+.theme-light .wa-section.timeline-content .timeline-entry.era-change { color: var(--color-dark-1); }
+
+.theme-dark .wa-section.timeline-content .timeline-entry.no-importance { color: var(--color-light-6); }
+.theme-dark .wa-section.timeline-content .timeline-entry.trivial { color: var(--color-light-5); }
+.theme-dark .wa-section.timeline-content .timeline-entry.minor { color: var(--color-light-4); }
+.theme-dark .wa-section.timeline-content .timeline-entry.important { color: var(--color-light-3); }
+.theme-dark .wa-section.timeline-content .timeline-entry.major { color: var(--color-light-2); }
+.theme-dark .wa-section.timeline-content .timeline-entry.era-change { color: var(--color-light-1); }
+
 

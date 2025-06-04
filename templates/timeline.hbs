@@ -1,0 +1,63 @@
+<section class="wa-section timeline-content" data-timeline="{{timeline.id}}">
+    <h2>{{timeline.title}}</h2>
+    <div class="flexcol timeline">
+        <div class="flexrow timeline-entry">
+            <div class="col-1"></div>
+            <div class="col-2 first-entry-icon"></div>
+            <div class="col-3"></div>
+        </div>
+        {{#each allLines as | line | }}
+            {{#if line.isEntry}}
+                <h3 class="hidden-title">{{line.def.title}}</h3>
+                <div class="flexrow timeline-entry minimized {{line.gui.css}}{{#if line.gui.shrinked}} hidden{{/if}}" data-entry="{{line.def.id}}">
+                    <div class="col-1 entry-date">
+                        {{line.def.startDate.label}}
+                    </div>
+                    <div class="flexcol col-2 entry-icon" >
+                        <i class="{{line.def.icon}}"></i>
+                    </div>
+                    <div class="flexrow col-3 minimized-h3" >
+                        {{line.def.title}}
+                    </div>
+                </div>
+                <div class="flexcol timeline-entry maximized {{line.gui.css}}{{#unless line.gui.shrinked}} hidden{{/unless}}" data-entry="{{line.def.id}}">
+                    <div class="flexrow first-line">
+                        <div class="maximized-icon">
+                            <i class="{{line.def.icon}}"></i>
+                        </div>
+                        <div class="flexcol maximized-title">
+                            <div class="maximized-h3">{{line.def.title}}</div>
+                            <div class="maximized-subtitle">
+                                {{line.def.startDate.label}} - {{line.def.category}} - {{line.def.significance.label}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flexrow maximized-description">
+                        <div class="description-div">{{{line.def.contentParsed}}}</div>
+                        {{#if line.gui.related.length}}
+                            <div class="flexcol relation-div">
+                                {{#each line.gui.related as | relation | }}
+                                    <img class="wa-tooltip related-img"
+                                         data-article-id="{{relation.id}}"
+                                         data-tooltip="{{relation.title}}"
+                                         src="{{relation.img}}">
+                                {{/each}}
+                            </div>
+                        {{/if}}
+                    </div>
+                </div>
+            {{else}}
+                <div class="flexrow timeline-entry space-between" style="min-height:{{line.spaceBetween}}px;">
+                    <div class="col-1"></div>
+                    <div class="col-2 entry-icon"></div>
+                    <div class="col-3"></div>
+                </div>
+            {{/if}}
+        {{/each}}
+        <div class="flexrow timeline-entry">
+            <div class="col-1"></div>
+            <div class="col-2 last-entry-icon"></div>
+            <div class="col-3"></div>
+        </div>
+    </div>
+</section>

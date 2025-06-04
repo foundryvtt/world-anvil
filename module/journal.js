@@ -3,7 +3,7 @@ import {importArticle, getArticleContent, getCategories, CATEGORY_ID} from "./fr
 /**
  * A World Anvil Directory that allows you to see and manage your World Anvil content in Foundry VTT
  */
-export default class WorldAnvilBrowser extends Application {
+export default class WorldAnvilBrowser extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
 
   /**
    * An array of Articles which appear in this World
@@ -47,41 +47,46 @@ export default class WorldAnvilBrowser extends Application {
 
   /* -------------------------------------------- */
 
-  /** @override */
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      id: "world-anvil-browser",
-      classes: ["world-anvil"],
-      template: "modules/world-anvil/templates/journal.hbs",
+  static DEFAULT_OPTIONS = {
+    id: "world-anvil-browser",
+    classes: ["world-anvil"],
+    position: {
       width: 720,
       height: "auto",
-      scrollY: [".world-anvil-container"]
-    });
+    },
+    window: {
+      icon: "fas fa-gear", // You can now add an icon to the header
+    }
+  }
+  static PARTS = {
+    details: {
+      template: "modules/world-anvil/templates/journal-details.hbs"
+    },
+    articles: {
+      template: "modules/world-anvil/templates/journal-articles.hbs"
+    }
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   get anvil() {
     return game.modules.get("world-anvil").anvil;
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /** @override */
   get title() {
-    const anvil = game.modules.get("world-anvil").anvil;
-    return `World Anvil: ${anvil.world.name}`;
+    return `World Anvil : ${this.anvil.world.name}`;
   }
 
-	/* -------------------------------------------- */
-
+  /* -------------------------------------------- */
   /** @override */
-  async getData() {
-    const world = this.anvil.world || await this.anvil.getWorld(this.anvil.worldId);
+  async _prepareContext(options) {
     const tree = await this.getContentTree();
     this._refreshCategoryVisibility();
     return {
-      world: world,
+      world: this.anvil.world,
       tree: tree,
       displayDraft: this._displayDraft,
       displayWIP: this._displayWIP
@@ -164,14 +169,16 @@ export default class WorldAnvilBrowser extends Application {
 	/* -------------------------------------------- */
 
   /** @override */
-  activateListeners(html) {
-    super.activateListeners(html);
+  _onRender(context, options) {
+    super._onRender(context, options);
+    const html = $(this.element);
+
     html.find(".article-title").click(this._onClickArticleTitle.bind(this));
     html.find("button.world-anvil-control").click(this._onClickControlButton.bind(this));
     html.find(".collapsed-icon").click(this._onClickCollapseFolder.bind(this));
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
 
   /**
    * Handle left-click events on an article title
@@ -187,7 +194,7 @@ export default class WorldAnvilBrowser extends Application {
 
     // New temporary entry
     const article = await this.anvil.getArticle(el.dataset.articleId);
-    const content = getArticleContent(article);
+    const content = await getArticleContent(article);
     entry = new JournalEntry({
       name: article.title,
       content: content.html,
@@ -220,6 +227,13 @@ export default class WorldAnvilBrowser extends Application {
       case "toggle-wip":
         this._displayWIP = !this._displayWIP;
         return this.render();
+
+      // Wa-link
+      case "wa-link":
+        const url = button.dataset.url;
+        const tab = window.open(url, '_blank');
+        if(tab) {tab.focus();}
+        return;
 
       // Category control buttons
       case "sync-folder":
@@ -304,7 +318,7 @@ export default class WorldAnvilBrowser extends Application {
     }).map( a => {
       return {
         _id: a.entry.id,
-        permission: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER }
+        ownership: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER }
       }
     });
 
@@ -328,7 +342,7 @@ export default class WorldAnvilBrowser extends Application {
     }).map( a => {
       return {
         _id: a.entry.id,
-        permission: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE }
+        ownership: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE }
       }
     });
 
@@ -352,7 +366,7 @@ export default class WorldAnvilBrowser extends Application {
       default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER
     };
 
-    await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});
+    await entry.update({ownership: perms}, {diff: false, recursive: false, noHook: true});
     this.render();
   }
 
@@ -370,7 +384,7 @@ export default class WorldAnvilBrowser extends Application {
       default: CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE
     };
 
-    await entry.update({permission: perms}, {diff: false, recursive: false, noHook: true});
+    await entry.update({ownership: perms}, {diff: false, recursive: false, noHook: true});
     this.render();
   }
 
