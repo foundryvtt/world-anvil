@@ -1,18 +1,30 @@
 /**
  * A configuration sheet FormApplication to configure the World Anvil integration
- * @extends {FormApplication}
  */
-export default class WorldAnvilConfig extends FormApplication {
+export default class WorldAnvilConfig extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
 
   /** @override */
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      id: "world-anvil-config",
-      template: "modules/world-anvil/templates/config.html",
+  static DEFAULT_OPTIONS = {
+    id: "world-anvil-config",
+    tag: "form",
+    position: {
       width: 600,
       height: "auto",
-      closeOnSubmit: false
-    });
+    },
+    window: {
+      contentClasses: ["standard-form"],
+      icon: "fas fa-settings"
+    },
+    form: {
+      closeOnSubmit: false,
+      handler: WorldAnvilConfig.#onSubmit
+    }
+  }
+  /** @override */
+  static PARTS = {
+    main: {
+      template: "modules/world-anvil/templates/config.html"
+    }
   }
 
 	/* -------------------------------------------- */
@@ -24,8 +36,10 @@ export default class WorldAnvilConfig extends FormApplication {
 
 	/* -------------------------------------------- */
 
+  #closeOnSubmit=false;
+
   /** @override */
-  async getData() {
+  async _prepareContext(_options) {
     const anvil = game.modules.get("world-anvil").anvil;
 
     // Determine the configuration step
@@ -42,7 +56,7 @@ export default class WorldAnvilConfig extends FormApplication {
     else stepNumber = 3;
 
     // If we have reached step 3, we can safely close the form when it is submitted
-    if ( stepNumber === 3 ) this.options.closeOnSubmit = true;
+    this.#closeOnSubmit= stepNumber === 3;
 
     // Maybe retrieve a list of world options
     if ( anvil.user && !anvil.worlds.length ) await anvil.getWorlds();
@@ -60,9 +74,14 @@ export default class WorldAnvilConfig extends FormApplication {
 	/* -------------------------------------------- */
 
   /** @override */
-  _updateObject(event, formData) {
-    formData.authToken = formData.authToken.trim();
-    game.settings.set("world-anvil", "configuration", formData);
+  static async #onSubmit(event, form, formData) {
+    formData.object.authToken = formData.object.authToken.trim();
+    await game.settings.set("world-anvil", "configuration", formData.object);
+    if(this.#closeOnSubmit){
+      this.close();
+    } else {
+      this.render();
+    }
   }
 
 	/* -------------------------------------------- */
