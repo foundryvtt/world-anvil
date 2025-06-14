@@ -166,16 +166,19 @@ export default class WorldAnvilBrowser extends foundry.applications.api.Handleba
     return this.articles;
   }
 
-	/* -------------------------------------------- */
+  /* -------------------------------------------- */
+
+  bindEvent(selector, callback, {event="click"}={}) {
+    const els = this.element.querySelectorAll(selector);
+    els.forEach(el => el.addEventListener(event, callback.bind(this)) );
+  }
 
   /** @override */
   _onRender(context, options) {
     super._onRender(context, options);
-    const html = $(this.element);
-
-    html.find(".article-title").click(this._onClickArticleTitle.bind(this));
-    html.find("button.world-anvil-control").click(this._onClickControlButton.bind(this));
-    html.find(".collapsed-icon").click(this._onClickCollapseFolder.bind(this));
+    this.bindEvent(".article-title", this.#onClickArticleTitle);
+    this.bindEvent("button.world-anvil-control", this.#onClickControlButton);
+    this.bindEvent(".collapsed-icon", this.#onClickCollapseFolder);
   }
 
   /* -------------------------------------------- */
@@ -184,7 +187,7 @@ export default class WorldAnvilBrowser extends foundry.applications.api.Handleba
    * Handle left-click events on an article title
    * @private
    */
-  async _onClickArticleTitle(event) {
+  async #onClickArticleTitle(event) {
     event.preventDefault();
     const el = event.currentTarget.closest(".article");
 
@@ -209,7 +212,7 @@ export default class WorldAnvilBrowser extends foundry.applications.api.Handleba
    * Handle left-click events on a directory import button
    * @private
    */
-  async _onClickControlButton(event) {
+  async #onClickControlButton(event) {
     const button = event.currentTarget;
     const action = button.dataset.action;
     switch (action) {
@@ -259,7 +262,7 @@ export default class WorldAnvilBrowser extends foundry.applications.api.Handleba
    * Collapse inside the category inside journal display. (Or expand it)
    * @private
    */
-   async _onClickCollapseFolder(event) {
+   async #onClickCollapseFolder(event) {
     const icon = event.currentTarget;
     const categoryId = icon.closest(".category").dataset.categoryId;
     const alreadyCollapsed = this._collapsedCategories.includes( categoryId );
