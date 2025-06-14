@@ -134,9 +134,7 @@ Hooks.on("renderJournalEntrySheet", (app, html, data) => {
 });
 
 Hooks.on("renderJournalEntryPageSheet", (app, html, data) => {
-
   // Activate cross-link listeners
-  const html$ = $(html);
   activeTimelineToggles(app, html);
   activateWALinks(html);
 });
