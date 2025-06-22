@@ -158,7 +158,7 @@ const templates = {}
  * TimelineContent will be dynamically added during importArticle()
  */
 export const loadTimelineTemplateInMemory = async () => {
-  templates.timelineContent = await getTemplate('modules/world-anvil/templates/timeline.hbs');
+  templates.timelineContent = await foundry.applications.handlebars.getTemplate('modules/world-anvil/templates/timeline.hbs');
 }
 
 /* -------------------------------------------- */
