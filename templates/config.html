@@ -11,12 +11,8 @@
     <div class="form-group">
         <label>{{localize "WA.WorldId"}}</label>
         <select name="worldId">
-            {{#select worldId}}
             <option value=""></option>
-            {{#each worlds}}
-            <option value="{{this.id}}">{{this.name}}</option>
-            {{/each}}
-            {{/select}}
+            {{selectOptions worlds selected=worldId labelAttr="name" valueAttr="id"}}
         </select>
         <p class="notes">{{localize "WA.WorldIdHint"}}</p>
     </div>
